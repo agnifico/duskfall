@@ -1,0 +1,18 @@
+{
+  "id": "arrival-beach",
+  "name": "Arrival Beach",
+  "zone": "north-shore",
+  "pin": [2810, 1157],
+  "kind": "gathering",
+  "backdrop": "sea",
+  "fog": false,
+  "table": ["palm", "driftwood", "stones", "palm"],
+  "rows": [
+    "w w w w w w w w w",
+    "w h h s s s.hut h w w",
+    "h s s.* s s.* s s.driftwood h w",
+    "s.> s s.fire s.* g g.* s s h",
+    "g g.palm g s.* g.stones g.* g.boulder s s",
+    "f f.birch f.birch g g.* g g.oak f.ether g"
+  ]
+}

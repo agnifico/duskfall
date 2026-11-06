@@ -1,0 +1,29 @@
+@import './ui/px.css';
+
+:root {
+  color-scheme: dark;
+}
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  height: 100%;
+}
+body {
+  background: #0c1716;
+  color: var(--c-panel-fg);
+  font: 13px/1.4 -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+}
+
+/* The HUD covers the screen but only its boxes and buttons take clicks; the map underneath gets the rest. */
+.hud {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.hud .px,
+.hud button {
+  pointer-events: auto;
+}

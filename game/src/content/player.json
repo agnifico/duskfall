@@ -1,0 +1,21 @@
+{
+  "figure": {
+    "stand": "grok_chars/heroine-stand",
+    "walk": "grok_chars/heroine-walk"
+  },
+  "portrait": "characters/heroine/portrait.webp",
+  "art": [
+    "characters/heroine/full.webp",
+    "characters/heroine/avatar.webp",
+    "characters/heroine/side.webp",
+    "characters/heroine/aR0aZ.webp",
+    "characters/heroine/J0dTh.webp",
+    "characters/heroine/4NeQw.webp",
+    "characters/heroine/KAPc4.webp",
+    "characters/heroine/7afgn.webp",
+    "characters/heroine/OS6Dg.webp",
+    "characters/heroine/5Y38V.webp",
+    "characters/heroine/NtyOt.webp",
+    "characters/heroine/JrYtJ.webp"
+  ]
+}

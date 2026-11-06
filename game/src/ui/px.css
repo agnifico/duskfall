@@ -1,0 +1,410 @@
+/* Retro surfaces, in plain CSS, with switchable colour themes.
+ *
+ * Every surface has:
+ *   - a face: its top colour
+ *   - a highlight line along the top of the face
+ *   - two darker shadow bands along its bottom (the lip)
+ *   - an outline around the whole shape, in the theme's ink
+ *   - a hard shadow falling down and to the right
+ * Bevelled surfaces have stepped corners. Pressed buttons sink one unit: the lip and the shadow go,
+ * and a thin shadow falls across the top of the face.
+ *
+ * How it is drawn, and why:
+ *   - ::before paints the face and its bands, so clip-path can cut the corners of the face
+ *     without also cutting off the outline and the shadow.
+ *   - The outline and the shadow are a chain of drop-shadow() filters on the element itself.
+ *     Each copies everything drawn so far one unit up, down, left or right in the ink colour,
+ *     so together they trace any shape, stepped corners included.
+ *   - A theme only sets each tone's face and text colour. The bands and the highlight are mixed
+ *     from the face and the ink, so shadows pick up the theme's ink (warm brown shadows on cream).
+ *
+ * Usage:  <div class="px t-panel bevel">…</div>    <button class="px btn t-accent">…</button>
+ * Tones:  t-panel (main surfaces) · t-inset (chips, secondary) · t-accent (primary buttons)
+ *         t-good · t-info · t-warm · t-bad · t-off (disabled, locked)
+ * Text:   var(--fg) main · var(--dim) secondary · var(--hl) highlight, on whatever surface it sits.
+ */
+
+@font-face {
+  font-family: 'Chakra Petch';
+  src: url('/fonts/chakra-petch-400.woff2') format('woff2');
+  font-weight: 400;
+  font-display: block;
+}
+@font-face {
+  font-family: 'Chakra Petch';
+  src: url('/fonts/chakra-petch-500.woff2') format('woff2');
+  font-weight: 500;
+  font-display: block;
+}
+@font-face {
+  font-family: 'Chakra Petch';
+  src: url('/fonts/chakra-petch-600.woff2') format('woff2');
+  font-weight: 600;
+  font-display: block;
+}
+@font-face {
+  font-family: 'Jersey 10';
+  src: url('/fonts/Jersey10-Regular.ttf') format('truetype');
+  font-display: block;
+}
+
+:root {
+  --u: 2px; /* one pixel of the pixel-art style */
+  --font-label: 'Chakra Petch', ui-monospace, Menlo, monospace;
+  --font-body: 'Chakra Petch', -apple-system, Helvetica, sans-serif;
+  --font-display: 'Jersey 10', 'Chakra Petch', ui-monospace, monospace;
+  --map-ink: #06121c; /* text shadow for names written on the painted maps */
+}
+
+/* ---------- themes ---------- */
+
+/* Meadow: cream and brown, soft greens and sky. The default. */
+:root,
+:root[data-theme='meadow'] {
+  --ink: #5a3b2a;
+  --drop: rgb(90 59 42 / 0.3);
+  --c-panel: #f7e9cb; --c-panel-fg: #5a3b2a; --c-panel-hl: #c0692f;
+  --c-inset: #ecd5a6; --c-inset-fg: #5a3b2a; --c-inset-hl: #b85a24;
+  --c-accent: #96d067; --c-accent-fg: #24421a;
+  --c-good: #cbe77f; --c-good-fg: #36500f;
+  --c-info: #8fcde8; --c-info-fg: #173a4d;
+  --c-warm: #f7c65b; --c-warm-fg: #563808;
+  --c-bad: #ee8b6f; --c-bad-fg: #4b170c;
+  --c-off: #d8ccb4; --c-off-fg: #9b8a70;
+  --well: #d4b98a; --well-fg: #8a6a48;
+  --energy: #f2b632; --energy-hi: #ffe08a; --energy-lo: #c9851a;
+  --cost-bg: #5a3b2a; --cost-fg: #ffe08a;
+  --warn: #d0452f;
+  --sky-1: #c4e8f3; --sky-2: #7fbedb;
+  --sea-1: #5fb3d6; --sea-2: #2f7fb0;
+  --cloud: rgb(255 255 255 / 0.92); --cloud-shadow: rgb(20 50 80 / 0.15);
+}
+
+/* Harvest: wooden panels, parchment insides, gold and leaf green. */
+:root[data-theme='harvest'] {
+  --ink: #3b2314;
+  --drop: rgb(40 20 8 / 0.42);
+  --c-panel: #c4834a; --c-panel-fg: #fff3d8; --c-panel-hl: #ffd468;
+  --c-inset: #f2d7a2; --c-inset-fg: #4a2c17; --c-inset-hl: #b04a1c;
+  --c-accent: #f2b53c; --c-accent-fg: #4a2c0a;
+  --c-good: #7cbc4f; --c-good-fg: #1c3510;
+  --c-info: #62aacb; --c-info-fg: #0f2a3b;
+  --c-warm: #ec8a45; --c-warm-fg: #3d1806;
+  --c-bad: #cc4a3c; --c-bad-fg: #fff1e6;
+  --c-off: #a08a70; --c-off-fg: #e6d6bc;
+  --well: #7e5230; --well-fg: #e9c99a;
+  --energy: #86cf4c; --energy-hi: #c2ef8a; --energy-lo: #4f962a;
+  --cost-bg: #3b2314; --cost-fg: #ffd468;
+  --warn: #ff7c5e;
+  --sky-1: #f6d7a4; --sky-2: #d98f5f;
+  --sea-1: #4a9c96; --sea-2: #1f5c63;
+  --cloud: rgb(255 242 222 / 0.9); --cloud-shadow: rgb(30 20 10 / 0.22);
+}
+
+/* Arcade: white and navy, bright primaries. */
+:root[data-theme='arcade'] {
+  --ink: #2b2347;
+  --drop: rgb(43 35 71 / 0.35);
+  --c-panel: #fdf7ea; --c-panel-fg: #2b2347; --c-panel-hl: #e2456b;
+  --c-inset: #e6e1f7; --c-inset-fg: #2b2347; --c-inset-hl: #3f63d8;
+  --c-accent: #ffcd3c; --c-accent-fg: #3a2a05;
+  --c-good: #5fd16a; --c-good-fg: #0f3a14;
+  --c-info: #4fc3f2; --c-info-fg: #0a2f44;
+  --c-warm: #ff9f43; --c-warm-fg: #3d1f02;
+  --c-bad: #ff5d6c; --c-bad-fg: #3a0710;
+  --c-off: #cfcadb; --c-off-fg: #8a83a3;
+  --well: #d3cde8; --well-fg: #6b6390;
+  --energy: #ffcd3c; --energy-hi: #fff0a8; --energy-lo: #d99a10;
+  --cost-bg: #2b2347; --cost-fg: #ffe066;
+  --warn: #e2456b;
+  --sky-1: #b3e1ff; --sky-2: #4a8be0;
+  --sea-1: #48a8f0; --sea-2: #1f5fc4;
+  --cloud: rgb(255 255 255 / 0.95); --cloud-shadow: rgb(10 30 80 / 0.16);
+}
+
+/* Forest: the first pass, dark green and gold. Kept to compare against. */
+:root[data-theme='forest'] {
+  --ink: #0a1210;
+  --drop: rgb(0 0 0 / 0.45);
+  --c-panel: #1c3832; --c-panel-fg: #f3e6c8; --c-panel-hl: #f2c766;
+  --c-inset: #12241f; --c-inset-fg: #f3e6c8; --c-inset-hl: #f2c766;
+  --c-accent: #e0a83e; --c-accent-fg: #2a1a05;
+  --c-good: #5aae55; --c-good-fg: #0d260c;
+  --c-info: #47aaa0; --c-info-fg: #06201d;
+  --c-warm: #e0a83e; --c-warm-fg: #2a1a05;
+  --c-bad: #cc563f; --c-bad-fg: #2a0a04;
+  --c-off: #34403f; --c-off-fg: #8a9896;
+  --well: #0a1613; --well-fg: #93a8a0;
+  --energy: #f4c542; --energy-hi: #fde39a; --energy-lo: #c08f1d;
+  --cost-bg: #0a1210; --cost-fg: #f2c766;
+  --warn: #ff8f78;
+  --sky-1: #2a4d4f; --sky-2: #0c1716;
+  --sea-1: #1d5868; --sea-2: #0a2230;
+  --cloud: rgb(190 225 215 / 0.2); --cloud-shadow: rgb(0 0 0 / 0.28);
+}
+
+/* ---------- the surface ---------- */
+
+.px {
+  --face: var(--c-panel);
+  --fg: var(--c-panel-fg);
+  --hl: var(--c-panel-hl);
+  --shade: color-mix(in oklab, var(--face) 74%, var(--ink));
+  --shade2: color-mix(in oklab, var(--face) 50%, var(--ink));
+  --hi: color-mix(in oklab, var(--face) 60%, #fff);
+  --dim: color-mix(in oklab, var(--fg) 58%, var(--face));
+  --lip: calc(2 * var(--u)); /* thickness of the main shadow band */
+  --outline: drop-shadow(0 calc(-1 * var(--u)) 0 var(--ink)) drop-shadow(0 var(--u) 0 var(--ink))
+    drop-shadow(calc(-1 * var(--u)) 0 0 var(--ink)) drop-shadow(var(--u) 0 0 var(--ink));
+  position: relative;
+  isolation: isolate;
+  color: var(--fg);
+  filter: var(--outline) drop-shadow(var(--u) var(--u) 0 var(--drop));
+}
+
+.px::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--face);
+  box-shadow:
+    inset 0 var(--u) 0 var(--hi),
+    inset 0 calc(-1 * var(--u)) 0 var(--shade2),
+    inset 0 calc(-1 * (var(--lip) + var(--u))) 0 var(--shade);
+  clip-path: var(--shape, none);
+}
+
+/* stepped corners, two steps of one unit each */
+.px.bevel {
+  --s: var(--u);
+  --shape: polygon(
+    0 calc(2 * var(--s)), var(--s) calc(2 * var(--s)), var(--s) var(--s), calc(2 * var(--s)) var(--s), calc(2 * var(--s)) 0,
+    calc(100% - 2 * var(--s)) 0, calc(100% - 2 * var(--s)) var(--s), calc(100% - var(--s)) var(--s), calc(100% - var(--s)) calc(2 * var(--s)), 100% calc(2 * var(--s)),
+    100% calc(100% - 2 * var(--s)), calc(100% - var(--s)) calc(100% - 2 * var(--s)), calc(100% - var(--s)) calc(100% - var(--s)), calc(100% - 2 * var(--s)) calc(100% - var(--s)), calc(100% - 2 * var(--s)) 100%,
+    calc(2 * var(--s)) 100%, calc(2 * var(--s)) calc(100% - var(--s)), var(--s) calc(100% - var(--s)), var(--s) calc(100% - 2 * var(--s)), 0 calc(100% - 2 * var(--s))
+  );
+}
+
+/* a flat surface: no lip, for chips and labels */
+.px.flat {
+  --lip: 0px;
+}
+
+/* gently rounded corners instead of square or stepped ones */
+.px.round::before {
+  border-radius: var(--r, 8px);
+}
+
+/* ---------- tones ---------- */
+
+.t-panel { --face: var(--c-panel); --fg: var(--c-panel-fg); --hl: var(--c-panel-hl); }
+.t-inset { --face: var(--c-inset); --fg: var(--c-inset-fg); --hl: var(--c-inset-hl); }
+.t-accent { --face: var(--c-accent); --fg: var(--c-accent-fg); --hl: var(--c-accent-fg); }
+.t-good { --face: var(--c-good); --fg: var(--c-good-fg); --hl: var(--c-good-fg); }
+.t-info { --face: var(--c-info); --fg: var(--c-info-fg); --hl: var(--c-info-fg); }
+.t-warm { --face: var(--c-warm); --fg: var(--c-warm-fg); --hl: var(--c-warm-fg); }
+.t-bad { --face: var(--c-bad); --fg: var(--c-bad-fg); --hl: var(--c-bad-fg); }
+.t-off { --face: var(--c-off); --fg: var(--c-off-fg); --hl: var(--c-off-fg); }
+
+/* ---------- buttons ---------- */
+
+button.px {
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+}
+.px.btn {
+  transition: transform 60ms steps(2);
+}
+.px.btn:hover::before {
+  background: color-mix(in srgb, var(--face) 86%, #fff);
+}
+.px.btn:active:not(:disabled),
+.px.btn.on {
+  transform: translateY(var(--u));
+  filter: var(--outline);
+}
+.px.btn:active:not(:disabled)::before,
+.px.btn.on::before {
+  box-shadow:
+    inset 0 var(--u) 0 color-mix(in srgb, var(--ink) 35%, transparent),
+    inset 0 calc(-1 * var(--u)) 0 var(--shade2);
+}
+.px.btn:disabled {
+  --face: var(--c-off);
+  --fg: var(--c-off-fg);
+  --hl: var(--c-off-fg);
+  cursor: default;
+}
+.px.btn:disabled:hover::before {
+  background: var(--face);
+}
+.px.btn:focus-visible {
+  outline: var(--u) dashed var(--hl);
+  outline-offset: calc(3 * var(--u));
+}
+
+/* ---------- small parts ---------- */
+
+/* a sunken trough: energy bar background, empty slots */
+.well {
+  background: var(--well);
+  box-shadow:
+    inset 0 var(--u) 0 color-mix(in srgb, var(--ink) 45%, transparent),
+    inset 0 calc(-1 * var(--u)) 0 rgb(255 255 255 / 0.12);
+}
+
+/* hotkey letter */
+.key {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  font: 600 11px/1 var(--font-label);
+  color: var(--fg);
+  background: color-mix(in srgb, var(--ink) 18%, transparent);
+  box-shadow: inset 0 calc(-1 * var(--u)) 0 color-mix(in srgb, var(--ink) 28%, transparent);
+}
+
+/* energy cost or FREE, inside a button */
+.cost {
+  display: inline-grid;
+  place-items: center;
+  height: 18px;
+  padding: 0 6px;
+  font: 600 11px/1 var(--font-label);
+  color: var(--cost-fg);
+  background: var(--cost-bg);
+  white-space: nowrap;
+}
+.cost.free {
+  color: var(--c-good-fg);
+  background: var(--c-good);
+  box-shadow: 0 0 0 var(--u) var(--ink);
+}
+.cost.short {
+  color: var(--warn);
+}
+.cost.free.short {
+  color: var(--c-good-fg);
+}
+
+/* ---------- type ---------- */
+
+/* small labels: buttons, chips, numbers */
+.lbl {
+  font-family: var(--font-label);
+  font-weight: 600;
+  font-size: 10px;
+  line-height: 1.15;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.lbl.m {
+  font-size: 12px;
+}
+.lbl.l {
+  font-size: 15px;
+}
+/* sentences */
+.body {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 15px;
+  line-height: 1.35;
+}
+/* titles, in the pixel font */
+.disp {
+  font-family: var(--font-display);
+  font-weight: 400;
+  line-height: 1;
+  -webkit-font-smoothing: none;
+}
+
+/* ---------- map pins: names written on the painted maps, the same in every theme ---------- */
+
+.map-pin {
+  position: absolute;
+  transform: translate(-50%, -26px); /* the shield's tip sits on the point */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+.map-pin:disabled {
+  cursor: default;
+}
+.shield {
+  display: block;
+  width: 22px;
+  height: 26px;
+  --lip: var(--u);
+  --shape: polygon(0 0, 100% 0, 100% 62%, 50% 100%, 0 62%);
+  transition: transform 80ms steps(2);
+}
+.shield > i {
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  width: 6px;
+  height: 6px;
+  transform: translate(-50%, -50%);
+  background: var(--fg);
+  opacity: 0.75;
+}
+.map-pin:hover:not(:disabled) .shield {
+  transform: translateY(calc(-1 * var(--u)));
+}
+.map-pin.current .shield {
+  transform: translateY(calc(-2 * var(--u)));
+}
+.pin-name {
+  font: 18px/1 var(--font-display);
+  color: #fff;
+  white-space: nowrap;
+  text-shadow: 0 2px 0 var(--map-ink), 2px 0 0 var(--map-ink), -2px 0 0 var(--map-ink), 0 -2px 0 var(--map-ink), 0 0 10px #000;
+  -webkit-font-smoothing: none;
+}
+.you-are-here {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.you-are-here i {
+  width: 12px;
+  height: 12px;
+  background: #e0503a;
+  transform: rotate(45deg);
+  box-shadow: 0 0 0 2px var(--map-ink);
+  animation: here-pulse 1.2s steps(2) infinite;
+}
+.you-are-here span {
+  color: #fff;
+  text-shadow: 0 2px 0 var(--map-ink), 0 0 6px #000;
+}
+@keyframes here-pulse {
+  50% {
+    transform: rotate(45deg) scale(1.35);
+  }
+}
+
+/* ---------- painted maps ---------- */
+
+/* the painting's edges melt into the sea colour around it, so it never shows a hard border */
+.edge-fade {
+  mask-image: linear-gradient(to right, transparent, #000 5%, #000 95%, transparent),
+    linear-gradient(to bottom, transparent, #000 5%, #000 95%, transparent);
+  mask-composite: intersect;
+}

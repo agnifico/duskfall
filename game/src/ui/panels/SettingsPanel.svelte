@@ -1,0 +1,151 @@
+<script lang="ts">
+  // Settings: the colour theme, dev mode (and the dev tools it shows), new game, the rules.
+  import { DEV, G, act, restart, setDev } from '../../lib/game.svelte';
+  import * as E from '../../engine/actions';
+  import { COST } from '../../engine/rules';
+  import Panel from './Panel.svelte';
+  import { THEMES } from '../themes';
+
+  function newGame() {
+    if (confirm('Start a new game? This save is wiped.')) restart();
+  }
+</script>
+
+<Panel title="Settings">
+  <div class="lbl eyebrow">Colour theme · T cycles</div>
+  <div class="seg themes">
+    {#each THEMES as t (t.id)}
+      <button class="px btn t-inset pick" class:on={DEV.theme === t.id} onclick={() => setDev({ theme: t.id })}>
+        <span class="lbl m">{t.name}</span>
+      </button>
+    {/each}
+  </div>
+
+  <div class="row">
+    <span class="lbl m">Dev mode</span>
+    <button class="px btn t-inset pick toggle" class:on={DEV.on} aria-pressed={DEV.on} onclick={() => setDev({ on: !DEV.on })}>
+      <span class="lbl m">{DEV.on ? 'On' : 'Off'}</span>
+    </button>
+  </div>
+
+  {#if DEV.on}
+    <div class="dev">
+      <div class="row">
+        <span class="lbl m">Unlimited energy</span>
+        <button
+          class="px btn t-inset pick toggle"
+          class:on={DEV.freeEnergy}
+          aria-pressed={DEV.freeEnergy}
+          onclick={() => setDev({ freeEnergy: !DEV.freeEnergy })}
+        >
+          <span class="lbl m">{DEV.freeEnergy ? 'On' : 'Off'}</span>
+        </button>
+      </div>
+
+      <label class="slider">
+        <span class="lbl m">Hex field angle</span><b class="lbl m">{DEV.angle}°</b>
+        <input type="range" min="0" max="60" step="1" value={DEV.angle} oninput={(e) => setDev({ angle: +e.currentTarget.value })} />
+      </label>
+
+      <div class="row">
+        <span class="lbl m">Tool tier</span>
+        <div class="seg">
+          {#each [1, 2, 3] as t (t)}
+            <button class="px btn t-inset pick" class:on={G.s.toolTier === t} onclick={() => act((s) => (s.toolTier = t))}><span class="lbl m">{t}</span></button>
+          {/each}
+        </div>
+      </div>
+
+      <div class="row">
+        <span class="lbl m">Day {G.s.day}</span>
+        <button class="px btn bevel t-panel wide" onclick={() => act((s) => E.nextDay(s, G.now))}><span class="lbl m">Next day</span></button>
+      </div>
+    </div>
+  {/if}
+
+  <div class="row buttons">
+    <button class="px btn bevel t-bad wide" onclick={newGame}><span class="lbl m">New game</span></button>
+  </div>
+
+  <div class="lbl eyebrow">Rules</div>
+  <p class="body">
+    Walking costs 1⚡ a hex on sand, grass or path, and 2⚡ through forest, rock or shallows. Each node shows what it costs and
+    gives. Fighting costs {COST.fight}⚡ and searching {COST.search}⚡. Talking and going to people are free. Energy comes back
+    one point every 1:30.
+  </p>
+  <p class="lbl dim keys">Hotkeys: G gather · F search · B bag · P people · Q quests · C character · M map · S settings · T theme · ← → flip images · Esc back</p>
+</Panel>
+
+<style>
+  .eyebrow {
+    color: var(--hl);
+    margin: 6px 0 10px;
+  }
+  .slider {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+    margin-bottom: 14px;
+    align-items: center;
+  }
+  .slider input {
+    grid-column: 1 / -1;
+    width: 100%;
+    accent-color: var(--c-accent);
+  }
+  .slider b {
+    color: var(--hl);
+    font-weight: 600;
+  }
+  .row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .seg {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .themes {
+    margin-bottom: 16px;
+  }
+  .pick {
+    min-width: 32px;
+    height: 28px;
+    display: grid;
+    place-items: center;
+    padding: 0 10px 4px;
+  }
+  .pick.on {
+    --face: var(--c-accent);
+    --fg: var(--c-accent-fg);
+  }
+  .toggle {
+    min-width: 56px;
+  }
+  /* the dev tools, set in from the rest */
+  .dev {
+    margin: -4px 0 14px;
+    padding: 12px 12px 0;
+    background: color-mix(in srgb, var(--fg) 6%, transparent);
+    box-shadow: inset 2px 0 0 var(--hl);
+  }
+  .buttons {
+    justify-content: flex-start;
+  }
+  .wide {
+    padding: 8px 14px 11px;
+  }
+  p {
+    margin: 0 0 10px;
+  }
+  .dim {
+    color: var(--dim);
+  }
+  .keys {
+    line-height: 1.7;
+  }
+</style>

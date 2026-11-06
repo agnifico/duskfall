@@ -1,0 +1,14 @@
+# dependencies and builds
+node_modules/
+dist/
+
+# macOS
+.DS_Store
+Icon?
+
+# The drop box for source images (large). The game's art lives in game/public;
+# the tools that read source images say which files they expect in here.
+extras/
+
+# Python
+__pycache__/

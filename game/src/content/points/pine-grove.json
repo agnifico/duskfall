@@ -1,0 +1,16 @@
+{
+  "id": "pine-grove",
+  "name": "Pine Grove",
+  "zone": "plains",
+  "pin": [2495, 1393],
+  "kind": "gathering",
+  "fog": false,
+  "table": ["pine", "birch", "berries", "pine"],
+  "rows": [
+    "f f.pine f.pine f f.oak f.oak f f",
+    "f.pine g g g.berries g f f.pine",
+    "g.> g g.* g g.* g f.birch f.birch",
+    "g g.* g g g r.stones r.boulder r",
+    "g g g.shrooms g g.* r r.cluster r.malachite"
+  ]
+}

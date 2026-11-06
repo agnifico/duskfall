@@ -1,0 +1,16 @@
+{
+  "id": "sylvies-home",
+  "name": "Sylvie's Home",
+  "zone": "plains",
+  "pin": [2220, 1593],
+  "kind": "people",
+  "fog": false,
+  "table": ["tree", "berries", "stones"],
+  "rows": [
+    "f f.birch f.birch f.pine f.oak f.oak f",
+    "f g g g.house g g f",
+    "g g.sylvie g p g g.* g",
+    "g.> p p p g.fire g.* g",
+    "g g.berries g p g g.stones g"
+  ]
+}

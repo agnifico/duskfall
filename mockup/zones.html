@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mockup · Nuvatra → zone → point</title>
+<!-- Throwaway mockup to judge the form: map pins down to small hex points, with energy. Not game code. -->
+<style>
+  body { margin: 0; background: #15191c; color: #dfe4e7; font: 13px -apple-system, Helvetica, Arial, sans-serif; display: flex; height: 100vh; }
+  aside { width: 310px; flex: none; background: #1e2428; padding: 14px; box-sizing: border-box; overflow-y: auto; }
+  main { flex: 1; overflow: auto; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 16px; }
+  h2 { font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: #8b969c; margin: 16px 0 6px; }
+  .crumbs { font-size: 14px; }
+  .crumbs a { color: #7fc4ff; cursor: pointer; }
+  .crumbs span { color: #8b969c; margin: 0 5px; }
+  .energy { display: flex; gap: 3px; margin: 4px 0; }
+  .energy i { flex: 1; height: 12px; border-radius: 2px; background: #3a4248; }
+  .energy i.on { background: #ffc94a; }
+  #regen { color: #8b969c; }
+  button { display: block; width: 100%; text-align: left; background: #2c5f7c; color: #fff; border: 0; border-radius: 4px; padding: 7px 10px; margin: 4px 0; cursor: pointer; font: inherit; }
+  button.free { background: #2f6e4f; }
+  button:disabled { background: #2b3337; color: #7d878c; cursor: default; }
+  .log div { padding: 3px 0; border-bottom: 1px solid #2a3135; color: #b9c1c5; }
+  .log div:first-child { color: #fff; }
+  .inv div { display: flex; justify-content: space-between; }
+  .hint { color: #8b969c; line-height: 1.45; }
+  #tip { min-height: 18px; color: #ffd77a; }
+  label { display: flex; gap: 6px; align-items: center; margin: 4px 0; }
+  .map { position: relative; overflow: hidden; border-radius: 10px; box-shadow: 0 10px 40px #0008; }
+  .map img { position: absolute; max-width: none; }
+  .pin { position: absolute; transform: translate(-50%, -100%); background: #fff; color: #1b1f22; border-radius: 14px; padding: 5px 11px; font-weight: 600; cursor: pointer; white-space: nowrap; box-shadow: 0 2px 10px #0008; text-align: center; }
+  .pin small { display: block; font-weight: 400; color: #5d676c; font-size: 11px; }
+  .pin.locked { background: #4d5559; color: #c9cfd2; cursor: default; }
+  .pin.locked small { color: #aab2b6; }
+  .title { text-align: center; margin-bottom: 8px; }
+  .title b { font-size: 18px; display: block; }
+  .title span { color: #8b969c; }
+  svg text { pointer-events: none; user-select: none; }
+  .cell, .obj { cursor: pointer; }
+  .seg { display: flex; gap: 4px; }
+  .seg button { text-align: center; }
+  .seg button.on { background: #ffc94a; color: #1b1f22; }
+  .cell.path .top { stroke: #ffffff; stroke-width: 2.5; }
+  .cell.goal .top { stroke: #ffd77a; stroke-width: 3.5; }
+</style>
+</head>
+<body>
+<aside id="side"></aside>
+<main id="main"></main>
+
+<script src="sprites/sprites.js"></script>
+<script>
+// ---------- content (data) ----------
+const IMG = '../image%20copy.png', IW = 1168, IH = 784;
+
+const ZONES = [
+  { id: 'north', name: 'North Shore', pin: [560, 95], crop: [330, 20, 640, 230], points: ['beach', 'drill'] },
+  { id: 'plains', name: 'The Plains', pin: [250, 330], crop: [40, 190, 440, 300], points: ['sylvie', 'garden', 'bazaar'] },
+  { id: 'mire', name: 'The Mire', pin: [210, 560], locked: 'Chapter 2' },
+  { id: 'mountain', name: 'The Mountain', pin: [590, 290], locked: 'Chapter 2' },
+  { id: 'ruins', name: 'Eastern Ruins', pin: [990, 330], locked: 'later' },
+];
+
+// Terrain letter, then an optional prop after a dot. "*" = a slot whose contents are re-rolled each day.
+const POINTS = {
+  beach: {
+    name: 'Arrival Beach', zone: 'north', pin: [470, 85], kind: 'Gathering', fog: false, family: 'nuv', art: 'gemini',
+    table: ['P', 'D', 'R', 'P'],
+    rows: [
+      'w w w w w w w w w',
+      'w h h s s s.F h w w',
+      'h s s.* s s.* s s.D h w',
+      's.> s s.U s.* g g.* s s h',
+      'g g.P g s.* g g.* g.R s s',
+      'f f.O f g g.* g g.K f.A g',
+    ],
+  },
+  drill: {
+    name: 'The Drill', zone: 'north', pin: [820, 125], kind: 'Secrets and enemies', fog: true, family: 'nuv', art: 'grok',
+    table: [],
+    rows: [
+      'w w w w w w w w',
+      'w h h s s h w w',
+      'h s s.? s.X s s.G h w',
+      's.> s s.E s s s.? s h',
+      'g g s g.? g s.E s.J s',
+      'r r.R r g g.C g.K r.Q r',
+    ],
+  },
+  sylvie: {
+    name: "Sylvie's Home", zone: 'plains', pin: [235, 315], kind: 'People', fog: false, family: 'nuv', art: 'gemini',
+    table: ['N', 'B', 'R'],
+    rows: [
+      'f f.O f f.N f.O f f',
+      'f g g g.H g g f',
+      'g g.S g p g g.* g',
+      'g.> p p p g.U g.* g',
+      'g g.B g p g g.R g',
+    ],
+  },
+  // Art tests: Indo-Persian objects dropped into Nuvatra on purpose.
+  garden: {
+    name: 'Persian Garden (art test)', zone: 'plains', pin: [385, 250], kind: 'Gathering', fog: false, family: 'indo', art: 'gemini',
+    table: [],
+    rows: [
+      'g g.cy g g.cy g g.cy g g',
+      'g g g.ro p g.ro g g g',
+      'g.> p p p.pv p p p g',
+      'g g.ch g.ro p g.ro g.ch g g',
+      's s g p g s s.sw s',
+    ],
+  },
+  bazaar: {
+    name: 'Bazaar (art test)', zone: 'plains', pin: [150, 420], kind: 'People', fog: false, family: 'indo', art: 'grok',
+    table: [],
+    rows: [
+      's s.wc s s s.wc s s s',
+      's p p p.iw p p p s',
+      'p.> p p.cs p p.cs p p s',
+      's s.cs p p p s.wc s s',
+      's s s p.sw s s.cy s s',
+    ],
+  },
+};
+
+const TER = {
+  w: { name: 'deep water', col: '#3b86b8', h: 0, cost: null },
+  h: { name: 'shallows', col: '#7cc4d6', h: 0, cost: 2 },
+  s: { name: 'sand', col: '#e7d096', h: 1, cost: 1 },
+  g: { name: 'grass', col: '#8cbf62', h: 2, cost: 1 },
+  p: { name: 'path', col: '#cfae74', h: 2, cost: 1 },
+  f: { name: 'forest floor', col: '#4f8b47', h: 2, cost: 2 },
+  r: { name: 'rocky ground', col: '#9b9488', h: 3, cost: 2 },
+};
+
+const PROPS = {
+  P: { type: 'node', name: 'Palm', icon: '🌴', tier: 1, verb: 'Chop', item: 'Palm wood', n: 2 },
+  D: { type: 'node', name: 'Driftwood', icon: '🪵', tier: 1, verb: 'Collect', item: 'Driftwood', n: 1 },
+  N: { type: 'node', name: 'Pine', icon: '🌲', tier: 1, verb: 'Chop', item: 'Pine wood', n: 2 },
+  O: { type: 'node', name: 'Hardwood oak', icon: '🌳', tier: 2, verb: 'Chop', item: 'Hardwood', n: 2 },
+  A: { type: 'node', name: 'Ancient yew', icon: '🌳', tier: 3, verb: 'Chop', item: 'Ancient heartwood', n: 1, big: true },
+  R: { type: 'node', name: 'Stone', icon: '🪨', tier: 1, verb: 'Mine', item: 'Stone', n: 2 },
+  K: { type: 'node', name: 'Resonant stone', icon: '💎', tier: 2, verb: 'Mine', item: 'Resonant shard', n: 1 },
+  L: { type: 'node', name: 'Shells', icon: '🐚', tier: 1, verb: 'Gather', item: 'Shells', n: 2 },
+  B: { type: 'node', name: 'Berry bush', icon: '🫐', tier: 1, verb: 'Pick', item: 'Berries', n: 3 },
+  H: { type: 'rest', name: "Sylvie's house", icon: '🏠' },
+  S: { type: 'npc', name: 'Sylvie', img: 'sylvie.png', lines: [
+    "You're up. Good. The tide brought you in half-drowned.",
+    "If you're staying, make yourself useful. Driftwood and stone, from the beach.",
+    "Those machines on the north-east shore aren't ours. Tell me if you see anyone there.",
+  ] },
+  E: { type: 'enemy', name: 'shore crab', icon: '🦀', item: 'Crab shell' },
+  C: { type: 'secret', name: 'Washed-up chest', icon: '🧰', item: 'Old coin', n: 3 },
+  '?': { type: 'secret', name: 'Something glinting', icon: '✨', item: 'Sea glass', n: 1, hidden: true },
+  X: { type: 'look', name: 'the drill', icon: '🏗️', text: "A Saints drill, still warm. Nobody's here. Fresh boot prints lead down to the water." },
+  '>': { type: 'exit', name: 'Way out', icon: '🚩' },
+  F: { type: 'look', name: 'the fishing hut', icon: '🛖', text: 'Nets drying, nobody home. A boat-shaped dent in the sand where a boat used to be.' },
+  U: { type: 'look', name: 'the campfire', icon: '🔥', text: 'Still warm. Someone sat here this morning.' },
+  G: { type: 'look', name: 'the command tent', icon: '⛺', text: 'Canvas stamped with a golden sun. Locked chests, rolled-up maps.' },
+  J: { type: 'look', name: 'the old pillars', icon: '🏛️', text: 'Dragon Empire stonework, older than anything else on this shore.' },
+  Q: { type: 'node', name: 'Dead tree', icon: '🌳', tier: 1, verb: 'Chop', item: 'Deadwood', n: 1 },
+  cy: { type: 'node', name: 'Cypress', icon: '🌲', tier: 1, verb: 'Chop', item: 'Cypress wood', n: 2 },
+  ch: { type: 'node', name: 'Chinar', icon: '🌳', tier: 2, verb: 'Chop', item: 'Plane wood', n: 2 },
+  ro: { type: 'node', name: 'Rose bush', icon: '🌹', tier: 1, verb: 'Pick', item: 'Rose petals', n: 3 },
+  pv: { type: 'look', name: 'the pavilion', icon: '🕌', text: 'A domed pavilion. Shade, a breeze, the whole garden in view.' },
+  wc: { type: 'look', name: 'a windcatcher house', icon: '🏠', text: 'The tower pulls the breeze down into the rooms. It is cool inside.' },
+  iw: { type: 'look', name: 'the tiled gateway', icon: '🚪', text: 'Blue and turquoise tile, every piece set by hand.' },
+  sw: { type: 'look', name: 'the stepwell', icon: '🕳️', text: 'Steps go down and down to cold, green water.' },
+  cs: { type: 'look', name: 'a carpet stall', icon: '🧺', text: 'Trading comes later. The merchant waves anyway.' },
+};
+
+// Painted sprites (sprites/sprites.js, cut by tools/cut_sheets.py): which cell of each sheet a prop uses.
+const SPRITE_INDEX = {
+  nuv: { P: 0, N: 1, O: 2, A: 3, B: 4, D: 5, R: 6, K: 7, H: 8, F: 9, U: 10, C: 11, X: 12, G: 13, J: 14, Q: 15 },
+  indo: { cy: 0, ch: 1, ro: 2, pv: 3, wc: 4, iw: 5, sw: 6, cs: 7 },
+};
+// Drawn width as a share of one hex's width. Height follows the sprite.
+const SIZE = { P: 0.85, N: 0.8, O: 1.05, A: 1.3, B: 0.62, D: 0.8, R: 0.66, K: 0.7, H: 1.2, F: 1.05, U: 0.62, C: 0.55, X: 0.85, G: 1.0, J: 0.75, Q: 0.85,
+  cy: 0.45, ch: 1.1, ro: 0.7, pv: 0.9, wc: 1.25, iw: 0.85, sw: 1.1, cs: 1.05 };
+const FLAT = { U: true, sw: true }; // lie on the ground: centred on the hex, no cast shadow
+const ART = { gemini: 'Gemini', grok: 'Grok', emoji: 'Emoji' };
+
+const COST = { gather: 3, fight: 4, search: 2 };
+const MAX = 10, REGEN = 90 * 1000; // 1 energy per 90 s: empty to full in 15 min
+
+// ---------- state ----------
+const S = {
+  view: 'world', zone: null, point: null, posKey: null,
+  energy: MAX, lastRegen: Date.now(), day: 1, tool: 1, inv: {}, talk: 0, rested: false,
+  art: {}, depleted: new Set(), beaten: new Set(), taken: new Set(), revealed: new Set(), seen: {}, log: [],
+};
+
+// ---------- helpers ----------
+function mulberry32(a) { return function () { a |= 0; a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+function hash(s) { let h = 2166136261; for (const ch of s) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+function shade(hex, k) { const n = parseInt(hex.slice(1), 16); return `rgb(${((n >> 16) * k) | 0},${(((n >> 8) & 255) * k) | 0},${((n & 255) * k) | 0})`; }
+const zoneOf = (id) => ZONES.find((z) => z.id === id);
+const say = (m) => { S.log.unshift(m); S.log.length = Math.min(S.log.length, 10); };
+const give = (item, n) => { S.inv[item] = (S.inv[item] || 0) + n; };
+
+const gridCache = {};
+function cellsOf(pid) {
+  const k = pid + '@' + S.day;
+  if (gridCache[k]) return gridCache[k];
+  const P = POINTS[pid], rng = mulberry32(hash(pid) + S.day * 977), cells = [];
+  P.rows.forEach((row, r) => row.trim().split(/\s+/).forEach((tok, c) => {
+    let [t, p] = tok.split('.');
+    if (p === '*') p = P.table[Math.floor(rng() * P.table.length)];
+    cells.push({ r, c, t, p: p || null, key: `${pid}:${r}:${c}` });
+  }));
+  return (gridCache[k] = cells);
+}
+const cur = () => cellsOf(S.point).find((x) => x.key === S.posKey);
+function at(cells, r, c) { return cells.find((x) => x.r === r && x.c === c); }
+function nbrs(cells, x) {
+  const d = x.r & 1 ? [[1, 0], [-1, 0], [0, -1], [1, -1], [0, 1], [1, 1]] : [[1, 0], [-1, 0], [-1, -1], [0, -1], [-1, 1], [0, 1]];
+  return d.map(([dc, dr]) => at(cells, x.r + dr, x.c + dc)).filter(Boolean);
+}
+function cube(x) { const q = x.c - (x.r - (x.r & 1)) / 2; return [q, x.r, -q - x.r]; }
+function hexDist(a, b) { const A = cube(a), B = cube(b); return Math.max(Math.abs(A[0] - B[0]), Math.abs(A[1] - B[1]), Math.abs(A[2] - B[2])); }
+const seenSet = (pid) => S.seen[pid] || (S.seen[pid] = new Set());
+const isSeen = (pid, x) => !POINTS[pid].fog || seenSet(pid).has(x.key);
+function look(pid, cells, from, radius) { const s = seenSet(pid); for (const x of cells) if (hexDist(x, from) <= radius) s.add(x.key); }
+function propOf(x) {
+  if (!x.p) return null;
+  const pr = PROPS[x.p];
+  if (pr.hidden && !S.revealed.has(x.key)) return null;
+  if (pr.type === 'enemy' && S.beaten.has(x.key)) return null;
+  if (pr.type === 'secret' && S.taken.has(x.key)) return null;
+  return pr;
+}
+function route(pid, cells, from, to) {
+  const best = new Map([[from.key, 0]]), prev = new Map(), open = [from];
+  while (open.length) {
+    open.sort((a, b) => best.get(a.key) - best.get(b.key));
+    const u = open.shift();
+    if (u === to) break;
+    for (const v of nbrs(cells, u)) {
+      if (TER[v.t].cost == null || !isSeen(pid, v)) continue;
+      const d = best.get(u.key) + TER[v.t].cost;
+      if (d < (best.get(v.key) ?? Infinity)) { best.set(v.key, d); prev.set(v.key, u); open.push(v); }
+    }
+  }
+  if (!best.has(to.key)) return null;
+  const path = []; let x = to;
+  while (x && x !== from) { path.unshift(x); x = prev.get(x.key); }
+  return { cost: best.get(to.key), path };
+}
+function spend(n) {
+  if (n <= 0) return true;
+  if (S.energy < n) { say(`Not enough energy: need ${n}⚡, you have ${S.energy}. It recharges 1 every 1:30.`); return false; }
+  if (S.energy === MAX) S.lastRegen = Date.now();
+  S.energy -= n;
+  return true;
+}
+
+// ---------- actions ----------
+function enter(pid, atKey) {
+  S.view = 'point'; S.point = pid; S.zone = POINTS[pid].zone;
+  const cells = cellsOf(pid);
+  S.posKey = atKey || cells.find((x) => x.p === '>').key;
+  look(pid, cells, cur(), 1);
+  render();
+}
+function moveTo(x) {
+  const cells = cellsOf(S.point), rt = route(S.point, cells, cur(), x);
+  if (!rt || !rt.path.length) return;
+  if (!spend(rt.cost)) return render();
+  for (const step of rt.path) {
+    look(S.point, cells, step, 1);
+    if (step.p === '?' && !S.revealed.has(step.key)) { S.revealed.add(step.key); say('You notice something glinting.'); }
+  }
+  S.posKey = x.key;
+  render();
+}
+function actionsHere() {
+  const out = [];
+  if (S.view !== 'point') return out;
+  const P = POINTS[S.point], x = cur(), pr = propOf(x);
+  if (pr) switch (pr.type) {
+    case 'node':
+      if (S.depleted.has(x.key)) out.push({ label: `${pr.name}: regrows tomorrow`, dis: true });
+      else if (pr.tier > S.tool) out.push({ label: `${pr.verb} ${pr.name}: needs a tier-${pr.tier} tool`, dis: true });
+      else out.push({ label: `${pr.verb} ${pr.name} · ${COST.gather}⚡`, fn: () => {
+        if (!spend(COST.gather)) return;
+        const n = pr.n + (Math.random() < 0.3 ? 1 : 0);
+        give(pr.item, n); S.depleted.add(x.key); say(`${pr.verb} ${pr.name}: +${n} ${pr.item}.`);
+      } });
+      break;
+    case 'enemy':
+      out.push({ label: `Fight the ${pr.name} · ${COST.fight}⚡`, fn: () => {
+        if (!spend(COST.fight)) return;
+        S.beaten.add(x.key); give(pr.item, 1); say(`You beat the ${pr.name}. +1 ${pr.item}. It'll be back tomorrow.`);
+      } });
+      break;
+    case 'secret':
+      out.push({ label: `Take: ${pr.name} · free`, free: true, fn: () => { S.taken.add(x.key); give(pr.item, pr.n); say(`${pr.name}: +${pr.n} ${pr.item}.`); } });
+      break;
+    case 'npc':
+      out.push({ label: `Talk to ${pr.name} · free`, free: true, fn: () => say(`${pr.name}: “${pr.lines[S.talk++ % pr.lines.length]}”`) });
+      break;
+    case 'rest':
+      out.push(S.rested ? { label: 'Already rested today', dis: true }
+        : { label: `Rest at ${pr.name}: refill ⚡, once a day · free`, free: true, fn: () => { S.energy = MAX; S.rested = true; say('You sleep for an hour. Energy full.'); } });
+      break;
+    case 'look':
+      out.push({ label: `Examine ${pr.name} · free`, free: true, fn: () => say(pr.text) });
+      break;
+    case 'exit':
+      out.push({ label: `Leave to ${zoneOf(S.zone).name} · free`, free: true, fn: () => { S.view = 'zone'; } });
+      break;
+  }
+  if (P.fog) out.push({ label: `Search nearby · ${COST.search}⚡`, fn: () => {
+    if (!spend(COST.search)) return;
+    const cells = cellsOf(S.point); look(S.point, cells, x, 2);
+    let found = 0;
+    for (const y of cells) if (y.p === '?' && hexDist(y, x) <= 2 && !S.revealed.has(y.key)) { S.revealed.add(y.key); found++; }
+    say(found ? `You search and spot ${found} thing${found > 1 ? 's' : ''}.` : 'You search. Nothing new nearby.');
+  } });
+  return out;
+}
+
+// ---------- views ----------
+function mapView(crop, pins) {
+  const main = document.getElementById('main');
+  const [x0, y0, w, h] = crop, CW = Math.min(980, main.clientWidth - 40), k = CW / w;
+  let s = `<div class="map" style="width:${CW}px;height:${h * k}px"><img src="${IMG}" style="width:${IW * k}px;left:${-x0 * k}px;top:${-y0 * k}px">`;
+  for (const p of pins) s += `<div class="pin${p.locked ? ' locked' : ''}" data-go="${p.go || ''}" style="left:${(p.x - x0) * k}px;top:${(p.y - y0) * k}px">${p.name}<small>${p.sub}</small></div>`;
+  return s + '</div>';
+}
+
+const R = 44, SQ = 0.58, LIFT = 8, BASE = 9, S3 = Math.sqrt(3), HEXW = R * S3, TOP = 150;
+function centre(x) { return [50 + R * S3 * (x.c + 0.5 * (x.r & 1)), TOP + R * 1.5 * SQ * x.r - TER[x.t].h * LIFT]; }
+function corner(cx, cy, deg) { const a = (deg * Math.PI) / 180; return [cx + R * Math.cos(a), cy + R * SQ * Math.sin(a)]; }
+const pts = (arr) => arr.map((p) => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+
+function spriteFor(pid, code) {
+  const P = POINTS[pid], art = S.art[pid] || P.art;
+  if (art === 'emoji' || !window.SPRITES) return null;
+  const idx = (SPRITE_INDEX[P.family] || {})[code];
+  const set = window.SPRITES[`${art}_${P.family}`];
+  return idx == null || !set ? null : set[idx];
+}
+
+function objectSVG(pid, x, pr, cx, cy) {
+  const faded = pr.type === 'node' && S.depleted.has(x.key);
+  if (pr.type === 'npc') {
+    return `<g transform="translate(${cx},${cy - 18})"><ellipse cy="20" rx="14" ry="5" fill="#000" opacity="0.3" filter="url(#soft)"/><image href="${pr.img}" x="-18" y="-18" width="36" height="36" clip-path="url(#av)"/><circle r="18" fill="none" stroke="#fff" stroke-width="2.5"/></g>`;
+  }
+  const sp = spriteFor(pid, x.p);
+  let s = '';
+  if (sp) {
+    let w = HEXW * (SIZE[x.p] || 0.8), h = (w * sp.h) / sp.w;
+    if (h > HEXW * 2.6) { w *= (HEXW * 2.6) / h; h = HEXW * 2.6; }
+    const groundY = cy + R * SQ * 0.3;
+    let ix, iy;
+    if (FLAT[x.p]) { ix = cx - w / 2; iy = cy - h / 2; }
+    else {
+      ix = cx - sp.bx * w; iy = groundY - sp.by * h;
+      s += `<ellipse cx="${cx + 3}" cy="${groundY - 1}" rx="${(w * 0.42).toFixed(1)}" ry="${(w * 0.15).toFixed(1)}" fill="#000" opacity="${faded ? 0.12 : 0.32}" filter="url(#soft)"/>`;
+    }
+    s += `<image href="${sp.f}" x="${ix.toFixed(1)}" y="${iy.toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" opacity="${faded ? 0.35 : 1}"/>`;
+  } else {
+    s += `<text x="${cx}" y="${cy - 8}" text-anchor="middle" dominant-baseline="central" font-size="${pr.big ? 42 : 30}" opacity="${faded ? 0.3 : 1}" font-family="Apple Color Emoji,Segoe UI Emoji,sans-serif">${pr.icon}</text>`;
+  }
+  if (pr.type === 'node' && pr.tier > 1) {
+    s += `<circle cx="${cx + 18}" cy="${cy + 8}" r="8" fill="${pr.tier === 2 ? '#3d8bff' : '#ff9f1a'}" stroke="#fff" stroke-width="1.5"/><text x="${cx + 18}" y="${cy + 8.5}" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="700" fill="#fff">${pr.tier}</text>`;
+  }
+  return s;
+}
+
+function hexView() {
+  const pid = S.point, P = POINTS[pid], cells = cellsOf(pid);
+  const cols = Math.max(...cells.map((x) => x.c)) + 1, rows = Math.max(...cells.map((x) => x.r)) + 1;
+  const W = Math.ceil(80 + R * S3 * (cols + 0.5)), H = Math.ceil(TOP + R * 1.5 * SQ * rows + 60);
+  const order = [...cells].sort((a, b) => a.r - b.r || a.c - b.c);
+  let s = `<div class="title"><b>${P.name}</b><span>${P.kind}${P.fog ? ' · fogged: you only see next to where you have been' : ''}</span></div>`;
+  s += `<svg id="hex" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><defs><clipPath id="av"><circle r="18"/></clipPath><filter id="soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.5"/></filter></defs>`;
+  for (const x of order) { // ground first
+    const T = TER[x.t], seen = isSeen(pid, x), [cx, cy] = centre(x), drop = T.h * LIFT + BASE;
+    const c = [0, 1, 2, 3, 4, 5].map((i) => corner(cx, cy, 60 * i - 30));
+    const dn = (p) => [p[0], p[1] + drop];
+    const col = seen ? T.col : '#2a3136';
+    s += `<g class="cell" data-key="${x.key}">`;
+    s += `<polygon points="${pts([c[1], c[2], dn(c[2]), dn(c[1])])}" fill="${shade(col, 0.62)}"/>`;
+    s += `<polygon points="${pts([c[2], c[3], dn(c[3]), dn(c[2])])}" fill="${shade(col, 0.78)}"/>`;
+    s += `<polygon class="top" points="${pts(c)}" fill="${col}" stroke="${shade(col, 0.82)}" stroke-width="1"/></g>`;
+  }
+  for (const x of order) { // then objects, back to front
+    const pr = isSeen(pid, x) ? propOf(x) : null;
+    if (!pr) continue;
+    const [cx, cy] = centre(x);
+    s += `<g class="obj" data-key="${x.key}">${objectSVG(pid, x, pr, cx, cy)}</g>`;
+  }
+  const me = cur(), [mx, my] = centre(me), off = propOf(me) ? -20 : 0;
+  s += `<ellipse cx="${mx + off}" cy="${my + 5}" rx="12" ry="5" fill="#0006"/><circle cx="${mx + off}" cy="${my - 10}" r="12" fill="#ff7a45" stroke="#fff" stroke-width="3"/>`;
+  return s + `</svg>`;
+}
+
+function render() {
+  hoverKey = null;
+  const main = document.getElementById('main');
+  if (S.view === 'world') {
+    main.innerHTML = mapView([0, 0, IW, IH], ZONES.map((z) => ({
+      x: z.pin[0], y: z.pin[1], name: z.name, locked: !!z.locked, go: z.locked ? '' : 'zone:' + z.id,
+      sub: z.locked ? `Locked: ${z.locked}` : `${z.points.length} points`,
+    })));
+  } else if (S.view === 'zone') {
+    const z = zoneOf(S.zone);
+    main.innerHTML = mapView(z.crop, z.points.map((pid) => {
+      const P = POINTS[pid], built = !!P.rows;
+      return { x: P.pin[0], y: P.pin[1], name: P.name, locked: !built, go: built ? 'point:' + pid : '', sub: built ? P.kind : `${P.kind} · not in this mockup` };
+    }));
+  } else {
+    main.innerHTML = hexView();
+  }
+  renderSide();
+}
+
+function renderSide() {
+  const side = document.getElementById('side');
+  let crumbs = `<a data-go="world">Nuvatra</a>`;
+  if (S.view !== 'world') crumbs += `<span>›</span><a data-go="zone:${S.zone}">${zoneOf(S.zone).name}</a>`;
+  if (S.view === 'point') crumbs += `<span>›</span>${POINTS[S.point].name}`;
+
+  const acts = actionsHere();
+  let h = `<div class="crumbs">${crumbs}</div>`;
+  h += `<h2>Energy · day ${S.day}</h2><div class="energy">${Array.from({ length: MAX }, (_, i) => `<i class="${i < S.energy ? 'on' : ''}"></i>`).join('')}</div><div id="regen"></div>`;
+  h += `<h2>Here</h2><div id="tip"></div>`;
+  if (S.view === 'world') h += `<div class="hint">Pick a zone. Moving between zones and points is free.</div>`;
+  else if (S.view === 'zone') h += `<div class="hint">Pick a point. Each point is a small hex map.</div>`;
+  else if (!acts.length) h += `<div class="hint">Nothing to do on this hex. Hover a hex to see what walking there costs; click to walk.</div>`;
+  acts.forEach((a, i) => { h += `<button data-act="${i}" class="${a.free ? 'free' : ''}" ${a.dis ? 'disabled' : ''}>${a.label}</button>`; });
+
+  if (S.view === 'point') {
+    const a = S.art[S.point] || POINTS[S.point].art;
+    h += `<h2>Art on this point</h2><div class="seg">${Object.entries(ART).map(([k, v]) => `<button class="${a === k ? 'on' : ''}" data-go="art:${k}">${v}</button>`).join('')}</div>`;
+  }
+  h += `<h2>People</h2><button class="free" data-go="tp:sylvie">Teleport to Sylvie · free</button><button disabled>Claudia and Cygwin: not met yet</button>`;
+  const inv = Object.entries(S.inv);
+  h += `<h2>Bag</h2><div class="inv">${inv.length ? inv.map(([k, v]) => `<div><span>${k}</span><b>${v}</b></div>`).join('') : '<span class="hint">Empty</span>'}</div>`;
+  h += `<h2>Log</h2><div class="log">${S.log.map((m) => `<div>${m}</div>`).join('') || '<span class="hint">Nothing yet</span>'}</div>`;
+  h += `<h2>Mockup controls</h2>
+    <label><input type="checkbox" id="tool" ${S.tool > 1 ? 'checked' : ''}> I own tier-2 tools</label>
+    <button data-go="nextday">Next day: regrow nodes, re-roll * slots, refill</button>`;
+  h += `<h2>Rules in this mockup</h2><div class="hint">
+    Walking: 1⚡ per sand, grass or path hex; 2⚡ per forest, rock or shallows.<br>
+    Gather 3⚡ · fight 4⚡ · search 2⚡ · talk and teleport free.<br>
+    ⚡ recharges 1 every 1:30, 15 minutes from empty to full.<br>
+    Badges ② ③ = node tier. Tier 3 is always locked here.<br>
+    Arrival Beach rolls some of its nodes fresh each day.<br>
+    Art: each point starts on Gemini or Grok sprites; switch per point.<br>
+    The Drill is fogged: Search reveals hidden things nearby.</div>`;
+  side.innerHTML = h;
+  side.querySelectorAll('[data-act]').forEach((b) => (b.onclick = () => { acts[+b.dataset.act].fn(); render(); }));
+  const tool = side.querySelector('#tool');
+  tool.onchange = () => { S.tool = tool.checked ? 2 : 1; render(); };
+  tickRegen();
+}
+
+function tickRegen() {
+  const now = Date.now();
+  if (S.energy < MAX) {
+    let changed = false;
+    while (now - S.lastRegen >= REGEN && S.energy < MAX) { S.energy++; S.lastRegen += REGEN; changed = true; }
+    if (changed) document.querySelectorAll('.energy i').forEach((el, i) => el.classList.toggle('on', i < S.energy));
+  } else S.lastRegen = now;
+  const el = document.getElementById('regen');
+  if (el) {
+    const left = Math.max(0, REGEN - (now - S.lastRegen));
+    el.textContent = S.energy < MAX ? `${S.energy}/${MAX} · next ⚡ in ${Math.floor(left / 60000)}:${String(Math.floor((left % 60000) / 1000)).padStart(2, '0')}` : `${S.energy}/${MAX} · full`;
+  }
+}
+setInterval(tickRegen, 1000);
+
+// ---------- input ----------
+document.addEventListener('click', (ev) => {
+  const go = ev.target.closest('[data-go]');
+  if (go && go.dataset.go) {
+    const [kind, id] = go.dataset.go.split(':');
+    if (kind === 'world') { S.view = 'world'; render(); }
+    else if (kind === 'zone') { S.view = 'zone'; S.zone = id; render(); }
+    else if (kind === 'point') enter(id);
+    else if (kind === 'tp') { const c = cellsOf('sylvie').find((x) => x.p === 'S'); enter('sylvie', c.key); say('You find your way back to Sylvie.'); render(); }
+    else if (kind === 'art') { S.art[S.point] = id; render(); }
+    else if (kind === 'nextday') { S.day++; S.depleted.clear(); S.beaten.clear(); S.rested = false; S.energy = MAX; say(`Day ${S.day}. Nodes regrow; the beach shifts.`); render(); }
+    return;
+  }
+  const cell = ev.target.closest('[data-key]');
+  if (cell && S.view === 'point') {
+    const x = cellsOf(S.point).find((c) => c.key === cell.dataset.key);
+    if (x && x.key !== S.posKey) moveTo(x);
+  }
+});
+
+let hoverKey = null;
+document.addEventListener('mousemove', (ev) => {
+  if (S.view !== 'point') return;
+  const cell = ev.target.closest('[data-key]'), key = cell ? cell.dataset.key : null;
+  if (key === hoverKey) return;
+  hoverKey = key;
+  document.querySelectorAll('.cell.path, .cell.goal').forEach((el) => el.classList.remove('path', 'goal'));
+  const tip = document.getElementById('tip');
+  if (!key || !tip) { if (tip) tip.textContent = ''; return; }
+  const cells = cellsOf(S.point), x = cells.find((c) => c.key === key);
+  if (!isSeen(S.point, x)) { tip.textContent = 'Unexplored'; return; }
+  const pr = propOf(x), what = pr ? ` · ${pr.name}${pr.tier ? ` (tier ${pr.tier})` : ''}` : '';
+  if (key === S.posKey) { tip.textContent = `You are here${what}`; return; }
+  const rt = route(S.point, cells, cur(), x);
+  if (!rt) { tip.textContent = `${TER[x.t].name}: can't walk there`; return; }
+  rt.path.forEach((p) => document.querySelector(`.cell[data-key="${p.key}"]`)?.classList.add('path'));
+  document.querySelector(`.cell[data-key="${key}"]`)?.classList.add('goal');
+  tip.textContent = `Walk here: ${rt.cost}⚡${rt.cost > S.energy ? ' (not enough)' : ''}${what}`;
+});
+
+window.addEventListener('resize', () => { if (S.view !== 'point') render(); });
+say('You wake on the sand. Somewhere above the beach, smoke from a chimney.');
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+{
+  "sylvie": {
+    "name": "Sylvie",
+    "title": "Keeper of the Wilds",
+    "text": "A ranger who lives in the red-roofed house on the forest's edge. She guards the woodlands and grasslands of Nuvatra — and the land, in turn, guards her. Sharp with her bow, handier still with a rope.",
+    "portrait": "characters/sylvie/portrait.webp",
+    "art": [
+      "characters/sylvie/full.webp",
+      "characters/sylvie/avatar.webp",
+      "characters/sylvie/side.webp",
+      "characters/sylvie/8QCMG.webp",
+      "characters/sylvie/JOXgB.webp",
+      "characters/sylvie/uDBXM.webp",
+      "characters/sylvie/NGRxm.webp",
+      "characters/sylvie/RJfJ5.webp",
+      "characters/sylvie/jKfqr.webp",
+      "characters/sylvie/zFIZb.webp",
+      "characters/sylvie/0kB6N.webp",
+      "characters/sylvie/KlSpV.webp",
+      "characters/sylvie/Xy5k9.webp"
+    ],
+    "point": "sylvies-home",
+    "lines": [
+      "You're up. Good. The tide brought you in half-drowned.",
+      "If you're staying, make yourself useful. Driftwood and stone, from the beach.",
+      "Those machines on the north-east shore aren't ours. Tell me if you see anyone there."
+    ],
+    "figure": {
+      "stand": "grok_chars/sylvie-stand",
+      "walk": "grok_chars/sylvie-walk"
+    }
+  }
+}

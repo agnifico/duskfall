@@ -1,0 +1,7 @@
+{
+  "map": { "image": "maps/world.webp", "width": 1792, "height": 1008, "sea": "#123c66" },
+  "start": "nuvatra",
+  "lands": [
+    { "id": "nuvatra", "name": "Nuvatra", "pin": [955, 470] }
+  ]
+}

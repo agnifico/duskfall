@@ -1,0 +1,19 @@
+{
+  "id": "nuvatra",
+  "name": "Nuvatra",
+  "subtitle": "The Shattered Isle",
+  "map": { "image": "maps/nuvatra.webp", "width": 5504, "height": 3072, "sea": "#1c415f" },
+  "zones": [
+    { "id": "north-shore", "name": "North Shore", "label": [3183, 1216] },
+    { "id": "plains", "name": "The Plains", "label": [2181, 1471] },
+    { "id": "mire", "name": "The Mire", "label": [2141, 2081], "locked": "Chapter 2" },
+    { "id": "mountain", "name": "The Mountain", "label": [3026, 1432], "locked": "Chapter 2" },
+    { "id": "eastern-ruins", "name": "Eastern Ruins", "label": [3970, 1747], "locked": "later" },
+    { "id": "pleasure-island", "name": "Pleasure Island", "label": [2700, 420], "locked": "later" },
+    { "id": "saints-base", "name": "Saints' Base", "label": [820, 1500], "locked": "later" },
+    { "id": "glacier-isles", "name": "Glacier Isles", "label": [2780, 2860], "locked": "later" }
+  ],
+  "patches": [
+    { "image": "maps/nuvatra_north_shore.webp", "rect": [2470, 1000, 1456, 819] }
+  ]
+}

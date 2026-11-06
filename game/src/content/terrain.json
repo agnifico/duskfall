@@ -1,0 +1,9 @@
+{
+  "w": { "name": "deep water", "colour": "#3b86b8", "height": 0, "cost": null },
+  "h": { "name": "shallows", "colour": "#7cc4d6", "height": 0, "cost": 2 },
+  "s": { "name": "sand", "colour": "#e7d096", "height": 1, "cost": 1 },
+  "g": { "name": "grass", "colour": "#8cbf62", "height": 2, "cost": 1 },
+  "p": { "name": "path", "colour": "#cfae74", "height": 2, "cost": 1 },
+  "f": { "name": "forest floor", "colour": "#4f8b47", "height": 2, "cost": 2 },
+  "r": { "name": "rocky ground", "colour": "#9b9488", "height": 3, "cost": 2 }
+}

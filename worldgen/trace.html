@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Worldgen · trace</title>
+<style>
+  body { margin: 0; background: #14181b; color: #d8dde0; font: 13px -apple-system, Helvetica, Arial, sans-serif; display: flex; height: 100vh; }
+  aside { width: 300px; flex: none; overflow-y: auto; padding: 14px; background: #1d2327; box-sizing: border-box; }
+  main { flex: 1; overflow: auto; padding: 12px; }
+  h1 { font-size: 15px; margin: 0 0 10px; }
+  h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #8a959c; margin: 18px 0 8px; }
+  .row { margin-bottom: 9px; }
+  .row label { display: flex; justify-content: space-between; margin-bottom: 2px; }
+  .row input[type=range] { width: 100%; }
+  button { background: #2f6f8f; color: #fff; border: 0; border-radius: 4px; padding: 7px 12px; cursor: pointer; margin: 4px 4px 0 0; }
+  button.alt { background: #3a4248; }
+  .legend div { display: flex; align-items: center; gap: 8px; margin: 3px 0; }
+  .sw { width: 14px; height: 14px; border-radius: 3px; border: 1px solid #0006; }
+  .pct { margin-left: auto; color: #8a959c; }
+  canvas { width: 100%; display: block; }
+  #status { color: #8a959c; margin-top: 8px; min-height: 1.2em; }
+  input[type=text] { width: 100%; box-sizing: border-box; }
+</style>
+</head>
+<body>
+<aside>
+  <h1>Trace a painted map</h1>
+  <div class="row"><input id="file" type="file" accept="image/*"></div>
+  <div class="row"><label>Layer name <span></span></label><input id="name" type="text" value="world"></div>
+  <div class="row"><label>Overlay <span id="opV">0.85</span></label><input id="op" type="range" min="0" max="1" step="0.05" value="0.85"></div>
+  <div id="status">Pick the painted map to start.</div>
+
+  <h2>Classes</h2>
+  <div class="legend" id="legend"></div>
+
+  <h2>Colour rules</h2>
+  <div id="params"></div>
+  <button id="reset" class="alt">Reset rules</button>
+
+  <h2>Save</h2>
+  <button id="save">Save layers file</button>
+  <button id="png" class="alt">Export preview PNG</button>
+  <p style="color:#8a959c">Save as <b>layers_&lt;name&gt;.js</b> inside the worldgen folder. index.html picks it up on reload.</p>
+</aside>
+<main><canvas id="view"></canvas></main>
+
+<script src="gen.js"></script>
+<script src="trace.js"></script>
+<script>
+  const $ = (id) => document.getElementById(id);
+  const view = $('view'), ctx = view.getContext('2d', { willReadFrequently: true });
+  let src = null, res = null, timer = null;
+  const p = {};
+  const STORE = 'worldgen-trace-rules';
+
+  function loadRules() {
+    let saved = {};
+    try { saved = JSON.parse(localStorage.getItem(STORE) || '{}'); } catch (e) { console.warn(e); }
+    for (const [k, , , , , def] of Trace.PARAMS) p[k] = k in saved ? saved[k] : def;
+  }
+
+  function buildParams() {
+    const box = $('params'); box.innerHTML = '';
+    for (const [k, label, min, max, step] of Trace.PARAMS) {
+      const row = document.createElement('div'); row.className = 'row';
+      row.innerHTML = `<label>${label} <span id="v_${k}">${p[k]}</span></label><input type="range" min="${min}" max="${max}" step="${step}" value="${p[k]}">`;
+      row.querySelector('input').oninput = (ev) => {
+        p[k] = +ev.target.value; $('v_' + k).textContent = p[k];
+        localStorage.setItem(STORE, JSON.stringify(p));
+        schedule();
+      };
+      box.appendChild(row);
+    }
+  }
+
+  function buildLegend(pcts) {
+    $('legend').innerHTML = Trace.CLASSES.map(([id, name, c]) =>
+      `<div><span class="sw" style="background:rgb(${c})"></span>${name}<span class="pct">${pcts ? (pcts[id] * 100).toFixed(1) + '%' : ''}</span></div>`).join('');
+  }
+
+  function schedule() { clearTimeout(timer); timer = setTimeout(run, 150); }
+
+  function run() {
+    if (!src) return;
+    $('status').textContent = 'tracing…';
+    setTimeout(() => {
+      const t = performance.now();
+      res = Trace.classify(src, p);
+      draw();
+      buildLegend(Trace.counts(res));
+      $('status').textContent = `${src.width} × ${src.height} · traced in ${((performance.now() - t) / 1000).toFixed(1)} s`;
+    }, 10);
+  }
+
+  function draw() { if (res) Trace.preview(ctx, src, res, +$('op').value); }
+
+  $('file').onchange = async (ev) => {
+    const f = ev.target.files[0]; if (!f) return;
+    const bmp = await createImageBitmap(f);
+    view.width = bmp.width; view.height = bmp.height;
+    ctx.drawImage(bmp, 0, 0);
+    src = ctx.getImageData(0, 0, bmp.width, bmp.height);
+    run();
+  };
+  $('op').oninput = () => { $('opV').textContent = $('op').value; draw(); };
+  $('reset').onclick = () => { localStorage.removeItem(STORE); loadRules(); buildParams(); run(); };
+
+  $('save').onclick = async () => {
+    if (!res) return;
+    const name = ($('name').value || 'world').replace(/[^a-z0-9_]/gi, '');
+    const body = `// Traced from a painted map by trace.html. Regenerate there; do not edit by hand.\n` +
+      `window.LAYERS = window.LAYERS || {};\n` +
+      `window.LAYERS[${JSON.stringify(name)}] = ${JSON.stringify({ width: res.W, height: res.H, rules: p, png: Trace.pack(res) })};\n`;
+    const blob = new Blob([body], { type: 'text/javascript' });
+    const fileName = `layers_${name}.js`;
+    if (window.showSaveFilePicker) {
+      try {
+        const h = await showSaveFilePicker({ suggestedName: fileName, types: [{ description: 'JavaScript', accept: { 'text/javascript': ['.js'] } }] });
+        const w = await h.createWritable(); await w.write(blob); await w.close();
+        $('status').textContent = `saved ${fileName}`;
+        return;
+      } catch (e) { if (e.name === 'AbortError') return; console.warn(e); }
+    }
+    const a = document.createElement('a'); a.download = fileName; a.href = URL.createObjectURL(blob); a.click();
+    $('status').textContent = `downloaded ${fileName}: move it into the worldgen folder`;
+  };
+
+  $('png').onclick = () => {
+    const a = document.createElement('a');
+    a.download = `trace_${$('name').value || 'world'}.png`;
+    a.href = view.toDataURL('image/png'); a.click();
+  };
+
+  loadRules(); buildParams(); buildLegend();
+</script>
+</body>
+</html>

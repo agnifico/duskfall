@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Worldgen · height</title>
+<style>
+  body { margin: 0; background: #14181b; color: #d8dde0; font: 13px -apple-system, Helvetica, Arial, sans-serif; }
+  header { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; padding: 10px 14px; background: #1d2327; position: sticky; top: 0; }
+  label { display: flex; align-items: center; gap: 6px; }
+  input[type=number] { width: 70px; }
+  input[type=range] { width: 110px; }
+  button { background: #2f6f8f; color: #fff; border: 0; border-radius: 4px; padding: 6px 12px; cursor: pointer; }
+  button.alt { background: #3a4248; }
+  #status { margin-left: auto; color: #8a959c; }
+  #wrap { padding: 12px; }
+  canvas { width: 100%; max-width: 1600px; display: block; image-rendering: auto; }
+  #read { position: fixed; bottom: 10px; right: 14px; background: #1d2327; padding: 6px 10px; border-radius: 4px; }
+</style>
+</head>
+<body>
+<header>
+  <label>Seed <input id="seed" type="number" value="7"></label>
+  <label>Coast wander <input id="warp" type="range" min="0" max="40" value="18"><span id="warpV">18</span></label>
+  <label>Roughness <input id="rough" type="range" min="0" max="2" step="0.1" value="1"><span id="roughV">1</span></label>
+  <button id="gen">Generate</button>
+  <label>View
+    <select id="mode">
+      <option value="atlas">Atlas: colour, shading, contours</option>
+      <option value="relief">Relief for AI: colour and shading only</option>
+      <option value="topo">Topo chart: lines on paper</option>
+    </select>
+  </label>
+  <label>Contour every <input id="step" type="number" value="250" step="50"> m</label>
+  <button id="png" class="alt">Export PNG</button>
+  <span id="status"></span>
+</header>
+<div id="wrap"><canvas id="map"></canvas></div>
+<div id="read">hover the map</div>
+
+<script src="world.js"></script>
+<script src="gen.js"></script>
+<script>
+  const $ = (id) => document.getElementById(id);
+  const canvas = $('map'), ctx = canvas.getContext('2d', { willReadFrequently: true });
+  canvas.width = WORLD.width; canvas.height = WORLD.height;
+  let field = null;
+
+  function view() {
+    const m = $('mode').value, step = Math.max(50, +$('step').value || 250);
+    return {
+      tints: m !== 'topo', shade: m !== 'topo', contours: m !== 'relief', paper: m === 'topo',
+      landStep: step, seaStep: step * 4,
+    };
+  }
+
+  function draw() { if (field) Gen.render(ctx, field, view()); }
+
+  function run() {
+    $('status').textContent = 'generating…';
+    setTimeout(() => {
+      const t = performance.now();
+      field = Gen.generate(WORLD, { seed: +$('seed').value | 0, warp: +$('warp').value, rough: +$('rough').value });
+      draw();
+      $('status').textContent = `done in ${((performance.now() - t) / 1000).toFixed(1)} s`;
+    }, 20);
+  }
+
+  $('warp').oninput = () => ($('warpV').textContent = $('warp').value);
+  $('rough').oninput = () => ($('roughV').textContent = $('rough').value);
+  $('gen').onclick = run;
+  $('seed').onchange = run;
+  $('mode').onchange = draw;
+  $('step').onchange = draw;
+
+  $('png').onclick = () => {
+    const a = document.createElement('a');
+    a.download = `world_${$('mode').value}_seed${$('seed').value}.png`;
+    a.href = canvas.toDataURL('image/png');
+    a.click();
+  };
+
+  canvas.onmousemove = (ev) => {
+    if (!field) return;
+    const r = canvas.getBoundingClientRect();
+    const x = Math.floor(((ev.clientX - r.left) / r.width) * field.W);
+    const y = Math.floor(((ev.clientY - r.top) / r.height) * field.H);
+    const e = field.elev[y * field.W + x];
+    if (e === undefined) return;
+    $('read').textContent = `${x}, ${y} · ${e >= 0 ? Math.round(e) + ' m' : 'sea, ' + Math.round(-e) + ' m deep'}`;
+  };
+
+  run();
+</script>
+</body>
+</html>

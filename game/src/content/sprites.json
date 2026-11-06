@@ -1,0 +1,802 @@
+{
+ "gemini_nuv/palm": {
+  "file": "sprites/gemini_nuv/palm.png",
+  "w": 299,
+  "h": 384,
+  "bx": 0.419,
+  "by": 0.997,
+  "fx": 0.396
+ },
+ "gemini_nuv/pine": {
+  "file": "sprites/gemini_nuv/pine.png",
+  "w": 260,
+  "h": 384,
+  "bx": 0.503,
+  "by": 0.997,
+  "fx": 0.507
+ },
+ "gemini_nuv/oak": {
+  "file": "sprites/gemini_nuv/oak.png",
+  "w": 384,
+  "h": 379,
+  "bx": 0.523,
+  "by": 1.0,
+  "fx": 0.51
+ },
+ "gemini_nuv/ancient": {
+  "file": "sprites/gemini_nuv/ancient.png",
+  "w": 375,
+  "h": 384,
+  "bx": 0.488,
+  "by": 0.997,
+  "fx": 0.486
+ },
+ "gemini_nuv/berrybush": {
+  "file": "sprites/gemini_nuv/berrybush.png",
+  "w": 384,
+  "h": 321,
+  "bx": 0.505,
+  "by": 0.997,
+  "fx": 0.503
+ },
+ "gemini_nuv/driftwood": {
+  "file": "sprites/gemini_nuv/driftwood.png",
+  "w": 384,
+  "h": 289,
+  "bx": 0.194,
+  "by": 0.997,
+  "fx": 0.266
+ },
+ "gemini_nuv/boulder": {
+  "file": "sprites/gemini_nuv/boulder.png",
+  "w": 351,
+  "h": 342,
+  "bx": 0.747,
+  "by": 1.0,
+  "fx": 0.522
+ },
+ "gemini_nuv/resonant": {
+  "file": "sprites/gemini_nuv/resonant.png",
+  "w": 381,
+  "h": 349,
+  "bx": 0.719,
+  "by": 0.997,
+  "fx": 0.508
+ },
+ "gemini_nuv/cottage": {
+  "file": "sprites/gemini_nuv/cottage.png",
+  "w": 372,
+  "h": 384,
+  "bx": 0.54,
+  "by": 0.997,
+  "fx": 0.513
+ },
+ "gemini_nuv/fishinghut": {
+  "file": "sprites/gemini_nuv/fishinghut.png",
+  "w": 304,
+  "h": 384,
+  "bx": 0.519,
+  "by": 0.997,
+  "fx": 0.555
+ },
+ "gemini_nuv/campfire": {
+  "file": "sprites/gemini_nuv/campfire.png",
+  "w": 352,
+  "h": 304,
+  "bx": 0.532,
+  "by": 0.997,
+  "fx": 0.503
+ },
+ "gemini_nuv/chest": {
+  "file": "sprites/gemini_nuv/chest.png",
+  "w": 353,
+  "h": 332,
+  "bx": 0.399,
+  "by": 0.997,
+  "fx": 0.48
+ },
+ "gemini_nuv/drill": {
+  "file": "sprites/gemini_nuv/drill.png",
+  "w": 299,
+  "h": 384,
+  "bx": 0.586,
+  "by": 1.0,
+  "fx": 0.526
+ },
+ "gemini_nuv/tent": {
+  "file": "sprites/gemini_nuv/tent.png",
+  "w": 372,
+  "h": 384,
+  "bx": 0.463,
+  "by": 0.997,
+  "fx": 0.489
+ },
+ "gemini_nuv/pillars": {
+  "file": "sprites/gemini_nuv/pillars.png",
+  "w": 302,
+  "h": 384,
+  "bx": 0.727,
+  "by": 0.997,
+  "fx": 0.519
+ },
+ "gemini_nuv/deadtree": {
+  "file": "sprites/gemini_nuv/deadtree.png",
+  "w": 299,
+  "h": 384,
+  "bx": 0.452,
+  "by": 0.997,
+  "fx": 0.521
+ },
+ "grok_nuv/palm": {
+  "file": "sprites/grok_nuv/palm.png",
+  "w": 231,
+  "h": 324,
+  "bx": 0.484,
+  "by": 1.0,
+  "fx": 0.458
+ },
+ "grok_nuv/pine": {
+  "file": "sprites/grok_nuv/pine.png",
+  "w": 164,
+  "h": 262,
+  "bx": 0.527,
+  "by": 0.996,
+  "fx": 0.506
+ },
+ "grok_nuv/oak": {
+  "file": "sprites/grok_nuv/oak.png",
+  "w": 242,
+  "h": 279,
+  "bx": 0.499,
+  "by": 1.0,
+  "fx": 0.504
+ },
+ "grok_nuv/ancient": {
+  "file": "sprites/grok_nuv/ancient.png",
+  "w": 250,
+  "h": 294,
+  "bx": 0.496,
+  "by": 1.0,
+  "fx": 0.488
+ },
+ "grok_nuv/berrybush": {
+  "file": "sprites/grok_nuv/berrybush.png",
+  "w": 224,
+  "h": 227,
+  "bx": 0.485,
+  "by": 1.0,
+  "fx": 0.496
+ },
+ "grok_nuv/driftwood": {
+  "file": "sprites/grok_nuv/driftwood.png",
+  "w": 248,
+  "h": 163,
+  "bx": 0.247,
+  "by": 0.994,
+  "fx": 0.305
+ },
+ "grok_nuv/boulder": {
+  "file": "sprites/grok_nuv/boulder.png",
+  "w": 225,
+  "h": 236,
+  "bx": 0.521,
+  "by": 0.996,
+  "fx": 0.525
+ },
+ "grok_nuv/resonant": {
+  "file": "sprites/grok_nuv/resonant.png",
+  "w": 199,
+  "h": 226,
+  "bx": 0.556,
+  "by": 0.996,
+  "fx": 0.514
+ },
+ "grok_nuv/cottage": {
+  "file": "sprites/grok_nuv/cottage.png",
+  "w": 242,
+  "h": 249,
+  "bx": 0.622,
+  "by": 1.0,
+  "fx": 0.514
+ },
+ "grok_nuv/fishinghut": {
+  "file": "sprites/grok_nuv/fishinghut.png",
+  "w": 210,
+  "h": 262,
+  "bx": 0.616,
+  "by": 1.0,
+  "fx": 0.631
+ },
+ "grok_nuv/campfire": {
+  "file": "sprites/grok_nuv/campfire.png",
+  "w": 199,
+  "h": 168,
+  "bx": 0.496,
+  "by": 1.0,
+  "fx": 0.497
+ },
+ "grok_nuv/chest": {
+  "file": "sprites/grok_nuv/chest.png",
+  "w": 228,
+  "h": 228,
+  "bx": 0.639,
+  "by": 0.996,
+  "fx": 0.535
+ },
+ "grok_nuv/drill": {
+  "file": "sprites/grok_nuv/drill.png",
+  "w": 186,
+  "h": 266,
+  "bx": 0.613,
+  "by": 1.0,
+  "fx": 0.519
+ },
+ "grok_nuv/tent": {
+  "file": "sprites/grok_nuv/tent.png",
+  "w": 201,
+  "h": 274,
+  "bx": 0.57,
+  "by": 1.0,
+  "fx": 0.496
+ },
+ "grok_nuv/pillars": {
+  "file": "sprites/grok_nuv/pillars.png",
+  "w": 182,
+  "h": 289,
+  "bx": 0.272,
+  "by": 1.0,
+  "fx": 0.438
+ },
+ "grok_nuv/deadtree": {
+  "file": "sprites/grok_nuv/deadtree.png",
+  "w": 201,
+  "h": 282,
+  "bx": 0.527,
+  "by": 1.0,
+  "fx": 0.519
+ },
+ "gemini_indo/cypress": {
+  "file": "sprites/gemini_indo/cypress.png",
+  "w": 122,
+  "h": 384,
+  "bx": 0.495,
+  "by": 1.0,
+  "fx": 0.491
+ },
+ "gemini_indo/chinar": {
+  "file": "sprites/gemini_indo/chinar.png",
+  "w": 384,
+  "h": 348,
+  "bx": 0.53,
+  "by": 0.997,
+  "fx": 0.489
+ },
+ "gemini_indo/rosebush": {
+  "file": "sprites/gemini_indo/rosebush.png",
+  "w": 384,
+  "h": 376,
+  "bx": 0.498,
+  "by": 0.997,
+  "fx": 0.511
+ },
+ "gemini_indo/pavilion": {
+  "file": "sprites/gemini_indo/pavilion.png",
+  "w": 221,
+  "h": 384,
+  "bx": 0.506,
+  "by": 0.997,
+  "fx": 0.5
+ },
+ "gemini_indo/windcatcher": {
+  "file": "sprites/gemini_indo/windcatcher.png",
+  "w": 366,
+  "h": 384,
+  "bx": 0.601,
+  "by": 0.997,
+  "fx": 0.523
+ },
+ "gemini_indo/iwan": {
+  "file": "sprites/gemini_indo/iwan.png",
+  "w": 222,
+  "h": 384,
+  "bx": 0.149,
+  "by": 0.997,
+  "fx": 0.388
+ },
+ "gemini_indo/stepwell": {
+  "file": "sprites/gemini_indo/stepwell.png",
+  "w": 384,
+  "h": 271,
+  "bx": 0.494,
+  "by": 0.996,
+  "fx": 0.494
+ },
+ "gemini_indo/carpetstall": {
+  "file": "sprites/gemini_indo/carpetstall.png",
+  "w": 384,
+  "h": 367,
+  "bx": 0.44,
+  "by": 0.997,
+  "fx": 0.481
+ },
+ "grok_indo/cypress": {
+  "file": "sprites/grok_indo/cypress.png",
+  "w": 119,
+  "h": 304,
+  "bx": 0.477,
+  "by": 0.997,
+  "fx": 0.484
+ },
+ "grok_indo/chinar": {
+  "file": "sprites/grok_indo/chinar.png",
+  "w": 273,
+  "h": 305,
+  "bx": 0.471,
+  "by": 0.997,
+  "fx": 0.469
+ },
+ "grok_indo/rosebush": {
+  "file": "sprites/grok_indo/rosebush.png",
+  "w": 227,
+  "h": 203,
+  "bx": 0.497,
+  "by": 1.0,
+  "fx": 0.496
+ },
+ "grok_indo/pavilion": {
+  "file": "sprites/grok_indo/pavilion.png",
+  "w": 207,
+  "h": 296,
+  "bx": 0.501,
+  "by": 0.997,
+  "fx": 0.499
+ },
+ "grok_indo/windcatcher": {
+  "file": "sprites/grok_indo/windcatcher.png",
+  "w": 278,
+  "h": 308,
+  "bx": 0.501,
+  "by": 0.994,
+  "fx": 0.509
+ },
+ "grok_indo/iwan": {
+  "file": "sprites/grok_indo/iwan.png",
+  "w": 194,
+  "h": 307,
+  "bx": 0.714,
+  "by": 0.997,
+  "fx": 0.528
+ },
+ "grok_indo/stepwell": {
+  "file": "sprites/grok_indo/stepwell.png",
+  "w": 274,
+  "h": 264,
+  "bx": 0.475,
+  "by": 0.996,
+  "fx": 0.469
+ },
+ "grok_indo/carpetstall": {
+  "file": "sprites/grok_indo/carpetstall.png",
+  "w": 268,
+  "h": 291,
+  "bx": 0.572,
+  "by": 0.997,
+  "fx": 0.528
+ },
+ "grok_items/wood": {
+  "file": "sprites/grok_items/wood.png",
+  "w": 202,
+  "h": 153,
+  "bx": 0.378,
+  "by": 1.0,
+  "fx": 0.395
+ },
+ "grok_items/stone": {
+  "file": "sprites/grok_items/stone.png",
+  "w": 203,
+  "h": 151,
+  "bx": 0.514,
+  "by": 0.993,
+  "fx": 0.502
+ },
+ "grok_items/etherwood": {
+  "file": "sprites/grok_items/etherwood.png",
+  "w": 215,
+  "h": 153,
+  "bx": 0.35,
+  "by": 0.993,
+  "fx": 0.375
+ },
+ "grok_items/silver": {
+  "file": "sprites/grok_items/silver.png",
+  "w": 174,
+  "h": 153,
+  "bx": 0.522,
+  "by": 1.0,
+  "fx": 0.502
+ },
+ "grok_items/malachite": {
+  "file": "sprites/grok_items/malachite.png",
+  "w": 180,
+  "h": 157,
+  "bx": 0.511,
+  "by": 0.994,
+  "fx": 0.514
+ },
+ "grok_items/gold": {
+  "file": "sprites/grok_items/gold.png",
+  "w": 194,
+  "h": 159,
+  "bx": 0.465,
+  "by": 1.0,
+  "fx": 0.503
+ },
+ "grok_items/redcrystal": {
+  "file": "sprites/grok_items/redcrystal.png",
+  "w": 163,
+  "h": 155,
+  "bx": 0.52,
+  "by": 1.0,
+  "fx": 0.504
+ },
+ "grok_items/birchbark": {
+  "file": "sprites/grok_items/birchbark.png",
+  "w": 204,
+  "h": 158,
+  "bx": 0.615,
+  "by": 0.994,
+  "fx": 0.583
+ },
+ "grok_items/acorns": {
+  "file": "sprites/grok_items/acorns.png",
+  "w": 196,
+  "h": 151,
+  "bx": 0.641,
+  "by": 1.0,
+  "fx": 0.473
+ },
+ "grok_items/clover": {
+  "file": "sprites/grok_items/clover.png",
+  "w": 173,
+  "h": 159,
+  "bx": 0.544,
+  "by": 0.994,
+  "fx": 0.499
+ },
+ "grok_items/brownmushroom": {
+  "file": "sprites/grok_items/brownmushroom.png",
+  "w": 153,
+  "h": 161,
+  "bx": 0.436,
+  "by": 0.994,
+  "fx": 0.433
+ },
+ "grok_items/redmushroom": {
+  "file": "sprites/grok_items/redmushroom.png",
+  "w": 180,
+  "h": 164,
+  "bx": 0.471,
+  "by": 0.994,
+  "fx": 0.474
+ },
+ "grok_items/bluemushroom": {
+  "file": "sprites/grok_items/bluemushroom.png",
+  "w": 156,
+  "h": 146,
+  "bx": 0.482,
+  "by": 0.993,
+  "fx": 0.481
+ },
+ "grok_items/herbs": {
+  "file": "sprites/grok_items/herbs.png",
+  "w": 188,
+  "h": 148,
+  "bx": 0.557,
+  "by": 0.993,
+  "fx": 0.515
+ },
+ "grok_items/berries": {
+  "file": "sprites/grok_items/berries.png",
+  "w": 195,
+  "h": 144,
+  "bx": 0.512,
+  "by": 0.993,
+  "fx": 0.52
+ },
+ "grok_items/resin": {
+  "file": "sprites/grok_items/resin.png",
+  "w": 175,
+  "h": 151,
+  "bx": 0.625,
+  "by": 0.993,
+  "fx": 0.528
+ },
+ "grok_nodes/tree": {
+  "file": "sprites/grok_nodes/tree.png",
+  "w": 179,
+  "h": 173,
+  "bx": 0.5,
+  "by": 1.0,
+  "fx": 0.491
+ },
+ "grok_nodes/birch": {
+  "file": "sprites/grok_nodes/birch.png",
+  "w": 129,
+  "h": 183,
+  "bx": 0.512,
+  "by": 1.0,
+  "fx": 0.481
+ },
+ "grok_nodes/oak": {
+  "file": "sprites/grok_nodes/oak.png",
+  "w": 233,
+  "h": 180,
+  "bx": 0.512,
+  "by": 1.0,
+  "fx": 0.496
+ },
+ "grok_nodes/etherwood": {
+  "file": "sprites/grok_nodes/etherwood.png",
+  "w": 211,
+  "h": 178,
+  "bx": 0.505,
+  "by": 1.0,
+  "fx": 0.508
+ },
+ "grok_nodes/stump": {
+  "file": "sprites/grok_nodes/stump.png",
+  "w": 188,
+  "h": 120,
+  "bx": 0.472,
+  "by": 1.0,
+  "fx": 0.49
+ },
+ "grok_nodes/sapling": {
+  "file": "sprites/grok_nodes/sapling.png",
+  "w": 128,
+  "h": 136,
+  "bx": 0.497,
+  "by": 0.993,
+  "fx": 0.473
+ },
+ "grok_nodes/smallstones": {
+  "file": "sprites/grok_nodes/smallstones.png",
+  "w": 150,
+  "h": 110,
+  "bx": 0.501,
+  "by": 0.991,
+  "fx": 0.504
+ },
+ "grok_nodes/boulder": {
+  "file": "sprites/grok_nodes/boulder.png",
+  "w": 149,
+  "h": 127,
+  "bx": 0.457,
+  "by": 0.992,
+  "fx": 0.487
+ },
+ "grok_nodes/bouldercluster": {
+  "file": "sprites/grok_nodes/bouldercluster.png",
+  "w": 183,
+  "h": 140,
+  "bx": 0.498,
+  "by": 0.993,
+  "fx": 0.491
+ },
+ "grok_nodes/silvervein": {
+  "file": "sprites/grok_nodes/silvervein.png",
+  "w": 168,
+  "h": 145,
+  "bx": 0.546,
+  "by": 0.993,
+  "fx": 0.504
+ },
+ "grok_nodes/malachitevein": {
+  "file": "sprites/grok_nodes/malachitevein.png",
+  "w": 181,
+  "h": 149,
+  "bx": 0.537,
+  "by": 0.993,
+  "fx": 0.502
+ },
+ "grok_nodes/goldvein": {
+  "file": "sprites/grok_nodes/goldvein.png",
+  "w": 184,
+  "h": 147,
+  "bx": 0.602,
+  "by": 0.993,
+  "fx": 0.507
+ },
+ "grok_nodes/redvein": {
+  "file": "sprites/grok_nodes/redvein.png",
+  "w": 191,
+  "h": 148,
+  "bx": 0.577,
+  "by": 0.993,
+  "fx": 0.503
+ },
+ "grok_nodes/rubble": {
+  "file": "sprites/grok_nodes/rubble.png",
+  "w": 193,
+  "h": 143,
+  "bx": 0.5,
+  "by": 0.993,
+  "fx": 0.519
+ },
+ "grok_nodes/berrybush": {
+  "file": "sprites/grok_nodes/berrybush.png",
+  "w": 189,
+  "h": 147,
+  "bx": 0.507,
+  "by": 1.0,
+  "fx": 0.499
+ },
+ "grok_nodes/mushrooms": {
+  "file": "sprites/grok_nodes/mushrooms.png",
+  "w": 186,
+  "h": 147,
+  "bx": 0.51,
+  "by": 1.0,
+  "fx": 0.512
+ },
+ "grok_wreck/planks": {
+  "file": "sprites/grok_wreck/planks.png",
+  "w": 185,
+  "h": 171,
+  "bx": 0.435,
+  "by": 0.994,
+  "fx": 0.512
+ },
+ "grok_wreck/mast": {
+  "file": "sprites/grok_wreck/mast.png",
+  "w": 175,
+  "h": 201,
+  "bx": 0.626,
+  "by": 0.995,
+  "fx": 0.536
+ },
+ "grok_wreck/barrel": {
+  "file": "sprites/grok_wreck/barrel.png",
+  "w": 167,
+  "h": 154,
+  "bx": 0.606,
+  "by": 0.994,
+  "fx": 0.541
+ },
+ "grok_wreck/crate": {
+  "file": "sprites/grok_wreck/crate.png",
+  "w": 182,
+  "h": 191,
+  "bx": 0.528,
+  "by": 0.995,
+  "fx": 0.49
+ },
+ "grok_wreck/rowboat": {
+  "file": "sprites/grok_wreck/rowboat.png",
+  "w": 169,
+  "h": 204,
+  "bx": 0.125,
+  "by": 0.995,
+  "fx": 0.312
+ },
+ "grok_wreck/searock": {
+  "file": "sprites/grok_wreck/searock.png",
+  "w": 172,
+  "h": 242,
+  "bx": 0.461,
+  "by": 0.996,
+  "fx": 0.493
+ },
+ "grok_wreck/net": {
+  "file": "sprites/grok_wreck/net.png",
+  "w": 191,
+  "h": 199,
+  "bx": 0.565,
+  "by": 0.995,
+  "fx": 0.512
+ },
+ "grok_wreck/figurehead": {
+  "file": "sprites/grok_wreck/figurehead.png",
+  "w": 146,
+  "h": 249,
+  "bx": 0.607,
+  "by": 0.996,
+  "fx": 0.526
+ },
+ "grok_wreck/reef": {
+  "file": "sprites/grok_wreck/reef.png",
+  "w": 191,
+  "h": 170,
+  "bx": 0.561,
+  "by": 0.994,
+  "fx": 0.521
+ },
+ "grok_wreck/sandbar": {
+  "file": "sprites/grok_wreck/sandbar.png",
+  "w": 188,
+  "h": 162,
+  "bx": 0.487,
+  "by": 0.994,
+  "fx": 0.498
+ },
+ "grok_wreck/door": {
+  "file": "sprites/grok_wreck/door.png",
+  "w": 143,
+  "h": 217,
+  "bx": 0.73,
+  "by": 0.995,
+  "fx": 0.491
+ },
+ "grok_wreck/seachest": {
+  "file": "sprites/grok_wreck/seachest.png",
+  "w": 183,
+  "h": 191,
+  "bx": 0.597,
+  "by": 0.995,
+  "fx": 0.513
+ },
+ "grok_wreck/wheel": {
+  "file": "sprites/grok_wreck/wheel.png",
+  "w": 189,
+  "h": 191,
+  "bx": 0.654,
+  "by": 0.995,
+  "fx": 0.482
+ },
+ "grok_wreck/lantern": {
+  "file": "sprites/grok_wreck/lantern.png",
+  "w": 146,
+  "h": 190,
+  "bx": 0.57,
+  "by": 0.995,
+  "fx": 0.463
+ },
+ "grok_wreck/seagull": {
+  "file": "sprites/grok_wreck/seagull.png",
+  "w": 177,
+  "h": 206,
+  "bx": 0.488,
+  "by": 0.995,
+  "fx": 0.437
+ },
+ "grok_wreck/bleachedwood": {
+  "file": "sprites/grok_wreck/bleachedwood.png",
+  "w": 175,
+  "h": 200,
+  "bx": 0.167,
+  "by": 0.995,
+  "fx": 0.258
+ },
+ "grok_chars/heroine-stand": {
+  "file": "sprites/grok_chars/heroine-stand.png",
+  "w": 157,
+  "h": 384,
+  "bx": 0.546,
+  "by": 1.0,
+  "fx": 0.45
+ },
+ "grok_chars/heroine-walk": {
+  "file": "sprites/grok_chars/heroine-walk.png",
+  "w": 166,
+  "h": 384,
+  "bx": 0.808,
+  "by": 0.997,
+  "fx": 0.478
+ },
+ "grok_chars/sylvie-stand": {
+  "file": "sprites/grok_chars/sylvie-stand.png",
+  "w": 160,
+  "h": 384,
+  "bx": 0.307,
+  "by": 1.0,
+  "fx": 0.539
+ },
+ "grok_chars/sylvie-walk": {
+  "file": "sprites/grok_chars/sylvie-walk.png",
+  "w": 181,
+  "h": 384,
+  "bx": 0.844,
+  "by": 1.0,
+  "fx": 0.586
+ }
+}

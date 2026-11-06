@@ -1,0 +1,22 @@
+{
+  "wood": { "name": "Wood", "sprite": "grok_items/wood", "text": "Plain wood from common trees. Most things start with it." },
+  "stone": { "name": "Stone", "sprite": "grok_items/stone", "text": "Rough stone. Walls, tools, the odd sling." },
+  "etherwood": { "name": "Etherwood", "sprite": "grok_items/etherwood", "text": "Pale and cold to the touch. Nobody agrees on why its leaves grow blue." },
+  "silver-ore": { "name": "Silver ore", "sprite": "grok_items/silver", "text": "Grey rock threaded with bright silver." },
+  "malachite": { "name": "Malachite", "sprite": "grok_items/malachite", "text": "Green banded stone. Jewellers and alchemists both want it." },
+  "gold-ore": { "name": "Gold ore", "sprite": "grok_items/gold", "text": "Gold in grey rock. Worth the sweat." },
+  "red-crystal": { "name": "Red crystal", "sprite": "grok_items/redcrystal", "text": "Deep red, and warmer than a stone should be." },
+  "birch-bark": { "name": "Birch bark", "sprite": "grok_items/birchbark", "text": "Papery bark. Burns well and folds into almost anything." },
+  "acorns": { "name": "Acorns", "sprite": "grok_items/acorns", "text": "Oak seeds. Pigs, squirrels and a few recipes want them." },
+  "resin": { "name": "Resin", "sprite": "grok_items/resin", "text": "Sticky pine resin. Seals, glues and burns." },
+  "berries": { "name": "Berries", "sprite": "grok_items/berries", "text": "Dark and sweet." },
+  "brown-mushroom": { "name": "Brown mushroom", "sprite": "grok_items/brownmushroom", "text": "A plain brown mushroom. Safe to eat, probably." },
+  "red-mushroom": { "name": "Red mushroom", "sprite": "grok_items/redmushroom", "text": "Red with white spots. Don't eat it. Alchemists might." },
+  "blue-mushroom": { "name": "Blue mushroom", "sprite": "grok_items/bluemushroom", "text": "Pale blue. Grows where old magic runs close to the ground." },
+  "clover": { "name": "Clover", "sprite": "grok_items/clover", "text": "Four leaves. Lucky, supposedly." },
+  "herbs": { "name": "Wild herbs", "sprite": "grok_items/herbs", "text": "Good for teas and salves." },
+  "crab-shell": { "name": "Crab shell", "icon": "🦀", "text": "A shore crab's shell, still a little sandy." },
+  "boar-hide": { "name": "Boar hide", "icon": "🐗", "text": "Rough and bristly." },
+  "sea-glass": { "name": "Sea glass", "icon": "🔹", "text": "Glass worn smooth by the sea." },
+  "coin": { "name": "Coins", "icon": "🪙", "currency": true }
+}

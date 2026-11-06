@@ -1,0 +1,28 @@
+import type { GameState } from './types';
+import { MAX_ENERGY } from './rules';
+
+/** Bump when the save shape changes in a way old saves can't be read as. Upgrades live in lib/save.ts. */
+export const SAVE_VERSION = 4;
+
+export function newGame(now = Date.now()): GameState {
+  return {
+    version: SAVE_VERSION,
+    point: null,
+    pos: null,
+    visitedLands: {},
+    energy: MAX_ENERGY,
+    lastRegen: now,
+    day: 1,
+    toolTier: 1,
+    bag: {},
+    depleted: {},
+    beaten: {},
+    taken: {},
+    revealed: {},
+    seen: {},
+    rested: false,
+    talk: {},
+    log: ['You wake on the sand. Somewhere above the beach, smoke rises from a chimney.'],
+    seq: 1,
+  };
+}
