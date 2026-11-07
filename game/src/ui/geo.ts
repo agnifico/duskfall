@@ -13,6 +13,7 @@ export const S3 = Math.sqrt(3);
 export const HEXW = R * S3; // a hex's width
 const PAD_TOP = 150; // room above the field for tall objects
 const PAD = 50;
+const MAX_LIFT = 3 * LIFT; // room for the tallest terrain
 
 type P = [number, number];
 
@@ -23,6 +24,8 @@ export interface HexGeom {
   depth: number; // for drawing back to front: ground position down the screen
   top: string; // polygon points
   sides: { points: string; shade: number }[];
+  corners: P[]; // the top's six corners; edge k runs from corner k to k+1
+  walls: { corners: P[]; shade: number }[]; // the sides as points
 }
 
 export interface Layout {
@@ -30,6 +33,7 @@ export interface Layout {
   order: HexGeom[]; // back to front
   width: number;
   height: number;
+  origin: [number, number]; // where the field's middle lands, before heights lift it
 }
 
 export const pts = (arr: P[]) => arr.map((p) => `${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
@@ -72,7 +76,7 @@ export function layout(cells: Cell[], heightOf: (x: Cell) => number, angleDeg: n
       // light from the upper left: sides facing right are darker
       sides.push({ corners: [a, b, [b[0], b[1] + drop], [a[0], a[1] + drop]], shade: 0.72 - 0.14 * (nx / len) });
     }
-    return { key: x.key, cx, cy, depth: gy * SQ, corners, sides, drop };
+    return { key: x.key, cx, cy, depth: gy * SQ, corners, sides, drop, lift: h * LIFT };
   });
 
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
@@ -80,7 +84,7 @@ export function layout(cells: Cell[], heightOf: (x: Cell) => number, angleDeg: n
     for (const [x, y] of h.corners) {
       minX = Math.min(minX, x);
       maxX = Math.max(maxX, x);
-      minY = Math.min(minY, y);
+      minY = Math.min(minY, y + h.lift - MAX_LIFT); // the same for any heights, so the field holds still as they change
       maxY = Math.max(maxY, y + h.drop);
     }
   const ox = PAD - minX;
@@ -96,10 +100,12 @@ export function layout(cells: Cell[], heightOf: (x: Cell) => number, angleDeg: n
       depth: h.depth,
       top: pts(h.corners.map(shift)),
       sides: h.sides.map((s) => ({ points: pts(s.corners.map(shift)), shade: s.shade })),
+      corners: h.corners.map(shift),
+      walls: h.sides.map((s) => ({ corners: s.corners.map(shift), shade: s.shade })),
     });
   }
   const order = [...hexes.values()].sort((a, b) => a.depth - b.depth || a.cx - b.cx);
-  return { hexes, order, width: Math.ceil(maxX - minX + PAD * 2), height: Math.ceil(maxY - minY + PAD_TOP + PAD) };
+  return { hexes, order, width: Math.ceil(maxX - minX + PAD * 2), height: Math.ceil(maxY - minY + PAD_TOP + PAD), origin: [ox, oy] };
 }
 
 /** The ground point of an object inside its hex: a little below the centre, so it reads as standing on it. */

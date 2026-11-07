@@ -1,6 +1,8 @@
 <script lang="ts">
-  // Top of the screen: portrait, energy strip and timer, then small separate chips (time, where you
-  // are, coins), and the map corner on the right.
+  // Top of the screen: the portrait on the left, the map corner on the right, and between them two rows:
+  // the energy strip, always shown, then chips: the day, where you are, coins, XP, people.
+  // Where you are shows only the point's name; hovering it (or tabbing into it) opens the whole path,
+  // pushing the chips after it to the right, and each step is clickable.
   import { G } from '../../lib/game.svelte';
   import { asset, content } from '../../content';
   import { closeMap, homeLand, openLandMap, showWorld, togglePanel } from '../commands';
@@ -9,6 +11,8 @@
   import Breadcrumb from './Breadcrumb.svelte';
   import MapCorner from './MapCorner.svelte';
   import TimeChip from './TimeChip.svelte';
+  import EnergyStrip from './EnergyStrip.svelte';
+  import People from './People.svelte';
 
   /** Where you are, whichever map is open. Each step opens that level: the world, the land, the zone,
    *  and your own point takes you back to the hex field. */
@@ -27,6 +31,8 @@
   });
 
   const coins = $derived(G.s.bag['coin'] ?? 0);
+  let whereOpen = $state(false);
+  const shown = $derived(whereOpen ? crumbs : crumbs.slice(-1));
 
 </script>
 
@@ -41,12 +47,29 @@
   </button>
 
   <div class="mid">
+    <EnergyStrip />
     <div class="row chips">
       <TimeChip />
-      <div class="chip px flat round t-inset"><Breadcrumb items={crumbs} /></div>
+      <!-- svelte-ignore a11y_no_static_element_interactions -->
+      <div
+        class="chip where px flat round t-inset"
+        class:open={whereOpen}
+        onmouseenter={() => (whereOpen = true)}
+        onmouseleave={() => (whereOpen = false)}
+        onfocusin={() => (whereOpen = true)}
+        onfocusout={() => (whereOpen = false)}
+      >
+        <Breadcrumb items={shown} />
+      </div>
       <div class="chip px flat round t-inset" title="Coins">
         <i class="coin" aria-hidden="true"></i><span class="lbl m">{coins}</span>
       </div>
+      <div class="chip xp px flat round t-inset" title="Experience: {PLAYER.xp} of {PLAYER.xpNext} to level {PLAYER.level + 1}">
+        <span class="lbl m">XP</span>
+        <span class="track"><b style:width="{(PLAYER.xp / PLAYER.xpNext) * 100}%"></b></span>
+        <span class="lbl m dim">{PLAYER.xp}/{PLAYER.xpNext}</span>
+      </div>
+      <People />
     </div>
   </div>
 
@@ -107,7 +130,31 @@
     align-items: center;
   }
   .chips {
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+  }
+  .where {
+    flex: none;
+  }
+  .xp {
+    flex: 0 1 220px;
+  }
+  .xp .track {
+    flex: 1;
+    min-width: 40px;
+    position: relative;
+    height: 8px;
+    border-radius: 2px;
+    overflow: hidden;
+    background: color-mix(in oklab, var(--c-inset) 70%, #000);
+    box-shadow: 0 0 0 2px var(--ink);
+  }
+  .xp .track b {
+    position: absolute;
+    inset: 0 auto 0 0;
+    background: #8fd16a;
+  }
+  .dim {
+    color: var(--dim);
   }
   .chip {
     display: inline-flex;

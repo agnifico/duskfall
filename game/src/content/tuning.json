@@ -1,0 +1,36 @@
+{
+ "gemini_nuv/fishinghut": {
+  "sx": -0.019,
+  "sy": -0.212,
+  "so": 0.49,
+  "sh": 0.219
+ },
+ "grok_nodes/boulder": {
+  "sx": 0.049,
+  "sy": -0.154,
+  "sw": 0.641,
+  "sh": 0.279,
+  "so": 0.53
+ },
+ "grok_nodes/mushrooms": {
+  "sx": 0,
+  "so": 0.56
+ },
+ "grok_nodes/smallstones": {
+  "sw": 0.574,
+  "sh": 0.193,
+  "sx": -0.003,
+  "sy": -0.072,
+  "so": 0.55
+ },
+ "grok_nodes/tree": {
+  "bx": 0.508,
+  "by": 0.978,
+  "so": 0.67
+ },
+ "grok_nuv/driftwood": {
+  "sx": 0.255,
+  "so": 0.54,
+  "sy": -0.165
+ }
+}

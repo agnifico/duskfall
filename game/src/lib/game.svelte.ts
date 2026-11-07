@@ -70,9 +70,10 @@ interface Dev {
   theme: string; // colour theme id, see ui/themes.ts
   damage: 'dj' | 'ratio'; // damage formula under test (design/COMBAT.md, section 3)
   chip: number; // chip damage per tick from an enemy next to you that isn't attacking
+  ground: 'flat' | 'detail'; // the hex ground's look, while it's trialled (ui/ground.ts)
 }
 function loadDev(): Dev {
-  const base: Dev = { on: false, freeEnergy: false, theme: 'meadow', damage: 'dj', chip: 2 };
+  const base: Dev = { on: false, freeEnergy: false, theme: 'meadow', damage: 'dj', chip: 2, ground: 'detail' };
   try {
     return { ...base, ...JSON.parse(localStorage.getItem(DEV_KEY) ?? '{}') };
   } catch {

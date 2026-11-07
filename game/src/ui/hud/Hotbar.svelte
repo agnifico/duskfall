@@ -4,7 +4,7 @@
   // Hovering a skill shows its reach on the field. The rest will hold food, tools and items.
   import { G } from '../../lib/game.svelte';
   import { UI } from '../../lib/ui.svelte';
-  import { content } from '../../content';
+  import { asset, content } from '../../content';
   import * as E from '../../engine/actions';
   import { pressSkill } from '../commands';
 
@@ -28,7 +28,7 @@
         onmouseleave={() => (UI.preview = null)}
       >
         <span class="lbl n">{i + 1}</span>
-        <span class="icon">{sk.icon}</span>
+        {#if sk.badge}<img class="badge" src={asset(`sprites/skills/${sk.badge}.png`)} alt="" />{:else}<span class="icon">{sk.icon}</span>{/if}
         <span class="lbl cost">{sk.spirit}</span>
       </button>
     {:else}
@@ -74,7 +74,14 @@
     line-height: 1;
     font-family: 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif;
   }
+  .badge {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+  }
   .cost {
+    z-index: 1;
+    text-shadow: 0 1px 0 #000, 0 0 3px #000;
     position: absolute;
     right: 4px;
     bottom: 3px;

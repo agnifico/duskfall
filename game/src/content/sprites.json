@@ -767,6 +767,574 @@
   "by": 0.995,
   "fx": 0.258
  },
+ "icons/health": {
+  "file": "sprites/icons/health.png",
+  "w": 123,
+  "h": 111,
+  "bx": 0.493,
+  "by": 1.0,
+  "fx": 0.494
+ },
+ "icons/spirit": {
+  "file": "sprites/icons/spirit.png",
+  "w": 89,
+  "h": 142,
+  "bx": 0.494,
+  "by": 1.0,
+  "fx": 0.495
+ },
+ "icons/energy": {
+  "file": "sprites/icons/energy.png",
+  "w": 83,
+  "h": 130,
+  "bx": 0.085,
+  "by": 1.0,
+  "fx": 0.335
+ },
+ "icons/attack": {
+  "file": "sprites/icons/attack.png",
+  "w": 134,
+  "h": 136,
+  "bx": 0.093,
+  "by": 1.0,
+  "fx": 0.265
+ },
+ "icons/defence": {
+  "file": "sprites/icons/defence.png",
+  "w": 129,
+  "h": 130,
+  "bx": 0.498,
+  "by": 1.0,
+  "fx": 0.493
+ },
+ "icons/speed": {
+  "file": "sprites/icons/speed.png",
+  "w": 132,
+  "h": 130,
+  "bx": 0.286,
+  "by": 0.992,
+  "fx": 0.419
+ },
+ "icons/evasion": {
+  "file": "sprites/icons/evasion.png",
+  "w": 124,
+  "h": 138,
+  "bx": 0.197,
+  "by": 1.0,
+  "fx": 0.364
+ },
+ "icons/precision": {
+  "file": "sprites/icons/precision.png",
+  "w": 143,
+  "h": 138,
+  "bx": 0.418,
+  "by": 1.0,
+  "fx": 0.423
+ },
+ "icons/crit": {
+  "file": "sprites/icons/crit.png",
+  "w": 127,
+  "h": 134,
+  "bx": 0.499,
+  "by": 1.0,
+  "fx": 0.499
+ },
+ "icons/critdmg": {
+  "file": "sprites/icons/critdmg.png",
+  "w": 129,
+  "h": 136,
+  "bx": 0.095,
+  "by": 1.0,
+  "fx": 0.257
+ },
+ "icons/level": {
+  "file": "sprites/icons/level.png",
+  "w": 147,
+  "h": 134,
+  "bx": 0.497,
+  "by": 1.0,
+  "fx": 0.498
+ },
+ "icons/resonance": {
+  "file": "sprites/icons/resonance.png",
+  "w": 134,
+  "h": 134,
+  "bx": 0.498,
+  "by": 1.0,
+  "fx": 0.5
+ },
+ "icons/xp": {
+  "file": "sprites/icons/xp.png",
+  "w": 108,
+  "h": 121,
+  "bx": 0.49,
+  "by": 1.0,
+  "fx": 0.488
+ },
+ "icons/coins": {
+  "file": "sprites/icons/coins.png",
+  "w": 151,
+  "h": 130,
+  "bx": 0.588,
+  "by": 1.0,
+  "fx": 0.482
+ },
+ "icons/time": {
+  "file": "sprites/icons/time.png",
+  "w": 94,
+  "h": 142,
+  "bx": 0.479,
+  "by": 1.0,
+  "fx": 0.477
+ },
+ "icons/objective": {
+  "file": "sprites/icons/objective.png",
+  "w": 131,
+  "h": 136,
+  "bx": 0.079,
+  "by": 1.0,
+  "fx": 0.284
+ },
+ "icons/bag": {
+  "file": "sprites/icons/bag.png",
+  "w": 147,
+  "h": 129,
+  "bx": 0.572,
+  "by": 1.0,
+  "fx": 0.507
+ },
+ "icons/quests": {
+  "file": "sprites/icons/quests.png",
+  "w": 146,
+  "h": 115,
+  "bx": 0.561,
+  "by": 1.0,
+  "fx": 0.428
+ },
+ "icons/character": {
+  "file": "sprites/icons/character.png",
+  "w": 138,
+  "h": 125,
+  "bx": 0.489,
+  "by": 0.992,
+  "fx": 0.497
+ },
+ "icons/map": {
+  "file": "sprites/icons/map.png",
+  "w": 152,
+  "h": 118,
+  "bx": 0.474,
+  "by": 1.0,
+  "fx": 0.491
+ },
+ "icons/settings": {
+  "file": "sprites/icons/settings.png",
+  "w": 122,
+  "h": 114,
+  "bx": 0.5,
+  "by": 0.991,
+  "fx": 0.499
+ },
+ "icons/people": {
+  "file": "sprites/icons/people.png",
+  "w": 155,
+  "h": 122,
+  "bx": 0.448,
+  "by": 0.992,
+  "fx": 0.463
+ },
+ "icons/rest": {
+  "file": "sprites/icons/rest.png",
+  "w": 138,
+  "h": 129,
+  "bx": 0.5,
+  "by": 0.992,
+  "fx": 0.499
+ },
+ "icons/search": {
+  "file": "sprites/icons/search.png",
+  "w": 139,
+  "h": 127,
+  "bx": 0.897,
+  "by": 0.992,
+  "fx": 0.766
+ },
+ "icons/woodcutting": {
+  "file": "sprites/icons/woodcutting.png",
+  "w": 163,
+  "h": 164,
+  "bx": 0.499,
+  "by": 1.0,
+  "fx": 0.502
+ },
+ "icons/mining": {
+  "file": "sprites/icons/mining.png",
+  "w": 170,
+  "h": 144,
+  "bx": 0.441,
+  "by": 0.993,
+  "fx": 0.442
+ },
+ "icons/herblore": {
+  "file": "sprites/icons/herblore.png",
+  "w": 136,
+  "h": 147,
+  "bx": 0.567,
+  "by": 0.993,
+  "fx": 0.523
+ },
+ "icons/foraging": {
+  "file": "sprites/icons/foraging.png",
+  "w": 147,
+  "h": 158,
+  "bx": 0.521,
+  "by": 0.994,
+  "fx": 0.508
+ },
+ "icons/fishing": {
+  "file": "sprites/icons/fishing.png",
+  "w": 144,
+  "h": 135,
+  "bx": 0.421,
+  "by": 1.0,
+  "fx": 0.499
+ },
+ "icons/cooking": {
+  "file": "sprites/icons/cooking.png",
+  "w": 152,
+  "h": 138,
+  "bx": 0.498,
+  "by": 0.993,
+  "fx": 0.498
+ },
+ "icons/smithing": {
+  "file": "sprites/icons/smithing.png",
+  "w": 164,
+  "h": 150,
+  "bx": 0.477,
+  "by": 0.987,
+  "fx": 0.547
+ },
+ "icons/alchemy": {
+  "file": "sprites/icons/alchemy.png",
+  "w": 103,
+  "h": 151,
+  "bx": 0.539,
+  "by": 0.993,
+  "fx": 0.505
+ },
+ "icons/hatchet": {
+  "file": "sprites/icons/hatchet.png",
+  "w": 128,
+  "h": 141,
+  "bx": 0.139,
+  "by": 0.993,
+  "fx": 0.157
+ },
+ "icons/pickaxe": {
+  "file": "sprites/icons/pickaxe.png",
+  "w": 133,
+  "h": 145,
+  "bx": 0.894,
+  "by": 0.993,
+  "fx": 0.805
+ },
+ "icons/sickle": {
+  "file": "sprites/icons/sickle.png",
+  "w": 106,
+  "h": 152,
+  "bx": 0.173,
+  "by": 0.993,
+  "fx": 0.248
+ },
+ "icons/rod": {
+  "file": "sprites/icons/rod.png",
+  "w": 161,
+  "h": 155,
+  "bx": 0.376,
+  "by": 0.994,
+  "fx": 0.411
+ },
+ "icons/tools": {
+  "file": "sprites/icons/tools.png",
+  "w": 151,
+  "h": 134,
+  "bx": 0.525,
+  "by": 0.993,
+  "fx": 0.511
+ },
+ "icons/crafting": {
+  "file": "sprites/icons/crafting.png",
+  "w": 162,
+  "h": 144,
+  "bx": 0.531,
+  "by": 1.0,
+  "fx": 0.469
+ },
+ "icons/locked": {
+  "file": "sprites/icons/locked.png",
+  "w": 106,
+  "h": 144,
+  "bx": 0.513,
+  "by": 0.993,
+  "fx": 0.474
+ },
+ "icons/unknown": {
+  "file": "sprites/icons/unknown.png",
+  "w": 107,
+  "h": 155,
+  "bx": 0.444,
+  "by": 0.994,
+  "fx": 0.465
+ },
+ "icons/strike": {
+  "file": "sprites/icons/strike.png",
+  "w": 122,
+  "h": 133,
+  "bx": 0.421,
+  "by": 0.992,
+  "fx": 0.523
+ },
+ "icons/dash": {
+  "file": "sprites/icons/dash.png",
+  "w": 140,
+  "h": 135,
+  "bx": 0.383,
+  "by": 1.0,
+  "fx": 0.412
+ },
+ "icons/whirl": {
+  "file": "sprites/icons/whirl.png",
+  "w": 155,
+  "h": 136,
+  "bx": 0.493,
+  "by": 1.0,
+  "fx": 0.501
+ },
+ "icons/guard": {
+  "file": "sprites/icons/guard.png",
+  "w": 122,
+  "h": 140,
+  "bx": 0.436,
+  "by": 0.993,
+  "fx": 0.436
+ },
+ "icons/heavy": {
+  "file": "sprites/icons/heavy.png",
+  "w": 160,
+  "h": 146,
+  "bx": 0.49,
+  "by": 1.0,
+  "fx": 0.496
+ },
+ "icons/sling": {
+  "file": "sprites/icons/sling.png",
+  "w": 142,
+  "h": 134,
+  "bx": 0.528,
+  "by": 0.993,
+  "fx": 0.445
+ },
+ "icons/heal": {
+  "file": "sprites/icons/heal.png",
+  "w": 118,
+  "h": 135,
+  "bx": 0.297,
+  "by": 1.0,
+  "fx": 0.4
+ },
+ "icons/focus": {
+  "file": "sprites/icons/focus.png",
+  "w": 142,
+  "h": 137,
+  "bx": 0.413,
+  "by": 0.993,
+  "fx": 0.49
+ },
+ "skills/strike": {
+  "file": "sprites/skills/strike.png",
+  "w": 221,
+  "h": 221,
+  "bx": 0.499,
+  "by": 1.0,
+  "fx": 0.508
+ },
+ "skills/whirl": {
+  "file": "sprites/skills/whirl.png",
+  "w": 220,
+  "h": 221,
+  "bx": 0.499,
+  "by": 1.0,
+  "fx": 0.501
+ },
+ "skills/guard": {
+  "file": "sprites/skills/guard.png",
+  "w": 220,
+  "h": 221,
+  "bx": 0.501,
+  "by": 1.0,
+  "fx": 0.5
+ },
+ "skills/heavy": {
+  "file": "sprites/skills/heavy.png",
+  "w": 221,
+  "h": 222,
+  "bx": 0.498,
+  "by": 1.0,
+  "fx": 0.491
+ },
+ "skills/heal": {
+  "file": "sprites/skills/heal.png",
+  "w": 220,
+  "h": 222,
+  "bx": 0.499,
+  "by": 1.0,
+  "fx": 0.498
+ },
+ "skills/focus": {
+  "file": "sprites/skills/focus.png",
+  "w": 220,
+  "h": 222,
+  "bx": 0.501,
+  "by": 1.0,
+  "fx": 0.499
+ },
+ "skills/cleave": {
+  "file": "sprites/skills/cleave.png",
+  "w": 221,
+  "h": 214,
+  "bx": 0.499,
+  "by": 0.995,
+  "fx": 0.498
+ },
+ "skills/counter": {
+  "file": "sprites/skills/counter.png",
+  "w": 220,
+  "h": 214,
+  "bx": 0.499,
+  "by": 0.995,
+  "fx": 0.498
+ },
+ "skills/dash": {
+  "file": "sprites/skills/dash.png",
+  "w": 280,
+  "h": 305,
+  "bx": 0.499,
+  "by": 1.0,
+  "fx": 0.501
+ },
+ "skills/sling": {
+  "file": "sprites/skills/sling.png",
+  "w": 280,
+  "h": 305,
+  "bx": 0.499,
+  "by": 1.0,
+  "fx": 0.501
+ },
+ "skills/warcry": {
+  "file": "sprites/skills/warcry.png",
+  "w": 281,
+  "h": 305,
+  "bx": 0.498,
+  "by": 1.0,
+  "fx": 0.498
+ },
+ "lifeskills/woodcutting": {
+  "file": "sprites/lifeskills/woodcutting.png",
+  "w": 158,
+  "h": 149,
+  "bx": 0.656,
+  "by": 0.993,
+  "fx": 0.558
+ },
+ "lifeskills/mining": {
+  "file": "sprites/lifeskills/mining.png",
+  "w": 150,
+  "h": 129,
+  "bx": 0.663,
+  "by": 1.0,
+  "fx": 0.633
+ },
+ "lifeskills/herblore": {
+  "file": "sprites/lifeskills/herblore.png",
+  "w": 156,
+  "h": 128,
+  "bx": 0.376,
+  "by": 1.0,
+  "fx": 0.448
+ },
+ "lifeskills/foraging": {
+  "file": "sprites/lifeskills/foraging.png",
+  "w": 144,
+  "h": 140,
+  "bx": 0.486,
+  "by": 1.0,
+  "fx": 0.484
+ },
+ "lifeskills/fishing": {
+  "file": "sprites/lifeskills/fishing.png",
+  "w": 144,
+  "h": 163,
+  "bx": 0.807,
+  "by": 1.0,
+  "fx": 0.604
+ },
+ "lifeskills/cooking": {
+  "file": "sprites/lifeskills/cooking.png",
+  "w": 149,
+  "h": 141,
+  "bx": 0.497,
+  "by": 0.993,
+  "fx": 0.499
+ },
+ "lifeskills/smithing": {
+  "file": "sprites/lifeskills/smithing.png",
+  "w": 167,
+  "h": 142,
+  "bx": 0.465,
+  "by": 1.0,
+  "fx": 0.461
+ },
+ "lifeskills/alchemy": {
+  "file": "sprites/lifeskills/alchemy.png",
+  "w": 100,
+  "h": 133,
+  "bx": 0.482,
+  "by": 1.0,
+  "fx": 0.474
+ },
+ "lifeskills/crafting": {
+  "file": "sprites/lifeskills/crafting.png",
+  "w": 146,
+  "h": 134,
+  "bx": 0.491,
+  "by": 0.993,
+  "fx": 0.498
+ },
+ "lifeskills/farming": {
+  "file": "sprites/lifeskills/farming.png",
+  "w": 154,
+  "h": 140,
+  "bx": 0.648,
+  "by": 1.0,
+  "fx": 0.442
+ },
+ "lifeskills/hunting": {
+  "file": "sprites/lifeskills/hunting.png",
+  "w": 122,
+  "h": 142,
+  "bx": 0.843,
+  "by": 1.0,
+  "fx": 0.485
+ },
+ "lifeskills/carpentry": {
+  "file": "sprites/lifeskills/carpentry.png",
+  "w": 161,
+  "h": 127,
+  "bx": 0.548,
+  "by": 1.0,
+  "fx": 0.519
+ },
  "grok_chars/heroine-stand": {
   "file": "sprites/grok_chars/heroine-stand.png",
   "w": 157,

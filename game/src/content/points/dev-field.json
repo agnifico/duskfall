@@ -1,0 +1,33 @@
+{
+  "id": "dev-field",
+  "name": "Dev Field",
+  "zone": "dev",
+  "pin": [
+    0,
+    0
+  ],
+  "kind": "gathering",
+  "backdrop": "sky",
+  "fog": false,
+  "pad": 0,
+  "table": [],
+  "rows": [
+    "_ _ _ _ w _ _ _ w _ w w w _ _ _ _",
+    "_ _ _ h h h h h w w w w h _ _ _ _",
+    "_ _ _ s s s.palm s s h h h h h s _ _ _",
+    "_ _ s s s s.palm g s s s s s s _ _ _ _",
+    "_ _ _ f f.pine f.shrooms g g s s s s s g g _ _",
+    "_ _ f f.pine f.pine g g g g g g g g g.berries g _ _",
+    "_ _ f.pine f f.pine g.tree g g g g.berries g.berries r.boulder r.stones r r.stones r _",
+    "_ f.birch f.birch f.pine f g g g g.tree g r r.cluster r r.boulder r.stones r _",
+    "_ _ f f f f p g g.> g g r r r.boulder r r r",
+    "_ _ f.pine f f.birch f.pine p p p p g r r r r r.boulder _",
+    "_ _ _ f f f f g h h p p p p r.boulder r _",
+    "_ _ _ _ f f.pine g h h h g r r p p _ _",
+    "_ _ _ _ _ f g g h h g r r.cluster r _ _ _",
+    "_ _ _ _ _ g g g.berries g g r.stones r r.boulder r _ _ _",
+    "_ _ _ _ _ _ g g g g g g r r _ _ _",
+    "_ _ _ _ _ _ _ _ _ g g r _ _ _ _ _",
+    "_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _"
+  ]
+}

@@ -8,11 +8,15 @@
   "fog": false,
   "table": ["palm", "driftwood", "stones", "palm"],
   "rows": [
-    "w w w w w w w w w",
-    "w h h s s s.hut h w w",
-    "h s s.* s s.* s s.driftwood h w",
-    "s.> s s.fire s.* g g.* s s h",
-    "g g.palm g s.* g.stones g.* g.boulder s s",
-    "f f.birch f.birch g g.* g g.oak f.ether g"
-  ]
+    "_ _           _      _         w           w         w",
+    "_ w           w      w         w.driftwood w         w        w           w.driftwood",
+    "_ w           w      w         h           h         h        h           w           w",
+    "w h           h      h         s           s         s.palm   h           h           w",
+    "_ h.driftwood s.palm s.*       s           s.*       s        s.driftwood h           h",
+    "h h           s.hut  s.fire    s           g         g        s           s.palm      h",
+    "h g.palm      g      g         s           g.stones  g        f.boulder   f           s         h",
+    "h f.stones    f.tree g.stones  g           g.boulder f        f.tree      f           f.tree    h",
+    "_ _           f.tree f.shrooms g.>         f.tree    f.stones f.oak       f.oak       f.shrooms"
+  ],
+  "pad": 0
 }

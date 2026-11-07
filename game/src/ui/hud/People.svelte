@@ -1,5 +1,5 @@
 <script lang="ts">
-  // Under the portrait: the people you can go to. The button opens a list; going to anyone is free,
+  // In the top bar's second row: the people you can go to. The button opens a list; going to anyone is free,
   // from the hex field or the map. A person's name or face opens their profile.
   import { fly } from 'svelte/transition';
   import { UI } from '../../lib/ui.svelte';
@@ -33,9 +33,6 @@
 {#if people.length}
   <div class="people" bind:this={root}>
     <button class="px btn bevel t-panel toggle" class:on={UI.people} onclick={togglePeople} title="People (P)" aria-expanded={UI.people}>
-      <span class="faces" aria-hidden="true">
-        {#each people.slice(0, 4) as [id, n] (id)}<img src={asset(n.portrait)} alt="" />{/each}
-      </span>
       <span class="lbl m">People</span>
       <span class="caret" class:open={UI.people} aria-hidden="true"></span>
     </button>
@@ -64,26 +61,28 @@
 
 <style>
   .people {
-    position: absolute;
-    left: 14px;
-    top: 110px;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
+    position: relative;
+    flex: none;
   }
   .toggle {
     display: inline-flex;
     align-items: center;
     gap: 10px;
-    padding: 6px 12px 9px 8px;
+    height: 30px;
+    padding: 0 12px;
+  }
+  .list {
+    position: absolute;
+    left: 0;
+    top: calc(100% + 10px);
+    z-index: 5;
   }
   .faces {
     display: flex;
   }
   .faces img {
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
     object-fit: cover;
     box-shadow: 0 0 0 2px var(--ink);
   }

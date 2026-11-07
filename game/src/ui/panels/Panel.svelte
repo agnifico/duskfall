@@ -54,8 +54,11 @@
     place-items: center;
     padding-bottom: 4px;
   }
+  /* room inside the scroll area, so bevelled buttons at its edges keep their borders and shadows */
   .body-wrap {
     overflow-y: auto;
     min-height: 0;
+    padding: 4px 6px 6px;
+    margin: 0 -6px;
   }
 </style>

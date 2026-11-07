@@ -4,6 +4,8 @@
   import { fade } from 'svelte/transition';
   import { G } from '../../lib/game.svelte';
   import { UI } from '../../lib/ui.svelte';
+  import { ED } from '../../lib/editor.svelte';
+  import EditorBar from './EditorBar.svelte';
   import EventCard from './EventCard.svelte';
   import FieldTools from './FieldTools.svelte';
   import FoeCards from './FoeCards.svelte';
@@ -32,8 +34,9 @@
     {#if onField}<div class="bottom-left"><UiToggle /></div>{/if}
   {:else}
     <TopBar />
-    <People />
-    {#if onField}
+    {#if onField && ED.on}
+      <EditorBar />
+    {:else if onField}
       <FoeCards />
       <EventCard />
       <GatherPrompt />
@@ -61,5 +64,17 @@
     display: flex;
     align-items: flex-end;
     gap: 14px;
+  }
+  /* mobile: the hotbar stands up in a column above Hide, freeing the bottom edge */
+  @media (max-width: 760px) {
+    .bottom-left {
+      flex-direction: column-reverse;
+      align-items: center;
+      gap: 10px;
+    }
+    .bottom-left :global(.hotbar) {
+      flex-direction: column-reverse;
+      align-items: center;
+    }
   }
 </style>

@@ -1,6 +1,6 @@
 # UI pass: Agni's list (2026-11-07)
 
-**Done (2026-11-07):** enemy cards, turning the field, the Character and people pages (Profile and Images tabs), the bottom-left UI toggle, the expandable menu, HP/Spirit/Energy at the bottom centre. **Left:** tile detailing, the small versions of pages, the mobile pass.
+**Done (2026-11-07):** enemy cards, turning the field, the Character and people pages (Profile and Images tabs), the bottom-left UI toggle, the expandable menu, HP and Spirit at the bottom centre (narrow); Energy as a long strip in the top bar, always shown (2026-11-07). Tile detailing done in code (`ui/ground.ts`, fog of war, padding). **Left:** tile detailing, the small versions of pages, the mobile pass.
 
 Done piece by piece, every corner of the game. Systems first, fine-tuned numbers and art later.
 The component checklist is `UI_COMPONENTS.md`; this is the list of changes asked for.

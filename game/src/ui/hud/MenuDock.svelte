@@ -3,20 +3,22 @@
   // or collapses it again; while collapsed, the row still opens on hover, or on tap.
   import { UI, type PanelId } from '../../lib/ui.svelte';
   import { toggleMap, toggleMenu, togglePanel } from '../commands';
+  import { asset } from '../../content';
 
   let open = $state(false); // peeking: hovered or tapped while collapsed
+  let hold = $state(false); // just collapsed with the Menu button: no peeking until the pointer leaves
   const collapsed = $derived(!UI.menuOpen);
 
-  const ITEMS: { key: string; label: string; panel?: PanelId; run: () => void }[] = [
-    { key: 'B', label: 'Bag', panel: 'bag', run: () => togglePanel('bag') },
-    { key: 'Q', label: 'Quests', panel: 'quests', run: () => togglePanel('quests') },
-    { key: 'C', label: 'Character', panel: 'character', run: () => togglePanel('character') },
-    { key: 'M', label: 'Map', run: toggleMap },
-    { key: 'S', label: 'Settings', panel: 'settings', run: () => togglePanel('settings') },
+  const ITEMS: { key: string; label: string; icon: string; panel?: PanelId; run: () => void }[] = [
+    { key: 'B', label: 'Bag', icon: 'bag', panel: 'bag', run: () => togglePanel('bag') },
+    { key: 'Q', label: 'Quests', icon: 'quests', panel: 'quests', run: () => togglePanel('quests') },
+    { key: 'C', label: 'Profile', icon: 'character', panel: 'character', run: () => togglePanel('character') },
+    { key: 'M', label: 'Map', icon: 'map', run: toggleMap },
+    { key: 'S', label: 'Settings', icon: 'settings', panel: 'settings', run: () => togglePanel('settings') },
   ];
 </script>
 
-<nav class="dock" class:collapsed class:open onmouseleave={() => (open = false)} aria-label="Menu">
+<nav class="dock" class:collapsed class:open class:hold onmouseleave={() => ((open = false), (hold = false))} aria-label="Menu">
   <div class="items">
     {#each ITEMS as it (it.key)}
       <button
@@ -29,10 +31,11 @@
         title="{it.label} ({it.key})"
       >
         {#if it.key === 'B'}
-          {#key UI.bagBump}<span class="disp k" class:bump={UI.bagBump > 0}>{it.key}</span>{/key}
+          {#key UI.bagBump}<img class="ic" class:bump={UI.bagBump > 0} src={asset(`sprites/icons/${it.icon}.png`)} alt="" />{/key}
         {:else}
-          <span class="disp k">{it.key}</span>
+          <img class="ic" src={asset(`sprites/icons/${it.icon}.png`)} alt="" />
         {/if}
+        <span class="hk lbl">{it.key}</span>
         <span class="lbl">{it.label}</span>
       </button>
     {/each}
@@ -40,9 +43,13 @@
   <button
     class="px btn bevel t-accent item toggle"
     class:on={UI.menuOpen}
-    onclick={() => {
+    onclick={(e) => {
       toggleMenu();
       open = false;
+      if (!UI.menuOpen) {
+        hold = true;
+        e.currentTarget.blur();
+      }
     }}
     aria-expanded={UI.menuOpen || open}
     title={UI.menuOpen ? 'Collapse the menu' : 'Keep the menu open'}
@@ -67,8 +74,9 @@
     gap: 10px;
   }
   .item {
+    position: relative;
     width: 62px;
-    height: 62px;
+    height: 74px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -79,6 +87,19 @@
   .k {
     font-size: 30px;
     color: var(--hl);
+  }
+  .ic {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+    filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.25));
+  }
+  .hk {
+    position: absolute;
+    top: 3px;
+    right: 5px;
+    font-size: 10px;
+    opacity: 0.55;
   }
   .toggle .k {
     color: inherit;
@@ -95,8 +116,8 @@
   .collapsed .items {
     display: none;
   }
-  .collapsed:hover .items,
-  .collapsed:focus-within .items,
+  .collapsed:not(.hold):hover .items,
+  .collapsed:not(.hold):focus-within .items,
   .collapsed.open .items {
     display: flex;
   }

@@ -93,7 +93,8 @@ export interface Fx {
 /** A skill: costs Spirit (and maybe ⚡), takes one tick. */
 export interface Skill {
   name: string;
-  icon: string;
+  icon: string; // emoji, shown when there's no badge
+  badge?: string; // public/sprites/skills/<badge>.png
   text?: string;
   kind: 'dash' | 'attack';
   aim: 'self' | 'direction'; // fires at once, or pick a hex to aim at
@@ -160,7 +161,8 @@ export interface Point {
   backdrop?: 'sky' | 'sea'; // what's around the hex field: clouds drifting below, or open water (default sky)
   table: string[]; // prop codes a "*" slot can roll, re-rolled each day
   enemies?: { count: [number, number]; table: string[] }; // rolled each 15-minute cycle onto free hexes; repeat a code to weight it
-  rows: string[]; // hex rows: terrain letter, then optionally "." and a prop code
+  rows: string[]; // hex rows: terrain letter, then optionally "." and a prop code; "_" for no hex
+  pad?: number; // rings of drawn-only padding around the field (default 2; 0 for none)
 }
 
 /** A character's figure on the hex field: painted facing right, mirrored to face left. */
@@ -217,6 +219,7 @@ export interface Cell {
 
 export interface GameState {
   version: number;
+  name?: string; // the player's name, once they set one
   point: string | null; // where you are; null until you first enter a point
   pos: string | null; // cell key inside that point
   visitedLands: Record<string, true>; // lands whose opening has played once

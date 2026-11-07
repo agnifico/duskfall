@@ -6,6 +6,7 @@
   import { COST } from '../../engine/rules';
   import Panel from './Panel.svelte';
   import { THEMES } from '../themes';
+  import { toggleEditor, travelTo } from '../commands';
 
   function newGame() {
     if (confirm('Start a new game? This save is wiped.')) restart();
@@ -61,6 +62,25 @@
         </div>
       </div>
 
+
+      <div class="row">
+        <span class="lbl m">Dev field</span>
+        <button class="px btn bevel t-panel wide" onclick={() => travelTo('dev-field')}><span class="lbl m">Go</span></button>
+      </div>
+
+      <div class="row">
+        <span class="lbl m">Map editor · E</span>
+        <button class="px btn bevel t-panel wide" disabled={!G.s.point} onclick={toggleEditor}><span class="lbl m">Edit this point</span></button>
+      </div>
+
+      <div class="row">
+        <span class="lbl m">Ground</span>
+        <div class="seg">
+          {#each [['flat', 'Flat'], ['detail', 'Detailed']] as [id, name] (id)}
+            <button class="px btn t-inset pick" class:on={DEV.ground === id} onclick={() => setDev({ ground: id as 'flat' | 'detail' })}><span class="lbl m">{name}</span></button>
+          {/each}
+        </div>
+      </div>
 
       <div class="row">
         <span class="lbl m">Tool tier</span>

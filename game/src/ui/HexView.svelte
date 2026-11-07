@@ -11,6 +11,8 @@
   import { Tween } from 'svelte/motion';
   import { cubicOut } from 'svelte/easing';
   import { DEV, G, act, short } from '../lib/game.svelte';
+  import { ED, PLAYER, beginStroke, endStroke, isFigure, paint, pickFrom, tunePropSet, tuneSelect, tuneSprite, tuneSpriteSet } from '../lib/editor.svelte';
+  import { PLAYER_SHADOW, SHADOW, shadowOf, type Shadow } from './shadow';
   import { UI } from '../lib/ui.svelte';
   import { fireAim, stopWalk, walk as walkRoute } from './commands';
   import { asset, content, sprites, type Sprite } from '../content';
@@ -21,6 +23,8 @@
   import Backdrop from './Backdrop.svelte';
   import { HEXW, R, SQ, groundY, layout, shade, type HexGeom } from './geo';
   import { themeOf } from './themes';
+  import { FOG_H, FOG_TOP, PATCH_EXTENT, edgeNeighbour, fogBlock, groundHex, mul, patchImage, shownHeight, type FogBlock } from './ground';
+  import { padCells } from './pad';
 
   let { pointId }: { pointId: string } = $props();
 
@@ -29,16 +33,34 @@
   const DASH_MS = 110; // a dash: one quick jump from where you were to where you land
   const SIDESTEP = 0.26; // standing on a hex with something on it, the player stands this far to its left (hex widths)
 
-  const g = $derived(grid(content, pointId, G.s.day));
+  const g = $derived((void ED.v, grid(content, pointId, G.s.day))); // ED.v: the map editor changed the rows
+  // the field as drawn: the point's hexes and a ragged ring of padding around them (ui/pad.ts)
+  const P = $derived(content.points[pointId]);
+  /** The map editor, painting or tuning (not previewing the field as it plays). */
+  const editing = $derived(ED.on && !ED.preview);
+  // in the map editor: two full rings of empty slots instead, to paint new hexes into
+  const pad = $derived((void ED.v, editing ? padCells(pointId, g.cells, 2, false) : padCells(pointId, g.cells, P.pad ?? 2)));
+  const padKeys = $derived(new Set(pad.map((x) => x.key)));
+  const field = $derived.by(() => {
+    const cells = [...g.cells, ...pad];
+    return { cells, byKey: new Map(cells.map((x) => [x.key, x])), byRC: new Map(cells.map((x) => [`${x.r}:${x.c}`, x])) };
+  });
   // the field turns smoothly to UI.angle ([ and ]); its size on screen stays what it is unturned, so a turned
   // field can run past the screen's edges instead of shrinking to fit
   const turn = new Tween(untrack(() => UI.angle), { duration: 280, easing: cubicOut });
   $effect(() => {
     turn.target = UI.angle;
   });
-  const heightOf = (x: Cell) => content.terrain[x.t].height;
-  const L = $derived(layout(g.cells, heightOf, turn.current));
-  const L0 = $derived(layout(g.cells, heightOf, 0));
+  /** The detailed ground (ui/ground.ts), or the old flat hexes, a dev switch while the look is trialled. */
+  const detailed = $derived(!DEV.on || DEV.ground === 'detail');
+  const kindOf = (x: Cell) => (padKeys.has(x.key) ? (P.fog && !ED.on ? 'fog' : x.t) : ED.on || E.isSeen(G.s, content, pointId, x) ? x.t : 'fog');
+  const terrainH = (x: Cell) => content.terrain[x.t].height;
+  const heightOf = (x: Cell) => (detailed ? shownHeight(kindOf(x), terrainH(x)) : terrainH(x));
+  const L = $derived(layout(field.cells, heightOf, turn.current));
+  // the crop is worked out with every hex at its tallest, so the view holds still as fog clears
+  const cropH = (x: Cell) => Math.max(terrainH(x), FOG_H);
+  const Lc = $derived(layout(field.cells, cropH, turn.current));
+  const L0 = $derived(layout(field.cells, cropH, 0));
   const here = $derived(E.hereCell(G.s, content));
   const backdrop = $derived(content.points[pointId].backdrop ?? 'sky');
 
@@ -51,8 +73,8 @@
     const tallest = Math.max(figureH(content.player.figure), ...Object.values(content.npcs).map((n) => figureH(n.figure)));
     for (const hx of L.order) {
       t = Math.min(t, hx.cy - R * SQ, hx.cy - 54);
-      const x = g.byKey.get(hx.key)!;
-      if (content.terrain[x.t]?.cost != null) t = Math.min(t, groundY(hx.cy) - tallest);
+      const x = field.byKey.get(hx.key)!;
+      if (content.terrain[x.t]?.cost != null && !padKeys.has(x.key)) t = Math.min(t, groundY(hx.cy) - tallest);
       const pr = x.p ? content.props[x.p] : undefined;
       const sp = pr?.sprite ? sprites[pr.sprite] : undefined;
       if (pr && sp) {
@@ -65,14 +87,56 @@
     }
     return Math.max(0, Math.floor(t - 10));
   }
-  const top = $derived(topOf(L));
+  const top = $derived(topOf(Lc));
   /** The view: the unturned field's size, centred on the turned field. */
-  const view = $derived.by(() => {
+  const base = $derived.by(() => {
     const w = L0.width;
     const h = L0.height - topOf(L0);
-    const cx = L.width / 2;
-    const cy = (top + L.height) / 2;
-    return `${cx - w / 2} ${cy - h / 2} ${w} ${h}`;
+    return { cx: L.width / 2, cy: (top + L.height) / 2, w, h };
+  });
+
+  // ---------- zoom: the wheel (or a pinch) zooms in, toward the pointer ----------
+  const zoomMax = $derived(ED.on ? 4 : 1.6); // the map editor zooms further
+  let zoom = $state(1);
+  $effect(() => {
+    if (zoom > zoomMax) zoom = zoomMax;
+  });
+  let focus = $state<[number, number]>([0, 0]); // the view's middle, from the field's middle
+  let svgEl = $state<SVGSVGElement>();
+  $effect(() => {
+    void pointId;
+    zoom = 1;
+    focus = [0, 0];
+  });
+  /** Keep the zoomed view inside the whole field. */
+  const clampFocus = ([fx, fy]: [number, number], z: number): [number, number] => {
+    const mx = (base.w - base.w / z) / 2, my = (base.h - base.h / z) / 2;
+    return [Math.max(-mx, Math.min(mx, fx)), Math.max(-my, Math.min(my, fy))];
+  };
+  const view = $derived.by(() => {
+    const [fx, fy] = clampFocus(focus, zoom);
+    const w = base.w / zoom, h = base.h / zoom;
+    return `${base.cx + fx - w / 2} ${base.cy + fy - h / 2} ${w} ${h}`;
+  });
+  $effect(() => {
+    const el = svgEl;
+    if (!el) return;
+    const onwheel = (ev: WheelEvent) => {
+      ev.preventDefault();
+      const z2 = Math.max(1, Math.min(zoomMax, zoom * Math.exp(-ev.deltaY * (ev.ctrlKey ? 0.01 : 0.002))));
+      if (z2 === zoom) return;
+      const m = el.getScreenCTM();
+      if (!m) return;
+      const p = new DOMPoint(ev.clientX, ev.clientY).matrixTransform(m.inverse());
+      // the point under the pointer stays where it is
+      const [fx, fy] = clampFocus(focus, zoom);
+      const c = [base.cx + fx, base.cy + fy];
+      const k = zoom / z2;
+      focus = clampFocus([p.x - (p.x - c[0]) * k - base.cx, p.y - (p.y - c[1]) * k - base.cy], z2);
+      zoom = z2;
+    };
+    el.addEventListener('wheel', onwheel, { passive: false });
+    return () => el.removeEventListener('wheel', onwheel);
   });
 
   // ---------- enemies ----------
@@ -81,7 +145,7 @@
     const x = g.byKey.get(key);
     return !!x && E.isSeen(G.s, content, pointId, x);
   };
-  const foes = $derived(G.s.point === pointId ? (G.s.foes[pointId] ?? []).filter((f) => seen(f.pos)) : []);
+  const foes = $derived(G.s.point === pointId && !ED.on ? (G.s.foes[pointId] ?? []).filter((f) => seen(f.pos)) : []);
   /** Hexes where a territorial enemy would notice you. */
   const danger = $derived(new Set(foes.flatMap((f) => K.noticeHexes(content, g, f).map((x) => x.key))));
   /** Hexes an enemy's next attack will hit. */
@@ -112,10 +176,26 @@
 
   const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
+  /** In the map editor: each hex's token as written ("g.pine", "s.*"), to show "*" slots for what they are. */
+  const rawTokens = $derived.by(() => {
+    void ED.v;
+    const out = new Map<string, string>();
+    if (!ED.on) return out;
+    content.points[pointId].rows.forEach((row, r) => row.trim().split(/\s+/).forEach((t, c) => out.set(`${pointId}:${r}:${c}`, t)));
+    return out;
+  });
+
   /** The chip over the hovered hex. */
   const chip = $derived.by(() => {
     const x = hover ? g.byKey.get(hover) : undefined;
     const hx = hover ? L.hexes.get(hover) : undefined;
+    if (editing) {
+      const ex = hover ? field.byKey.get(hover) : undefined;
+      const ehx = hover ? L.hexes.get(hover) : undefined;
+      if (!ex || !ehx) return null;
+      const tok = padKeys.has(ex.key) ? '+' : (rawTokens.get(ex.key) ?? '');
+      return { hx: ehx, text: `${tok} · ${ex.r},${ex.c}`, bad: false };
+    }
     if (!x || !hx || x.key === G.s.pos) return null;
     if (UI.aim) {
       const sk = content.skills[UI.aim];
@@ -139,9 +219,27 @@
   });
 
   const colourOf = (key: string) => {
-    const x = g.byKey.get(key)!;
-    return E.isSeen(G.s, content, pointId, x) ? content.terrain[x.t].colour : themeOf(DEV.theme).fog;
+    const x = field.byKey.get(key)!;
+    return kindOf(x) === 'fog' ? themeOf(DEV.theme).fog : content.terrain[x.t].colour;
   };
+
+  /** Lays a patch image on the ground: centred on the field's middle, turned with it, squashed like it. */
+  const patchTransform = $derived(`translate(${L.origin[0]},${L.origin[1]}) scale(1,${SQ}) rotate(${turn.current})`);
+  const mixFog = $derived(mul(themeOf(DEV.theme).fog, 1.06));
+  const ground = $derived.by(() => {
+    if (!detailed) return null;
+    const at = (r: number, c: number) => field.byRC.get(`${r}:${c}`);
+    const out = new Map<string, ReturnType<typeof groundHex>>();
+    for (const hx of L.order) {
+      const x = field.byKey.get(hx.key)!;
+      const nb = [0, 1, 2, 3, 4, 5].map((k) => {
+        const n = edgeNeighbour(x, k, at);
+        return n ? { kind: kindOf(n), height: heightOf(n), pad: padKeys.has(n.key) } : undefined;
+      });
+      out.set(hx.key, groundHex(hx.key, kindOf(x), colourOf(hx.key), heightOf(x), hx.corners, hx.walls, nb, padKeys.has(x.key)));
+    }
+    return out;
+  });
 
   // ---------- the player's walk ----------
 
@@ -226,15 +324,26 @@
   type Drawable =
     | { kind: 'prop'; key: string; y: number; hx: HexGeom; cell: Cell; pr: Prop }
     | { kind: 'foe'; key: string; y: number; hx: HexGeom; foe: Foe }
-    | { kind: 'player'; key: string; y: number };
+    | { kind: 'player'; key: string; y: number }
+    | { kind: 'fog'; key: string; y: number; hx: HexGeom; fog: FogBlock; real: boolean };
 
   const drawables = $derived.by(() => {
     const out: Drawable[] = [];
     for (const hx of L.order) {
-      const cell = g.byKey.get(hx.key)!;
-      const pr = E.isSeen(G.s, content, pointId, cell) ? E.visibleProp(G.s, content, cell) : null;
+      const cell = g.byKey.get(hx.key);
+      if (!cell) continue; // padding
+      let pr = ED.on ? (cell.p ? content.props[cell.p] : null) : E.isSeen(G.s, content, pointId, cell) ? E.visibleProp(G.s, content, cell) : null;
+      if (pr && ED.on && ED.mode === 'paint' && ED.props === 'hidden') pr = null;
+      // Tune shows what it's working on, on its hex
+      if (ED.on && ED.mode === 'tune' && ED.tune.code && cell.key === ED.tune.key) pr = ED.tune.code === PLAYER ? PLAYER_PROP : (content.props[ED.tune.code] ?? pr);
       if (pr) out.push({ kind: 'prop', key: hx.key, y: hx.cy, hx, cell, pr });
     }
+    // fog of war: a block over each hidden hex, sorted in with everything else so what's in front draws over it
+    if (detailed)
+      for (const hx of L.order) {
+        const x = field.byKey.get(hx.key)!;
+        if (kindOf(x) === 'fog') out.push({ kind: 'fog', key: `@fog:${hx.key}`, y: hx.cy - 0.5, hx, fog: fogBlock(hx.corners, hx.walls), real: !padKeys.has(hx.key) });
+      }
     for (const f of foes) {
       const hx = L.hexes.get(f.pos);
       if (hx) out.push({ kind: 'foe', key: `@foe:${f.id}`, y: hx.cy, hx, foe: f });
@@ -243,6 +352,8 @@
     return out.sort((a, b) => a.y - b.y);
   });
 
+  const PLAYER_PROP: Prop = { code: PLAYER, type: 'npc', name: 'you', icon: '🧍' };
+
   interface Placed {
     sprite: Sprite;
     x: number;
@@ -250,13 +361,16 @@
     w: number;
     h: number;
     faded: boolean;
-    shadow: { cx: number; cy: number; rx: number; ry: number } | null;
+    gx: number; // the ground point the sprite stands on
+    gy: number;
+    shadow: Shadow | null;
   }
 
   /** Where a prop's sprite goes: its ground point on the hex, scaled to its size class, plus hand-tuned offsets.
    *  A node used up today shows its spent sprite (stump, rubble) if it has one, otherwise it fades. */
-  function place(pr: Prop, key: string, cx: number, cy: number): Placed | null {
-    const used = pr.type === 'node' && !!G.s.depleted[key];
+  function place(pr: Prop, key: string, cx: number, cy: number, spent = false): Placed | null {
+    void ED.v; // the map editor's tuning
+    const used = spent || (pr.type === 'node' && !!G.s.depleted[key]);
     const id = used && pr.spent ? pr.spent : pr.sprite;
     const sp = id ? sprites[id] : undefined;
     if (!sp) return null;
@@ -269,21 +383,22 @@
     const faded = used && !pr.spent;
     const ox = (pr.dx ?? 0) * HEXW;
     const oy = (pr.dy ?? 0) * HEXW;
-    if (pr.flat) return { sprite: sp, x: cx - w / 2 + ox, y: cy - h / 2 + oy, w, h, faded, shadow: null };
+    if (pr.flat) return { sprite: sp, x: cx - w / 2 + ox, y: cy - h / 2 + oy, w, h, faded, gx: cx + ox, gy: cy + oy, shadow: null };
     const gx = cx + ox;
     const gy = groundY(cy) + oy;
-    return { sprite: sp, x: gx - sp.bx * w, y: gy - sp.by * h, w, h, faded, shadow: { cx: gx + 3, cy: gy - 1, rx: w * 0.42, ry: w * 0.15 } };
+    return { sprite: sp, x: gx - sp.bx * w, y: gy - sp.by * h, w, h, faded, gx, gy, shadow: shadowOf(sp, gx, gy, w) };
   }
 
   /** Where a figure goes: its legs centred on (x, the hex's ground point). */
-  function placeFigure(fig: Figure | undefined, walking: boolean, x: number, cy: number) {
+  function placeFigure(fig: Figure | undefined, walking: boolean, x: number, cy: number, me = false) {
+    void ED.v; // the map editor's tuning
     const id = walking && fig?.walk ? fig.walk : fig?.stand;
     const sp = id ? sprites[id] : undefined;
     if (!sp) return null;
     const h = figureH(fig);
     const w = (h * sp.w) / sp.h;
     const gy = groundY(cy);
-    return { sprite: sp, x: x - (sp.fx ?? sp.bx) * w, y: gy - sp.by * h, w, h, gx: x, gy };
+    return { sprite: sp, x: x - (sp.fx ?? sp.bx) * w, y: gy - sp.by * h, w, h, gx: x, gy, shadow: shadowOf(sp, x, gy, w, me ? PLAYER_SHADOW : SHADOW) };
   }
 
   /** Mirror around a vertical line, to face left. */
@@ -296,6 +411,7 @@
   // ---------- clicking: aim a skill, attack, or walk (step by step, in commands.ts) ----------
 
   function onclick(ev: MouseEvent) {
+    if (ED.on) return; // the editor works on pointer down
     const key = keyAt(ev);
     if (!key || key === G.s.pos) return;
     if (UI.aim) return fireAim(key);
@@ -307,6 +423,119 @@
     if (short(p.cost)) return act((s) => E.say(s, `Not enough energy: that walk needs ${p.cost}⚡ and you have ${s.energy}.`));
     walkRoute(p.path.map((x) => x.key));
   }
+
+  // ---------- the map editor ----------
+  // Paint: press and drag. Alt-click picks a hex's prop as the brush (Alt+Shift: its ground).
+  // Tune: click a hex to show the tuned object there (or select the prop on it); drag the sprite to move it
+  // over its foot point (Shift: move the whole prop on the hex); drag the shadow, or its two handles to size it.
+  // Anywhere: drag with the right or middle button, or with Space held, to pan.
+
+  let painting = false;
+  let lastPainted: string | null = null;
+  let space = $state(false);
+  type Drag =
+    | { kind: 'pan'; x: number; y: number; focus: [number, number] }
+    | { kind: 'tune'; part: string; shift: boolean; p: DOMPoint; w: number; h: number; id: string; code: string; s: Record<string, number> };
+  let drag = $state<Drag | null>(null);
+
+  const rcOf = (key: string) => key.split(':').slice(-2).map(Number) as [number, number];
+  function svgPoint(ev: PointerEvent): DOMPoint | null {
+    const m = svgEl?.getScreenCTM();
+    return m ? new DOMPoint(ev.clientX, ev.clientY).matrixTransform(m.inverse()) : null;
+  }
+  function paintAt(key: string | null) {
+    if (!key || key === lastPainted) return;
+    lastPainted = key;
+    paint(pointId, ...rcOf(key));
+  }
+
+  /** What Tune is showing, where: the sprite's box, its ground point, its shadow. */
+  const tuned = $derived.by(() => {
+    void ED.v;
+    if (!ED.on || ED.mode !== 'tune' || !ED.tune.code || !ED.tune.key) return null;
+    const hx = L.hexes.get(ED.tune.key);
+    const id = tuneSprite(ED.tune.code, ED.tune.spent);
+    if (!hx || !id) return null;
+    const code = ED.tune.code;
+    if (isFigure(code)) {
+      const fig = code === PLAYER ? content.player.figure : content.npcs[content.props[code].npc!]?.figure;
+      const f = placeFigure(fig, false, hx.cx, hx.cy, code === PLAYER);
+      return f && { id, code, hx, figure: true, x: f.x, y: f.y, w: f.w, h: f.h, gx: f.gx, gy: f.gy, shadow: f.shadow as Shadow | null };
+    }
+    const p = place(content.props[code], '', hx.cx, hx.cy, ED.tune.spent);
+    return p && { id, code, hx, figure: false, x: p.x, y: p.y, w: p.w, h: p.h, gx: p.gx, gy: p.gy, shadow: p.shadow };
+  });
+
+  function onpointerdown(ev: PointerEvent) {
+    if (!ED.on) return;
+    if (ev.button === 1 || ev.button === 2 || (ev.button === 0 && space)) {
+      ev.preventDefault();
+      drag = { kind: 'pan', x: ev.clientX, y: ev.clientY, focus: clampFocus(focus, zoom) };
+      return;
+    }
+    if (ev.button !== 0 || ED.preview) return;
+    const part = (ev.target as Element).closest('[data-tune]')?.getAttribute('data-tune');
+    const p = svgPoint(ev);
+    if (part && tuned && p) {
+      const sp = sprites[tuned.id];
+      const pr = content.props[tuned.code];
+      const d = tuned.code === PLAYER ? PLAYER_SHADOW : SHADOW;
+      drag = {
+        kind: 'tune', part, shift: ev.shiftKey && !tuned.figure, p, w: tuned.w, h: tuned.h, id: tuned.id, code: tuned.code,
+        s: { bx: tuned.figure ? (sp.fx ?? sp.bx) : sp.bx, by: sp.by, sx: sp.sx ?? 0, sy: sp.sy ?? 0, sw: sp.sw ?? d.sw, sh: sp.sh ?? d.sh, dx: pr?.dx ?? 0, dy: pr?.dy ?? 0 },
+      };
+      return;
+    }
+    const key = keyAt(ev);
+    if (!key) return;
+    if (ev.altKey) return pickFrom(pointId, ...rcOf(key), ev.shiftKey);
+    if (ED.mode === 'tune') {
+      const pr = g.byKey.get(key)?.p;
+      const has = pr && (content.props[pr]?.sprite || content.props[pr]?.type === 'npc');
+      return tuneSelect(has ? pr : ED.tune.code, key);
+    }
+    painting = true;
+    lastPainted = null;
+    beginStroke(pointId);
+    paintAt(key);
+  }
+
+  function onpointermove(ev: PointerEvent) {
+    if (drag?.kind === 'pan') {
+      const k = svgEl?.getScreenCTM()?.a ?? 1;
+      focus = clampFocus([drag.focus[0] - (ev.clientX - drag.x) / k, drag.focus[1] - (ev.clientY - drag.y) / k], zoom);
+      return;
+    }
+    if (drag?.kind === 'tune') {
+      const p = svgPoint(ev);
+      if (!p) return;
+      const dx = p.x - drag.p.x, dy = p.y - drag.p.y;
+      const { s, w, h, id, code } = drag;
+      if (drag.part === 'sprite' && drag.shift) tunePropSet(code, { dx: s.dx + dx / HEXW, dy: s.dy + dy / HEXW });
+      else if (drag.part === 'sprite') tuneSpriteSet(id, { bx: s.bx - dx / w, by: s.by - dy / h });
+      else if (drag.part === 'shadow') tuneSpriteSet(id, { sx: s.sx + dx / w, sy: s.sy + dy / w });
+      else if (drag.part === 'sw') tuneSpriteSet(id, { sw: Math.max(0.02, s.sw + dx / w) });
+      else if (drag.part === 'sh') tuneSpriteSet(id, { sh: Math.max(0.01, s.sh + dy / w) });
+      return;
+    }
+    hover = keyAt(ev);
+    if (painting) paintAt(hover);
+  }
+
+  function onpointerup() {
+    drag = null;
+    if (!painting) return;
+    painting = false;
+    endStroke();
+  }
+
+  function onkeydown(ev: KeyboardEvent) {
+    if (ev.key !== ' ' || !ED.on || (ev.target as HTMLElement | null)?.closest?.('input, textarea, select')) return;
+    space = true;
+    (document.activeElement as HTMLElement | null)?.blur?.(); // or Space would press the last button clicked
+    ev.preventDefault();
+  }
+  const onkeyup = (ev: KeyboardEvent) => ev.key === ' ' && (space = false);
 
   // ---------- what the last action did: numbers, slashes, lunges, flashes ----------
   // The enemies' turn (phase 1) plays a beat after yours, so a fight reads as blow, then answer.
@@ -368,13 +597,25 @@
     l ? `--dx:${l.dx}px;--dy:${l.dy}px;animation-delay:${l.delay}ms` : undefined;
 </script>
 
+<svelte:window {onpointerup} {onkeydown} {onkeyup} />
+
 <div class="wrap">
   <Backdrop kind={backdrop} />
   <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-  <svg viewBox={view} class:aiming={!!UI.aim} {onclick} onmousemove={(ev) => (hover = keyAt(ev))} onmouseleave={() => (hover = null)}>
+  <svg bind:this={svgEl} viewBox={view} class:aiming={!!UI.aim} class:editing={ED.on} class:panning={space || drag?.kind === 'pan'} {onclick} {onpointerdown} {onpointermove} onpointerleave={() => (hover = null)} oncontextmenu={(e) => ED.on && e.preventDefault()}>
     <defs>
       <clipPath id="avatar"><circle r="18" /></clipPath>
       <filter id="soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.5" /></filter>
+      <radialGradient id="puff">
+        <stop offset="0" stop-color={mixFog} stop-opacity="0.9" />
+        <stop offset="1" stop-color={mixFog} stop-opacity="0" />
+      </radialGradient>
+      <!-- light across the whole field from the upper left, so it reads as one surface -->
+      <linearGradient id="sun" gradientUnits="userSpaceOnUse" x1="0" y1={top} x2={L.width} y2={L.height}>
+        <stop offset="0" stop-color="#fff" stop-opacity="0.16" />
+        <stop offset="0.5" stop-color="#fff" stop-opacity="0" />
+        <stop offset="1" stop-color="#000" stop-opacity="0.1" />
+      </linearGradient>
       <marker id="arrowhead" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse">
         <path d="M0,0 L10,5 L0,10 z" fill="#e5484d" />
       </marker>
@@ -383,10 +624,47 @@
     <g class="ground" class:float={backdrop === 'sky'}>
       {#each L.order as hx (hx.key)}
         {@const col = colourOf(hx.key)}
-        <g class="cell" class:path={onPath.has(hx.key)} class:goal={hover === hx.key && !!plan} data-key={hx.key}>
-          {#each hx.sides as side, i (i)}<polygon points={side.points} fill={shade(col, side.shade)} />{/each}
-          <polygon class="top" points={hx.top} fill={col} stroke={shade(col, 0.82)} />
+        {@const gd = ground?.get(hx.key)}
+        {#if editing && padKeys.has(hx.key)}
+          <g class="cell slot" class:hot={hover === hx.key} data-key={hx.key}><polygon points={hx.top} /></g>
+        {:else}
+        <g class="cell" class:pad={padKeys.has(hx.key)} class:path={onPath.has(hx.key)} class:goal={hover === hx.key && !!plan} data-key={padKeys.has(hx.key) ? undefined : hx.key}>
+          {#if gd}
+            {#each gd.walls as w, i (i)}<polygon points={w.points} fill={w.fill} />{/each}
+            {#each gd.lips as l, i (i)}<polygon points={l.points} fill={l.fill} />{/each}
+            <polygon class="top" points={hx.top} fill={gd.top} />
+            {#if gd.patch || gd.bands.length}
+              <!-- patches and edge bands, clipped to this hex's top so they meet the next hex's without a break -->
+              {@const cid = `clip-${hx.key.replace(/[^\w-]/g, '_')}`}
+              <clipPath id={cid}><polygon points={hx.top} /></clipPath>
+              <g clip-path="url(#{cid})" class="deco">
+                {#if gd.patch}
+                  <image href={patchImage(pointId, field.byKey.get(hx.key)!.t)} transform={patchTransform} x={-PATCH_EXTENT / 2} y={-PATCH_EXTENT / 2} width={PATCH_EXTENT} height={PATCH_EXTENT} preserveAspectRatio="none" />
+                {/if}
+                {#each gd.bands as b, i (i)}<path d={b.d} stroke={b.stroke} stroke-width={b.width} opacity={b.opacity} fill="none" stroke-linecap="round" stroke-linejoin="round" />{/each}
+              </g>
+            {/if}
+            <polygon points={hx.top} fill="url(#sun)" class="deco" />
+            {#each gd.shades as sh, i (i)}<polygon points={sh.points} fill={sh.fill ?? '#000'} opacity={sh.opacity} class="deco" />{/each}
+            {#each gd.decos as d, i (i)}
+              {#if d.tag === 'path'}
+                <path d={d.d} stroke={d.stroke ?? 'none'} stroke-width={d.width} opacity={d.opacity} fill={d.fill ?? 'none'} stroke-linecap="round" stroke-linejoin="round" class="deco {d.cls ?? ''}" style:animation-delay="-{d.delay ?? 0}s" />
+              {:else}
+                <ellipse cx={d.cx} cy={d.cy} rx={d.rx} ry={d.ry} fill={d.fill} opacity={d.opacity} class="deco {d.cls ?? ''}" style:animation-delay="-{d.delay ?? 0}s" />
+              {/if}
+            {/each}
+            {#each gd.lines as ln, i (i)}<polyline points={ln.points} stroke={ln.stroke} stroke-width={ln.width} opacity={ln.opacity} fill="none" stroke-linecap="round" class="deco" />{/each}
+          {:else}
+            {#each hx.sides as side, i (i)}<polygon points={side.points} fill={shade(col, side.shade)} />{/each}
+            <polygon class="top" points={hx.top} fill={col} stroke={shade(col, 0.82)} />
+          {/if}
+          {#if editing}
+            <polygon points={hx.top} class="edit-hex" class:hot={hover === hx.key} class:stage={ED.mode === 'tune' && ED.tune.key === hx.key} />
+            <!-- random slots are marked only while painting, where they matter -->
+            {#if ED.mode === 'paint' && rawTokens.get(hx.key)?.endsWith('.*')}<text x={hx.cx} y={hx.cy + 4} class="rand">?</text>{/if}
+          {/if}
         </g>
+        {/if}
       {/each}
     </g>
 
@@ -410,25 +688,31 @@
     </g>
 
     {#each drawables as d (d.key)}
-      {#if d.kind === 'foe'}
+      {#if d.kind === 'fog'}
+        <g class="fogblock" class:cell={d.real} data-key={d.real ? d.hx.key : undefined}>
+          {#each d.fog.spill as sp, i (i)}<polygon points={sp} fill={FOG_TOP} opacity={i ? 0.4 : 0.18} />{/each}
+          {#each d.fog.walls as w, i (i)}<polygon points={w.points} fill={w.fill} stroke={w.fill} stroke-width="0.8" />{/each}
+          <polygon points={d.fog.top} fill={FOG_TOP} stroke={FOG_TOP} stroke-width="0.8" />
+        </g>
+      {:else if d.kind === 'foe'}
         {@const f = d.foe}
         {@const pr = content.props[f.kind]}
         {@const st = K.foeStats(content, f.kind)}
-        {@const sp = pr?.sprite ? sprites[pr.sprite] : undefined}
-        {@const gy = groundY(d.hx.cy) - d.hx.cy}
-        {@const w = HEXW * (pr?.size ?? 0.8)}
-        {@const h = sp ? (w * sp.h) / sp.w : 40}
-        {@const top = sp ? gy - sp.by * h : -44}
+        <!-- placed like a prop, around (0, 0): the group moves from hex to hex -->
+        {@const p = pr ? place(pr, '', 0, 0) : null}
+        {@const gy = groundY(0)}
+        {@const sh = p?.shadow ?? { cx: 0, cy: gy - 1, rx: 18, ry: 6, o: 0.3 }}
+        {@const top = p ? p.y : -44}
         {@const lunge = lunges[f.pos]}
         <g class="foe" class:engaged={f.engaged} style:transform="translate({d.hx.cx}px, {d.hx.cy}px)" data-key={f.pos}>
-          <ellipse cy={gy - 1} rx={sp ? w * 0.42 : 18} ry={sp ? w * 0.15 : 6} fill="#000" opacity="0.3" filter="url(#soft)" />
-          {#if f.engaged}<ellipse cy={gy - 1} rx={sp ? w * 0.55 : 24} ry={sp ? w * 0.2 : 9} class="foe-ring" />{/if}
+          <ellipse cx={sh.cx} cy={sh.cy} rx={sh.rx} ry={sh.ry} fill="#000" opacity={sh.o} filter="url(#soft)" />
+          {#if f.engaged}<ellipse cx={sh.cx} cy={sh.cy} rx={sh.rx * 1.3} ry={sh.ry * 1.33} class="foe-ring" />{/if}
           {#key lunge?.id}
             <g class:lunge={!!lunge} style={lungeStyle(lunge)}>
-              {#if sp}
+              {#if p}
                 <!-- djv2's art faces left: turn to face the player -->
-                <g transform={player && player.x > d.hx.cx + 1 ? 'scale(-1,1)' : undefined}>
-                  <image href={asset(sp.file)} x={-sp.bx * w} y={top} width={w} height={h} />
+                <g transform={mirror(!!player && player.x > d.hx.cx + 1, p.gx)}>
+                  <image href={asset(p.sprite.file)} x={p.x} y={p.y} width={p.w} height={p.h} />
                 </g>
               {:else}
                 <text y="-14" class="emoji">{pr?.icon ?? '?'}</text>
@@ -442,12 +726,18 @@
         </g>
       {:else if d.kind === 'prop'}
         {@const { hx, cell, pr } = d}
-        <g class="obj" class:ghost={fighting} data-key={cell.key}>
-          {#if pr.type === 'npc' && pr.npc}
+        <g class="obj" class:ghost={fighting} class:faint={ED.on && ED.mode === 'paint' && ED.props === 'faint'} data-key={cell.key}>
+          {#if pr.code === PLAYER}
+            {@const f = placeFigure(content.player.figure, false, hx.cx, hx.cy, true)}
+            {#if f}
+              <ellipse cx={f.shadow.cx} cy={f.shadow.cy} rx={f.shadow.rx} ry={f.shadow.ry} fill="#000" opacity={f.shadow.o} filter="url(#soft)" />
+              <image href={asset(f.sprite.file)} x={f.x} y={f.y} width={f.w} height={f.h} />
+            {/if}
+          {:else if pr.type === 'npc' && pr.npc}
             {@const npc = content.npcs[pr.npc]}
             {@const f = placeFigure(npc.figure, false, hx.cx, hx.cy)}
             {#if f}
-              <ellipse cx={f.gx} cy={f.gy - 1} rx={f.w * 0.42} ry={f.w * 0.15} fill="#000" opacity="0.32" filter="url(#soft)" />
+              <ellipse cx={f.shadow.cx} cy={f.shadow.cy} rx={f.shadow.rx} ry={f.shadow.ry} fill="#000" opacity={f.shadow.o} filter="url(#soft)" />
               <g transform={mirror(!!player && player.x < hx.cx - 1, f.gx)}>
                 <image href={asset(f.sprite.file)} x={f.x} y={f.y} width={f.w} height={f.h} />
               </g>
@@ -459,10 +749,10 @@
               </g>
             {/if}
           {:else}
-            {@const p = place(pr, cell.key, hx.cx, hx.cy)}
+            {@const p = place(pr, cell.key, hx.cx, hx.cy, ED.on && ED.mode === 'tune' && ED.tune.spent && cell.key === ED.tune.key)}
             {#if p}
               {#if p.shadow}
-                <ellipse cx={p.shadow.cx} cy={p.shadow.cy} rx={p.shadow.rx} ry={p.shadow.ry} fill="#000" opacity={p.faded ? 0.12 : 0.32} filter="url(#soft)" />
+                <ellipse cx={p.shadow.cx} cy={p.shadow.cy} rx={p.shadow.rx} ry={p.shadow.ry} fill="#000" opacity={p.faded ? p.shadow.o * 0.4 : p.shadow.o} filter="url(#soft)" />
               {/if}
               <image href={asset(p.sprite.file)} x={p.x} y={p.y} width={p.w} height={p.h} opacity={p.faded ? 0.35 : 1} />
             {:else}
@@ -475,12 +765,12 @@
           {/if}
         </g>
       {:else if player}
-        {@const f = placeFigure(content.player.figure, player.walking, player.x, player.y)}
+        {@const f = placeFigure(content.player.figure, player.walking, player.x, player.y, true)}
         {@const lunge = G.s.pos ? lunges[G.s.pos] : undefined}
         <g class="me">
           {#if f}
-            <ellipse cx={f.gx} cy={f.gy - 1} rx={f.w * 0.5} ry={f.w * 0.17} fill="#000" opacity="0.3" filter="url(#soft)" />
-            <ellipse cx={f.gx} cy={f.gy - 1} rx={f.w * 0.62} ry={f.w * 0.22} class="ring" />
+            <ellipse cx={f.shadow.cx} cy={f.shadow.cy} rx={f.shadow.rx} ry={f.shadow.ry} fill="#000" opacity={f.shadow.o} filter="url(#soft)" />
+            <ellipse cx={f.shadow.cx} cy={f.shadow.cy} rx={f.shadow.rx * 1.24} ry={f.shadow.ry * 1.3} class="ring" />
             {#key lunge?.id}
               <g class:lunge={!!lunge} style={lungeStyle(lunge)}>
                 <g transform={mirror(lunge ? lunge.dx < 0 : player.left, f.gx)}>
@@ -495,6 +785,23 @@
         </g>
       {/if}
     {/each}
+
+    {#if tuned && !ED.preview}
+      <!-- Tune: the box to drag the sprite by, its foot point, its shadow and the shadow's size handles -->
+      {@const t = tuned}
+      {@const hy = groundY(t.hx.cy)}
+      <g class="tune">
+        <rect class="t-box" x={t.x} y={t.y} width={t.w} height={t.h} data-tune="sprite" />
+        <path class="t-hex" d="M {t.hx.cx - 5} {hy} h 10 M {t.hx.cx} {hy - 5} v 10" />
+        {#if t.shadow}
+          {@const sh = t.shadow}
+          <ellipse class="t-shadow" cx={sh.cx} cy={sh.cy} rx={sh.rx} ry={sh.ry} data-tune="shadow" />
+          <rect class="t-handle" x={sh.cx + sh.rx - 4} y={sh.cy - 4} width="8" height="8" data-tune="sw" />
+          <rect class="t-handle" x={sh.cx - 4} y={sh.cy + sh.ry - 4} width="8" height="8" data-tune="sh" />
+        {/if}
+        <circle class="t-foot" cx={t.gx} cy={t.gy} r="3.5" />
+      </g>
+    {/if}
 
     {#each slashes as f (f.id)}
       <g transform="translate({f.x},{f.y}) rotate({f.deg})">
@@ -542,6 +849,9 @@
   .obj {
     cursor: pointer;
   }
+  .cell.pad {
+    cursor: default;
+  }
   .me {
     pointer-events: none;
   }
@@ -550,6 +860,40 @@
     stroke: #ff7a45;
     stroke-width: 2.5;
     opacity: 0.85;
+  }
+  .deco {
+    pointer-events: none;
+  }
+  .wave {
+    animation: wave 4s ease-in-out infinite;
+  }
+  @keyframes wave {
+    0%, 100% { transform: translateX(-2px); opacity: 0.15; }
+    50% { transform: translateX(3px); }
+  }
+  .foam {
+    animation: foam 3s ease-in-out infinite;
+  }
+  @keyframes foam {
+    0%, 100% { opacity: 0.15; }
+    50% { opacity: 0.6; }
+  }
+  .glint {
+    animation: glint 5s ease-in-out infinite;
+  }
+  @keyframes glint {
+    0%, 80%, 100% { opacity: 0; }
+    88% { opacity: 0.95; }
+  }
+  .drift {
+    animation: drift 9s ease-in-out infinite alternate;
+  }
+  @keyframes drift {
+    from { transform: translateX(-6px); }
+    to { transform: translateX(6px); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .wave, .foam, .glint, .drift { animation: none; }
   }
   .cell.path .top {
     stroke: #ffffff;
@@ -630,6 +974,93 @@
   }
   .obj.ghost {
     opacity: 0.35;
+  }
+  /* the map editor */
+  .obj.faint {
+    opacity: 0.25;
+  }
+  svg.editing .me {
+    pointer-events: none;
+    opacity: 0.6;
+  }
+  svg.panning,
+  svg.panning * {
+    cursor: grab !important;
+  }
+  .edit-hex.stage {
+    stroke: #ffd65c;
+    stroke-width: 2.5;
+    fill: rgb(255 214 92 / 0.15);
+  }
+  .t-box {
+    fill: rgb(255 255 255 / 0.01);
+    stroke: #ffd65c;
+    stroke-width: 1;
+    stroke-dasharray: 4 3;
+    cursor: move;
+  }
+  .t-shadow {
+    fill: rgb(255 214 92 / 0.08);
+    stroke: #ffd65c;
+    stroke-width: 1.5;
+    cursor: move;
+  }
+  .t-handle {
+    fill: #ffd65c;
+    stroke: #0a1210;
+    stroke-width: 1.5;
+  }
+  .t-handle:nth-of-type(2) {
+    cursor: ew-resize;
+  }
+  .t-handle:nth-of-type(3) {
+    cursor: ns-resize;
+  }
+  .t-foot {
+    fill: #e5484d;
+    stroke: #fff;
+    stroke-width: 1.5;
+    pointer-events: none;
+  }
+  .t-hex {
+    stroke: #fff;
+    stroke-width: 1.5;
+    opacity: 0.8;
+    pointer-events: none;
+  }
+  svg.editing,
+  svg.editing .cell,
+  svg.editing .obj {
+    cursor: cell;
+  }
+  svg.editing {
+    touch-action: none;
+  }
+  .slot polygon {
+    fill: rgb(255 255 255 / 0.04);
+    stroke: rgb(255 255 255 / 0.45);
+    stroke-width: 1;
+    stroke-dasharray: 3 3;
+  }
+  .slot.hot polygon,
+  .edit-hex.hot {
+    fill: rgb(255 255 255 / 0.22);
+    stroke: #fff;
+    stroke-width: 2;
+  }
+  .edit-hex {
+    fill: none;
+    stroke: rgb(0 0 0 / 0.18);
+    stroke-width: 1;
+  }
+  .rand {
+    font: 700 13px var(--font-label);
+    fill: #fff;
+    stroke: #0a1210;
+    stroke-width: 3;
+    paint-order: stroke;
+    text-anchor: middle;
+    pointer-events: none;
   }
   .aimhex {
     fill: #6cc4ff;

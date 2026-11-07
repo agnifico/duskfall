@@ -1,8 +1,8 @@
 {
   "tree": { "type": "node", "name": "Tree", "icon": "🌳", "sprite": "grok_nodes/tree", "size": 0.95, "tier": 1, "verb": "Chop", "item": "wood", "yield": 2, "cost": 1, "spent": "grok_nodes/stump" },
-  "palm": { "type": "node", "name": "Palm", "icon": "🌴", "sprite": "grok_nuv/palm", "size": 0.85, "tier": 1, "verb": "Chop", "item": "wood", "yield": 2, "cost": 1, "spent": "grok_nodes/stump" },
+  "palm": { "type": "node", "name": "Palm", "icon": "🌴", "sprite": "grok_nuv/palm", "size": 0.63, "tier": 1, "verb": "Chop", "item": "wood", "yield": 2, "cost": 1, "spent": "grok_nodes/stump" },
   "pine": { "type": "node", "name": "Pine", "icon": "🌲", "sprite": "grok_nuv/pine", "size": 0.8, "tier": 1, "verb": "Chop", "item": "wood", "yield": 2, "cost": 1, "bonus": { "item": "resin", "chance": 0.2 }, "spent": "grok_nodes/stump" },
-  "driftwood": { "type": "node", "name": "Driftwood", "icon": "🪵", "sprite": "grok_nuv/driftwood", "size": 0.8, "tier": 1, "verb": "Collect", "item": "wood", "yield": 2, "cost": 1 },
+  "driftwood": { "type": "node", "name": "Driftwood", "icon": "🪵", "sprite": "grok_nuv/driftwood", "dy": 0, "dx": -0.12, "size": 0.6, "tier": 1, "verb": "Collect", "item": "wood", "yield": 2, "cost": 1 },
   "birch": { "type": "node", "name": "Birch", "icon": "🌳", "sprite": "grok_nodes/birch", "size": 0.8, "tier": 1, "verb": "Chop", "item": "wood", "yield": [5, 8], "cost": 2, "bonus": { "item": "birch-bark", "chance": 0.25 }, "spent": "grok_nodes/stump" },
   "oak": { "type": "node", "name": "Oak", "icon": "🌳", "sprite": "grok_nodes/oak", "size": 1.1, "tier": 2, "verb": "Chop", "item": "wood", "yield": [10, 15], "cost": 3, "bonus": { "item": "acorns", "chance": 0.25 }, "spent": "grok_nodes/stump" },
   "ether": { "type": "node", "name": "Etherwood", "icon": "🌳", "sprite": "grok_nodes/etherwood", "size": 1.1, "tier": 3, "verb": "Chop", "item": "etherwood", "yield": [2, 5], "cost": 4, "spent": "grok_nodes/stump" },
@@ -16,11 +16,11 @@
   "red": { "type": "node", "name": "Red crystal vein", "icon": "🪨", "sprite": "grok_nodes/redvein", "size": 0.85, "tier": 3, "verb": "Mine", "item": "red-crystal", "yield": [2, 5], "extra": { "item": "stone", "amount": 5 }, "cost": 4, "spent": "grok_nodes/rubble" },
 
   "berries": { "type": "node", "name": "Berry bush", "icon": "🫐", "sprite": "grok_nodes/berrybush", "size": 0.62, "tier": 1, "verb": "Pick", "item": "berries", "yield": [2, 4], "cost": 1 },
-  "shrooms": { "type": "node", "name": "Mushroom ring", "icon": "🍄", "sprite": "grok_nodes/mushrooms", "size": 0.62, "tier": 1, "verb": "Pick", "item": "brown-mushroom", "yield": [2, 3], "cost": 1, "bonus": { "item": "red-mushroom", "chance": 0.2 } },
+  "shrooms": { "type": "node", "name": "Mushroom ring", "icon": "🍄", "sprite": "grok_nodes/mushrooms", "size": 0.42, "tier": 1, "verb": "Pick", "item": "brown-mushroom", "yield": [2, 3], "cost": 1, "bonus": { "item": "red-mushroom", "chance": 0.2 } },
 
   "house": { "type": "rest", "name": "Sylvie's house", "icon": "🏠", "sprite": "grok_nuv/cottage", "size": 1.2, "text": "Whitewashed walls and a red roof. Sylvie says you can sleep here: an hour's rest fills your energy, once a day." },
-  "hut": { "type": "look", "name": "the fishing hut", "icon": "🛖", "sprite": "gemini_nuv/fishinghut", "size": 1.05, "text": "Nets drying, nobody home. A boat-shaped dent in the sand where a boat used to be." },
-  "fire": { "type": "look", "name": "the campfire", "icon": "🔥", "sprite": "grok_nuv/campfire", "size": 0.62, "flat": true, "text": "Still warm. Someone sat here this morning." },
+  "hut": { "type": "look", "name": "the fishing hut", "icon": "🛖", "sprite": "gemini_nuv/fishinghut", "dy": 0.04, "dx": -0.04, "size": 0.85, "text": "Nets drying, nobody home. A boat-shaped dent in the sand where a boat used to be." },
+  "fire": { "type": "look", "name": "the campfire", "icon": "🔥", "sprite": "grok_nuv/campfire", "size": 0.62, "dx": 0, "dy": -0.07,"flat": true, "text": "Still warm. Someone sat here this morning." },
   "tent": { "type": "look", "name": "the command tent", "icon": "⛺", "sprite": "grok_nuv/tent", "size": 1.0, "text": "Canvas stamped with a golden sun. Locked chests, rolled-up maps." },
   "pillars": { "type": "look", "name": "the old pillars", "icon": "🏛️", "sprite": "grok_nuv/pillars", "size": 0.75, "text": "Dragon Empire stonework, older than anything else on this shore." },
   "drill": { "type": "look", "name": "the drill", "icon": "🏗️", "sprite": "grok_nuv/drill", "size": 0.85, "text": "A Saints drill, still warm. Nobody's here. Fresh boot prints lead down to the water." },

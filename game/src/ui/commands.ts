@@ -1,6 +1,7 @@
 // What buttons and hotkeys do. Both go through here, so a hotkey and its button always agree.
 
 import { DEV, G, act, setDev } from '../lib/game.svelte';
+import { ED, closeEditor, dirty, openEditor } from '../lib/editor.svelte';
 import { UI, inIntro, notify, savePref, type PanelId } from '../lib/ui.svelte';
 import { content } from '../content';
 import * as E from '../engine/actions';
@@ -193,6 +194,19 @@ export function cycleTheme(): void {
   notify(`Theme: ${themeOf(id).name}`);
 }
 
+/** The map editor, in dev mode only, on the hex field. */
+export function toggleEditor(): void {
+  if (ED.on) {
+    if (dirty() && !confirm('Leave the editor? Unsaved changes stay on screen until a reload, but are not in the file.')) return;
+    return closeEditor();
+  }
+  if (!DEV.on || !G.s.point || UI.map) return;
+  UI.panel = null;
+  openEditor();
+}
+
+const EDITOR_KEYS = new Set(['e', 'h', '[', ']', 'm']);
+
 const KEYS: Record<string, () => void> = {
   b: () => togglePanel('bag'),
   q: () => togglePanel('quests'),
@@ -205,6 +219,7 @@ const KEYS: Record<string, () => void> = {
   t: cycleTheme,
   h: toggleUi,
   r: rerollEnemies,
+  e: toggleEditor,
   '[': () => turnField(-15),
   ']': () => turnField(15),
 };
@@ -231,6 +246,8 @@ export function onKey(e: KeyboardEvent): void {
     e.preventDefault();
     return;
   }
+  // in the map editor, only these game keys; its own are in EditorBar.svelte
+  if (ED.on && !EDITOR_KEYS.has(k)) return;
   const fn = KEYS[k];
   if (fn) {
     e.preventDefault();

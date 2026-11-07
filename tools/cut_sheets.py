@@ -41,6 +41,17 @@ NODES = ['tree', 'birch', 'oak', 'etherwood', 'stump', 'sapling', 'smallstones',
          'bouldercluster', 'silvervein', 'malachitevein', 'goldvein', 'redvein', 'rubble', 'berrybush', 'mushrooms']
 WRECK = ['planks', 'mast', 'barrel', 'crate', 'rowboat', 'searock', 'net', 'figurehead',
          'reef', 'sandbar', 'door', 'seachest', 'wheel', 'lantern', 'seagull', 'bleachedwood']
+ICONS1 = ['health', 'spirit', 'energy', 'attack', 'defence', 'speed', 'evasion', 'precision', 'crit', 'critdmg',
+          'level', 'resonance', 'xp', 'coins', 'time', 'objective', 'bag', 'quests', 'character', 'map',
+          'settings', 'people', 'rest', 'search']
+# None: a cell left out (a redo replaces it, or the skill was dropped)
+SKILLS = ['strike', None, 'whirl', 'guard', 'heavy', None, 'heal', 'focus', 'cleave', None, 'counter', None]
+SKILLS_REDO = ['dash', 'sling', None, 'warcry']
+LIFESKILLS = ['woodcutting', 'mining', 'herblore', 'foraging', 'fishing', 'cooking', 'smithing', 'alchemy',
+              'crafting', 'farming', 'hunting', 'carpentry']
+ICONS2 = ['woodcutting', 'mining', 'herblore', 'foraging', 'fishing', 'cooking', 'smithing', 'alchemy',
+          'hatchet', 'pickaxe', 'sickle', 'rod', 'tools', 'crafting', 'locked', 'unknown',
+          'strike', 'dash', 'whirl', 'guard', 'heavy', 'sling', 'heal', 'focus']
 
 # set name, file in extras/, columns, rows, object names in reading order
 SHEETS = [
@@ -51,6 +62,11 @@ SHEETS = [
     ('grok_items', 'Tx2vt.jpg', 4, 4, ITEMS),
     ('grok_nodes', 'mlKS4.jpg', 4, 4, NODES),
     ('grok_wreck', 'kpSkq.jpg', 4, 4, WRECK),
+    ('icons', 'icons_grok_1.jpg', 6, 4, ICONS1),
+    ('icons', 'icons_grok_2.jpg', 6, 4, ICONS2),
+    ('skills', 'rVCjL.jpg', 4, 3, SKILLS),
+    ('skills', 'P4CD6.jpg', 4, 1, SKILLS_REDO),
+    ('lifeskills', '7Uoau.jpg', 4, 3, LIFESKILLS),  # glyph only (see GLYPH); the UI draws the disc
     ('grok_chars', '7pwSI.jpg', 2, 2, ['heroine-stand', 'heroine-walk', 'sylvie-stand', 'sylvie-walk']),
 ]
 # set name, folder in extras/, file names without .png. Each image is one object on a transparent background.
@@ -63,6 +79,11 @@ SINGLES = [
 MAX_SIDE = 384
 DESPILL = {'grok_chars'}  # sheets with no magenta in them: remove any magenta cast entirely
 OVERFLOW = {'grok_chars': 0.15}  # sheets whose objects spill past their cells: cut from a window this much larger
+# Per-set overrides for cut_cell. icons: plain grey sheet, no cards to strip (a flat silhouette is not one), and
+# only near-exact grey counts as a gap. skills: badges on white, whose white highlights must never count as gaps.
+# One-colour glyph sheets (light glyph on a dark disc): cut by brightness into the glyph colour on transparent.
+GLYPH = {'lifeskills'}
+CUT = {'icons': dict(cards=False, gap_tol=16, speck_tol=18), 'skills': dict(cards=False, gap_tol=0, speck_tol=0)}
 
 
 def flood_remove(img, allowed, seeds, colour, tol):
@@ -74,7 +95,7 @@ def flood_remove(img, allowed, seeds, colour, tol):
     return np.isin(lab, hit[hit > 0])
 
 
-def cut_cell(cell, inside=True, despill=False, home=None):
+def cut_cell(cell, inside=True, despill=False, home=None, cards=True, gap_tol=40, speck_tol=75):
     """home: (y0, y1, x0, x1) of the cell inside a larger window. Only pieces centred in it are kept."""
     H, W, _ = cell.shape
     keep = np.ones((H, W), bool)
@@ -90,7 +111,7 @@ def cut_cell(cell, inside=True, despill=False, home=None):
     keep &= ~rem
 
     bg_colours = [A]
-    for _ in range(2):  # flat cards left around the object (Grok)
+    for _ in range(2 if cards else 0):  # flat cards left around the object (Grok)
         if not keep.any():
             break
         band = ndi.binary_erosion(keep, iterations=3) & ~ndi.binary_erosion(keep, iterations=6)
@@ -109,7 +130,7 @@ def cut_cell(cell, inside=True, despill=False, home=None):
         bg_colours.append(B)
 
     for colour in bg_colours:  # background showing through gaps inside the object
-        cand = keep & (np.linalg.norm(cell - colour, axis=2) < 40)
+        cand = keep & (np.linalg.norm(cell - colour, axis=2) < gap_tol)
         lab2, n2 = ndi.label(cand)
         if n2:
             sz = ndi.sum(cand, lab2, range(1, n2 + 1))
@@ -151,7 +172,7 @@ def cut_cell(cell, inside=True, despill=False, home=None):
     near_bg = bgcol[iy, ix]
     # Specks of background inside the object (gaps in foliage, between stones) are unmixed like edges.
     to_bg = np.min([np.linalg.norm(cell - col, axis=2) for col in bg_colours], axis=0)
-    specks = obj & (to_bg < 75)
+    specks = obj & (to_bg < speck_tol)
     near_bg[specks] = bg_colours[0]
     inner = obj & (dist >= 4) & ~ndi.binary_dilation(specks, iterations=2)
     if inner.any():
@@ -199,6 +220,23 @@ def cut_cell(cell, inside=True, despill=False, home=None):
     y0, y1, x0, x1 = ys.min(), ys.max() + 1, xs.min(), xs.max() + 1
     rgba = np.dstack([out, alpha * 255]).astype(np.uint8)[y0:y1, x0:x1]
     return rgba
+
+
+def cut_glyph(cell):
+    """A light one-colour glyph on darker ground: alpha from brightness, colour from the glyph's solid core."""
+    L = cell.mean(axis=2)
+    lo, hi = np.percentile(L, 50), np.percentile(L, 99)
+    a = np.clip((L - lo - 0.25 * (hi - lo)) / (0.6 * (hi - lo)), 0, 1)
+    lab, n = ndi.label(a > 0.5)
+    if n == 0:
+        return None
+    sizes = ndi.sum(a > 0.5, lab, range(1, n + 1))
+    keep = np.isin(lab, 1 + np.where(sizes >= 0.002 * a.size)[0])  # drop specks
+    a = a * ndi.binary_dilation(keep, iterations=3)
+    col = np.median(cell[a > 0.95], axis=0)
+    ys, xs = np.where(a > 0.02)
+    out = np.dstack([np.broadcast_to(col, cell.shape), a * 255]).astype(np.uint8)
+    return out[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
 
 
 def base_point(a):
@@ -251,6 +289,8 @@ def main():
         H, W, _ = sheet.shape
         os.makedirs(os.path.join(PUBLIC, 'sprites', name), exist_ok=True)
         for k, obj_name in enumerate(names):
+            if obj_name is None:
+                continue
             r, c = divmod(k, cols)
             cy0, cy1 = round(r * H / rows), round((r + 1) * H / rows)
             cx0, cx1 = round(c * W / cols), round((c + 1) * W / cols)
@@ -258,7 +298,8 @@ def main():
             my, mx = round(m * (cy1 - cy0)), round(m * (cx1 - cx0))
             wy0, wy1, wx0, wx1 = max(0, cy0 - my), min(H, cy1 + my), max(0, cx0 - mx), min(W, cx1 + mx)
             home = (cy0 - wy0, cy1 - wy0, cx0 - wx0, cx1 - wx0) if m else None
-            rgba = cut_cell(sheet[wy0:wy1, wx0:wx1], inside=not name.endswith('_indo'), despill=name in DESPILL, home=home)
+            rgba = cut_glyph(sheet[wy0:wy1, wx0:wx1]) if name in GLYPH else cut_cell(sheet[wy0:wy1, wx0:wx1], inside=not name.endswith('_indo'), despill=name in DESPILL, home=home,
+                            **CUT.get(name, {}))
             if rgba is None:
                 print(f'  {name}/{obj_name}: nothing found')
                 continue
@@ -267,7 +308,7 @@ def main():
             rel = f'sprites/{name}/{obj_name}.png'
             im.save(os.path.join(PUBLIC, rel))
             manifest[f'{name}/{obj_name}'] = {'file': rel, 'w': im.width, 'h': im.height, 'bx': round(bx, 3), 'by': round(by, 3), 'fx': round(fx, 3)}
-        print(f'  {name}: {len(names)} objects')
+        print(f'  {name}: {sum(n is not None for n in names)} objects')
     cut_singles(manifest)
     with open(MANIFEST, 'w') as f:
         json.dump(manifest, f, indent=1)

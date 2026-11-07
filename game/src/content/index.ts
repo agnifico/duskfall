@@ -9,6 +9,7 @@ import npcs from './npcs.json';
 import player from './player.json';
 import skills from './skills.json';
 import spritesRaw from './sprites.json';
+import tuningRaw from './tuning.json';
 
 const landFiles = import.meta.glob<Land>('./lands/*.json', { eager: true, import: 'default' });
 const pointFiles = import.meta.glob<Point>('./points/*.json', { eager: true, import: 'default' });
@@ -39,7 +40,9 @@ export const pointsByZone: Record<string, Point[]> = {};
 for (const p of Object.values(points)) (pointsByZone[p.zone] ??= []).push(p);
 
 /** Cut sprites, written by tools/cut_sheets.py. bx, by: where the object meets the ground, as fractions.
- *  fx: the centre of its bottom third, which for a figure is between its legs. */
+ *  fx: the centre of its bottom third, which for a figure is between its legs.
+ *  sx, sy, sw, sh, so: its cast shadow (offset from the ground point, radii, all in drawn widths; opacity),
+ *  from tuning.json; ui/shadow.ts has the defaults. */
 export interface Sprite {
   file: string;
   w: number;
@@ -47,8 +50,30 @@ export interface Sprite {
   bx: number;
   by: number;
   fx?: number;
+  sx?: number;
+  sy?: number;
+  sw?: number;
+  sh?: number;
+  so?: number;
 }
+
+/** Hand-tuned values per sprite, set in the map editor and kept apart from sprites.json, which the cutting
+ *  tool rewrites. A tuned bx is the foot point for figures too (it replaces fx). */
+export type Tune = Partial<Pick<Sprite, 'bx' | 'by' | 'sx' | 'sy' | 'sw' | 'sh' | 'so'>>;
+export const tuning = tuningRaw as Record<string, Tune>;
+const cut = structuredClone(spritesRaw) as Record<string, Sprite>;
 export const sprites = spritesRaw as Record<string, Sprite>;
+const TUNED = ['bx', 'by', 'fx', 'sx', 'sy', 'sw', 'sh', 'so'] as const;
+
+/** Lay a sprite's tuning over its cut values (again, after the editor changes it). */
+export function applyTune(id: string): void {
+  const s = sprites[id];
+  if (!s || !cut[id]) return;
+  for (const k of TUNED) delete s[k];
+  Object.assign(s, cut[id], tuning[id] ?? {});
+  if (tuning[id]?.bx != null) s.fx = tuning[id].bx;
+}
+for (const id of Object.keys(tuning)) applyTune(id);
 
 /** URL for a file in public/. */
 export const asset = (path: string) => `${import.meta.env.BASE_URL}${path}`;
@@ -58,11 +83,12 @@ const zoneIds = new Set(Object.values(lands).flatMap((l) => l.zones.map((z) => z
 const itemIds = new Set(Object.keys(content.items));
 for (const l of content.world.lands) if (!l.locked && !lands[l.id]) console.warn(`world: land ${l.id} has no file in lands/`);
 for (const p of Object.values(points)) {
-  if (!zoneIds.has(p.zone)) console.warn(`point ${p.id}: zone "${p.zone}" is not in any land`);
+  if (p.zone !== 'dev' && !zoneIds.has(p.zone)) console.warn(`point ${p.id}: zone "${p.zone}" is not in any land`);
   for (const code of p.table) if (!props[code]) console.warn(`point ${p.id}: unknown prop "${code}" in its table`);
   for (const code of p.enemies?.table ?? []) if (!props[code]?.foe) console.warn(`point ${p.id}: "${code}" in its enemies isn't an enemy`);
   for (const row of p.rows)
     for (const tok of row.trim().split(/\s+/)) {
+      if (tok === '_') continue;
       const dot = tok.indexOf('.');
       const t = dot < 0 ? tok : tok.slice(0, dot);
       const code = dot < 0 ? '' : tok.slice(dot + 1);

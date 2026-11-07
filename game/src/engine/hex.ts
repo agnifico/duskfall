@@ -21,6 +21,7 @@ export function grid(content: Content, pointId: string, day: number): Grid {
   const cells: Cell[] = [];
   P.rows.forEach((row, r) =>
     row.trim().split(/\s+/).forEach((tok, c) => {
+      if (tok === '_') return; // no hex here: lets a field take any outline
       const dot = tok.indexOf('.');
       const t = dot < 0 ? tok : tok.slice(0, dot);
       let p: string | null = dot < 0 ? null : tok.slice(dot + 1);
@@ -35,6 +36,11 @@ export function grid(content: Content, pointId: string, day: number): Grid {
   };
   cache.set(k, g);
   return g;
+}
+
+/** Drop a point's cached grids, after its rows change (the map editor). */
+export function forget(pointId: string): void {
+  for (const k of cache.keys()) if (k.startsWith(`${pointId}@`)) cache.delete(k);
 }
 
 const EVEN: [number, number][] = [[1, 0], [-1, 0], [-1, -1], [0, -1], [-1, 1], [0, 1]];
