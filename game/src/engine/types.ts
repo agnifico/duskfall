@@ -34,6 +34,74 @@ export interface Prop {
   amount?: number; // secret: how many of its item
   hidden?: boolean; // secret: invisible until found
   npc?: string; // npc: id in npcs.json
+  foe?: FoeData; // enemy: how it fights
+}
+
+/** Fighting stats. Player's are in rules.ts; an enemy's in its prop's `foe.stats`. */
+export interface Stats {
+  hp: number;
+  atk: number;
+  def: number;
+  spd: number; // tempo: actions per tick, against the player's speed
+  eva: number;
+  prc: number;
+  crit: number; // chance, 0..1
+  critDmg: number; // multiplier
+}
+
+/** Attack shapes on hexes, aimed from the attacker towards a target hex. */
+export type Shape =
+  | { shape: 'arc'; width: 1 | 3 } // the hex in front, or the 3 in front
+  | { shape: 'line'; length: number } // straight along one of the six directions
+  | { shape: 'area'; rings: number }; // every hex within `rings` of the attacker
+
+export interface FoeData {
+  stats: Partial<Stats> & { hp: number };
+  res?: number; // World Resonance it asks for (not used yet)
+  behaviour: 'still' | 'territorial'; // still: never moves or notices; territorial: chases within its notice range
+  notice?: number; // territorial: rings it notices you within (default 1)
+  attack: Shape;
+}
+
+/** What an enemy will do on its next action, shown one tick ahead. */
+export type Intent = { kind: 'move'; to: string } | { kind: 'attack'; hexes: string[] };
+
+/** An enemy standing on the field. */
+export interface Foe {
+  id: string; // its spawn cell's key
+  kind: string; // prop code
+  pos: string; // cell key
+  home: string; // where it spawned; territorial ones walk back here when they give up
+  hp: number;
+  charge: number; // speed banked towards its next action
+  engaged: boolean; // after you
+  intent: Intent | null;
+}
+
+/** Something the UI shows for a moment: a number floating up (hit, crit, miss, hurt), a sword arc (slash),
+ *  an attacker lunging towards a hex (lunge), a hex flashing red as an attack lands (flash), the player
+ *  jumping from one hex to another (dash). */
+export interface Fx {
+  id: number;
+  key: string; // cell it happens on
+  text: string;
+  kind: 'hit' | 'crit' | 'miss' | 'hurt' | 'slash' | 'lunge' | 'flash' | 'dash';
+  from?: string; // slash, lunge: the attacker's cell
+  phase: 0 | 1; // 0: your action; 1: the enemies' turn after it, shown a beat later
+}
+
+/** A skill: costs Spirit (and maybe ⚡), takes one tick. */
+export interface Skill {
+  name: string;
+  icon: string;
+  text?: string;
+  kind: 'dash' | 'attack';
+  aim: 'self' | 'direction'; // fires at once, or pick a hex to aim at
+  spirit: number;
+  energy?: number;
+  range?: number; // dash: hexes
+  shape?: Shape; // attack
+  power?: number; // attack: damage multiplier per target
 }
 
 export interface Item {
@@ -91,6 +159,7 @@ export interface Point {
   fog: boolean;
   backdrop?: 'sky' | 'sea'; // what's around the hex field: clouds drifting below, or open water (default sky)
   table: string[]; // prop codes a "*" slot can roll, re-rolled each day
+  enemies?: { count: [number, number]; table: string[] }; // rolled each 15-minute cycle onto free hexes; repeat a code to weight it
   rows: string[]; // hex rows: terrain letter, then optionally "." and a prop code
 }
 
@@ -110,9 +179,11 @@ export interface Npc {
   point: string; // where they live; going to them lands you next to them
   lines: string[];
   figure?: Figure;
+  stats?: Stats; // once they can fight on your team
 }
 
 export interface Player {
+  skills?: string[]; // ids in skills.json, in hotbar order
   portrait?: string;
   art?: string[];
   figure?: Figure;
@@ -133,6 +204,7 @@ export interface Content {
   items: Record<string, Item>;
   npcs: Record<string, Npc>;
   player: Player;
+  skills: Record<string, Skill>;
 }
 
 export interface Cell {
@@ -154,7 +226,7 @@ export interface GameState {
   toolTier: number;
   bag: Record<string, number>; // item id -> count
   depleted: Record<string, true>; // nodes used up today
-  beaten: Record<string, true>; // enemies beaten today
+  beaten: Record<string, true>; // unused since enemies roll per cycle; kept so old saves load
   taken: Record<string, true>; // secrets taken, for good
   revealed: Record<string, true>; // hidden things found
   seen: Record<string, Record<string, true>>; // fog: point -> cells seen
@@ -162,6 +234,15 @@ export interface GameState {
   talk: Record<string, number>; // npc -> lines heard so far
   log: string[];
   seq: number; // messages said so far; the UI shows a new one when this changes
+
+  hp: number;
+  spirit: number; // built by basic attacks, spent by skills; kept between fights
+  hpAt: number; // ms timestamp the next HP is counted from
+  restAt: string | null; // cell key of the last bed you slept in; knocked out, you wake there
+  foes: Record<string, Foe[]>; // point -> enemies standing there this cycle
+  foeRolls: Record<string, { cycle: number; rerolls: number }>; // point -> the cycle its enemies were rolled in, and rerolls used
+  fx: Fx[]; // what the last action did, for the UI to float up
+  fxSeq: number;
 }
 
 export interface Action {

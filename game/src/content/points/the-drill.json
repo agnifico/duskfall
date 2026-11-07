@@ -7,12 +7,13 @@
   "backdrop": "sea",
   "fog": true,
   "table": [],
+  "enemies": {"count": [2, 3], "table": ["toxolotl"]},
   "rows": [
     "w w w w w w w w",
     "w h h s s h w w",
     "h s s.glint s.drill s s.tent h w",
-    "s.> s s.crab s s s.glint s h",
-    "g g s g.glint g s.crab s.pillars s",
+    "s.> s s s s s.glint s h",
+    "g g s g.glint g s s.pillars s",
     "r r.boulder r.cluster r.silver g g.chest g r"
   ]
 }

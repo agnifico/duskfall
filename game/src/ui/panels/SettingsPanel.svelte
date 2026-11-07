@@ -2,6 +2,7 @@
   // Settings: the colour theme, dev mode (and the dev tools it shows), new game, the rules.
   import { DEV, G, act, restart, setDev } from '../../lib/game.svelte';
   import * as E from '../../engine/actions';
+  import { content } from '../../content';
   import { COST } from '../../engine/rules';
   import Panel from './Panel.svelte';
   import { THEMES } from '../themes';
@@ -42,10 +43,24 @@
         </button>
       </div>
 
-      <label class="slider">
-        <span class="lbl m">Hex field angle</span><b class="lbl m">{DEV.angle}°</b>
-        <input type="range" min="0" max="60" step="1" value={DEV.angle} oninput={(e) => setDev({ angle: +e.currentTarget.value })} />
-      </label>
+      <div class="row">
+        <span class="lbl m">Damage formula</span>
+        <div class="seg">
+          {#each [['dj', "DJ's"], ['ratio', 'Ratio']] as [id, name] (id)}
+            <button class="px btn t-inset pick" class:on={DEV.damage === id} onclick={() => setDev({ damage: id as 'dj' | 'ratio' })}><span class="lbl m">{name}</span></button>
+          {/each}
+        </div>
+      </div>
+
+      <div class="row">
+        <span class="lbl m">Chip damage</span>
+        <div class="seg">
+          {#each [0, 2, 4] as n (n)}
+            <button class="px btn t-inset pick" class:on={DEV.chip === n} onclick={() => setDev({ chip: n })}><span class="lbl m">{n}</span></button>
+          {/each}
+        </div>
+      </div>
+
 
       <div class="row">
         <span class="lbl m">Tool tier</span>
@@ -58,7 +73,7 @@
 
       <div class="row">
         <span class="lbl m">Day {G.s.day}</span>
-        <button class="px btn bevel t-panel wide" onclick={() => act((s) => E.nextDay(s, G.now))}><span class="lbl m">Next day</span></button>
+        <button class="px btn bevel t-panel wide" onclick={() => act((s) => E.nextDay(s, content, G.now))}><span class="lbl m">Next day</span></button>
       </div>
     </div>
   {/if}
@@ -70,32 +85,16 @@
   <div class="lbl eyebrow">Rules</div>
   <p class="body">
     Walking costs 1⚡ a hex on sand, grass or path, and 2⚡ through forest, rock or shallows. Each node shows what it costs and
-    gives. Fighting costs {COST.fight}⚡ and searching {COST.search}⚡. Talking and going to people are free. Energy comes back
+    gives. Searching costs {COST.search}⚡; fighting costs nothing but your health, which comes back slowly or with a rest. Talking and going to people are free. Energy comes back
     one point every 1:30.
   </p>
-  <p class="lbl dim keys">Hotkeys: G gather · F search · B bag · P people · Q quests · C character · M map · S settings · T theme · ← → flip images · Esc back</p>
+  <p class="lbl dim keys">Hotkeys: 1 2 skills · [ ] turn · H hide UI · R reroll · F search · B bag · P people · Q quests · C character · M map · S settings · T theme · ← → flip images · Esc back</p>
 </Panel>
 
 <style>
   .eyebrow {
     color: var(--hl);
     margin: 6px 0 10px;
-  }
-  .slider {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 8px;
-    margin-bottom: 14px;
-    align-items: center;
-  }
-  .slider input {
-    grid-column: 1 / -1;
-    width: 100%;
-    accent-color: var(--c-accent);
-  }
-  .slider b {
-    color: var(--hl);
-    font-weight: 600;
   }
   .row {
     display: flex;

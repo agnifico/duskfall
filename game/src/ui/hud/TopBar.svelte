@@ -7,7 +7,6 @@
   import { PLAYER } from '../placeholders';
   import type { Crumb } from '../types';
   import Breadcrumb from './Breadcrumb.svelte';
-  import EnergyBar from './EnergyBar.svelte';
   import MapCorner from './MapCorner.svelte';
   import TimeChip from './TimeChip.svelte';
 
@@ -28,6 +27,7 @@
   });
 
   const coins = $derived(G.s.bag['coin'] ?? 0);
+
 </script>
 
 <header class="top">
@@ -41,7 +41,6 @@
   </button>
 
   <div class="mid">
-    <div class="row"><EnergyBar /></div>
     <div class="row chips">
       <TimeChip />
       <div class="chip px flat round t-inset"><Breadcrumb items={crumbs} /></div>

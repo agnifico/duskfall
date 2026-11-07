@@ -1,15 +1,12 @@
 // Everything the player can do. Each function changes the state it is given, and nothing else.
 
 import type { Action, Cell, Content, GameState, Prop } from './types';
-import { COST, DEV_RULES, LOG_LENGTH, MAX_ENERGY, REGEN_MS, SEARCH_RADIUS } from './rules';
-import { grid, hexDistance, route, type Grid } from './hex';
+import { BASIC_ATTACK, COST, DEV_RULES, SPIRIT_PER_BASIC, HP_REGEN_MS, KO_HP, MAX_ENERGY, MAX_SPIRIT, PLAYER_STATS, REGEN_MS, SEARCH_RADIUS } from './rules';
+import { dirTo, grid, hexDistance, route, shapeCells, stepDir, type Grid } from './hex';
+import { say } from './log';
+import { ensureFoesAt, foeAt, foesHere, fx, inFight, playerHits, rerollFoes, resetFoes, tick } from './combat';
 
-/** A line for the player to read. The UI shows the newest one briefly. */
-export function say(s: GameState, msg: string): void {
-  s.log.unshift(msg);
-  if (s.log.length > LOG_LENGTH) s.log.length = LOG_LENGTH;
-  s.seq = (s.seq ?? 0) + 1;
-}
+export { say };
 
 export const itemName = (c: Content, id: string) => c.items[id]?.name ?? id;
 
@@ -54,6 +51,20 @@ function spend(s: GameState, n: number, now: number): boolean {
   return true;
 }
 
+// ---------- health ----------
+
+/** HP comes back one point every HP_REGEN_MS, but not while an enemy is after you. */
+export function regenHp(s: GameState, now: number): void {
+  if (s.hp >= PLAYER_STATS.hp || inFight(s)) {
+    s.hpAt = now;
+    return;
+  }
+  const n = Math.floor((now - s.hpAt) / HP_REGEN_MS);
+  if (n <= 0) return;
+  s.hp = Math.min(PLAYER_STATS.hp, s.hp + n);
+  s.hpAt += n * HP_REGEN_MS;
+}
+
 // ---------- where you are ----------
 
 export function currentPoint(s: GameState): string | null {
@@ -78,13 +89,14 @@ function look(s: GameState, g: Grid, pointId: string, from: Cell, radius: number
   for (const x of g.cells) if (hexDistance(x, from) <= radius) seen[x.key] = true;
 }
 
-/** The prop on a cell as the player can see it right now: hidden, beaten or taken ones are gone. */
+/** The prop on a cell as the player can see it right now: hidden or taken ones are gone. Enemies aren't
+ *  props once on the field: they move, so they live in s.foes (engine/combat.ts). */
 export function visibleProp(s: GameState, c: Content, x: Cell): Prop | null {
   if (!x.p) return null;
   const pr = c.props[x.p];
   if (!pr) return null;
   if (pr.hidden && !s.revealed[x.key]) return null;
-  if (pr.type === 'enemy' && s.beaten[x.key]) return null;
+  if (pr.type === 'enemy') return null;
   if (pr.type === 'secret' && s.taken[x.key]) return null;
   return pr;
 }
@@ -110,7 +122,7 @@ export function markVisited(s: GameState, landId: string): void {
   s.visitedLands[landId] = true;
 }
 
-export function enterPoint(s: GameState, c: Content, pointId: string, atKey?: string): void {
+export function enterPoint(s: GameState, c: Content, pointId: string, atKey?: string, now = Date.now()): void {
   const g = grid(c, pointId, s.day);
   const start = (atKey && g.byKey.get(atKey)) || g.cells.find((x) => x.p === '>') || g.cells[0];
   s.point = pointId;
@@ -118,6 +130,19 @@ export function enterPoint(s: GameState, c: Content, pointId: string, atKey?: st
   const land = landOf(c, pointId);
   if (land) markVisited(s, land);
   look(s, g, pointId, start, 1);
+  ensureFoesAt(s, c, g, pointId, now);
+}
+
+/** Make sure the point you're in has this cycle's enemies (on load, each second, a new day). */
+export function ensureFoes(s: GameState, c: Content, now: number): void {
+  const g = hereGrid(s, c);
+  if (s.point && g) ensureFoesAt(s, c, g, s.point, now);
+}
+
+/** Reroll the enemies where you are. */
+export function reroll(s: GameState, c: Content, now: number): void {
+  const g = hereGrid(s, c);
+  if (s.point && g) rerollFoes(s, c, g, s.point, now);
 }
 
 export function teleportTo(s: GameState, c: Content, npcId: string): void {
@@ -129,36 +154,181 @@ export function teleportTo(s: GameState, c: Content, npcId: string): void {
 
 // ---------- walking inside a point ----------
 
+/** The route to a hex, around enemies. Targeting an enemy, the route ends next to it. */
 export function planRoute(s: GameState, c: Content, targetKey: string) {
   const pid = currentPoint(s);
   const g = hereGrid(s, c);
   const from = hereCell(s, c);
   const to = g?.byKey.get(targetKey);
   if (!pid || !g || !from || !to) return null;
-  return route(
+  const r = route(
     g,
     from,
     to,
-    (x) => c.terrain[x.t]?.cost != null && isSeen(s, c, pid, x),
+    (x) => c.terrain[x.t]?.cost != null && isSeen(s, c, pid, x) && (x === to || !foeAt(s, x.key)),
     (x) => c.terrain[x.t].cost ?? Infinity,
   );
+  if (r && foeAt(s, to.key)) {
+    const last = r.path.pop()!;
+    r.cost -= c.terrain[last.t].cost ?? 0;
+  }
+  return r;
 }
 
-export function moveTo(s: GameState, c: Content, targetKey: string, now: number): void {
+/** One step onto a neighbouring hex: pays its ⚡, then the enemies act. Returns whether a walk should go on:
+ *  it stops on a hidden find, when an enemy's attack is aimed at you, or when you can't step. */
+export function step(s: GameState, c: Content, key: string, now: number): boolean {
+  s.fx = [];
   const pid = currentPoint(s);
   const g = hereGrid(s, c);
-  const plan = planRoute(s, c, targetKey);
-  if (!pid || !g || !plan || !plan.path.length) return;
-  if (!spend(s, plan.cost, now)) return;
-  for (const step of plan.path) {
-    look(s, g, pid, step, 1);
-    const pr = step.p ? c.props[step.p] : null;
-    if (pr?.hidden && !s.revealed[step.key]) {
-      s.revealed[step.key] = true;
-      say(s, `You notice ${pr.name.toLowerCase()}.`);
+  const from = hereCell(s, c);
+  const to = g?.byKey.get(key);
+  if (!pid || !g || !from || !to || hexDistance(from, to) !== 1) return false;
+  const cost = c.terrain[to.t]?.cost;
+  if (cost == null || foeAt(s, key)) return false;
+  if (!spend(s, cost, now)) return false;
+  s.pos = key;
+  look(s, g, pid, to, 1);
+  let go = true;
+  const pr = to.p ? c.props[to.p] : null;
+  if (pr?.hidden && !s.revealed[to.key]) {
+    s.revealed[to.key] = true;
+    say(s, `You notice ${pr.name.toLowerCase()}.`);
+    go = false;
+  }
+  if (afterAction(s, c, g)) return false;
+  if (foesHere(s).some((f) => f.intent?.kind === 'attack' && f.intent.hexes.includes(key))) go = false;
+  return go;
+}
+
+/** Whether your basic attack reaches an enemy from where you stand. */
+export function canHit(s: GameState, c: Content, foeId: string): boolean {
+  const g = hereGrid(s, c);
+  const me = hereCell(s, c);
+  const f = foesHere(s).find((x) => x.id === foeId);
+  const at = f && g?.byKey.get(f.pos);
+  return !!(g && me && at && shapeCells(g, me, at, BASIC_ATTACK).includes(at));
+}
+
+/** Your basic attack: free, one tick. */
+export function attack(s: GameState, c: Content, foeId: string): void {
+  s.fx = [];
+  const g = hereGrid(s, c);
+  const f = foesHere(s).find((x) => x.id === foeId);
+  if (!g || !f || !canHit(s, c, foeId)) return;
+  fx(s, f.pos, '', 'lunge', 0, s.pos!);
+  fx(s, f.pos, '', 'slash', 0, s.pos!);
+  playerHits(s, c, f);
+  s.spirit = Math.min(MAX_SPIRIT, (s.spirit ?? 0) + SPIRIT_PER_BASIC);
+  afterAction(s, c, g);
+}
+
+// ---------- skills ----------
+
+/** The hexes a dash towards a cell would cross: straight on, through enemies, stopping before water, walls and
+ *  fog. It can't end on an enemy, so it lands on the last free hex. */
+export function dashPath(s: GameState, c: Content, skillId: string, targetKey: string): Cell[] {
+  const sk = c.skills[skillId];
+  const pid = currentPoint(s);
+  const g = hereGrid(s, c);
+  const me = hereCell(s, c);
+  const to = g?.byKey.get(targetKey);
+  if (!sk || !pid || !g || !me || !to || to === me) return [];
+  const dir = dirTo(me, to);
+  const out: Cell[] = [];
+  let x: Cell | undefined = me;
+  for (let i = 0; i < (sk.range ?? 2); i++) {
+    x = x && stepDir(g, x, dir);
+    if (!x || c.terrain[x.t]?.cost == null || !isSeen(s, c, pid, x)) break;
+    out.push(x);
+  }
+  while (out.length && foeAt(s, out[out.length - 1].key)) out.pop();
+  return out;
+}
+
+/** The hexes a skill would hit, aimed at a cell (self-aimed skills ignore it). */
+export function skillHexes(s: GameState, c: Content, skillId: string, targetKey?: string): Cell[] {
+  const sk = c.skills[skillId];
+  const g = hereGrid(s, c);
+  const me = hereCell(s, c);
+  if (!sk || !g || !me) return [];
+  if (sk.kind === 'dash') return targetKey ? dashPath(s, c, skillId, targetKey) : [];
+  const at = (targetKey && g.byKey.get(targetKey)) || me;
+  return sk.shape ? shapeCells(g, me, at, sk.shape) : [];
+}
+
+/** Why a skill can't be used right now, or null. */
+export function skillBlocked(s: GameState, c: Content, skillId: string): string | null {
+  const sk = c.skills[skillId];
+  if (!sk) return 'Unknown skill';
+  if ((s.spirit ?? 0) < sk.spirit) return `Needs ${sk.spirit} Spirit`;
+  if (sk.energy && !DEV_RULES.freeEnergy && s.energy < sk.energy) return `Needs ${sk.energy}⚡`;
+  return null;
+}
+
+/** Use a skill: spends its Spirit (and ⚡), takes one tick. */
+export function useSkill(s: GameState, c: Content, skillId: string, targetKey: string | undefined, now: number): void {
+  s.fx = [];
+  const sk = c.skills[skillId];
+  const pid = currentPoint(s);
+  const g = hereGrid(s, c);
+  const me = hereCell(s, c);
+  if (!sk || !pid || !g || !me) return;
+  const why = skillBlocked(s, c, skillId);
+  if (why) return say(s, `${sk.name}: ${why.toLowerCase()}.`);
+  if (sk.kind === 'dash') {
+    const path = targetKey ? dashPath(s, c, skillId, targetKey) : [];
+    if (!path.length) return say(s, "You can't dash that way.");
+    if (!spend(s, sk.energy ?? 0, now)) return;
+    for (const x of path) {
+      look(s, g, pid, x, 1);
+      const pr = x.p ? c.props[x.p] : null;
+      if (pr?.hidden && !s.revealed[x.key]) {
+        s.revealed[x.key] = true;
+        say(s, `You notice ${pr.name.toLowerCase()}.`);
+      }
+    }
+    fx(s, path[path.length - 1].key, '', 'dash', 0, me.key);
+    s.pos = path[path.length - 1].key;
+  } else {
+    const hexes = skillHexes(s, c, skillId, targetKey);
+    for (const x of hexes) fx(s, x.key, '', 'slash', 0, me.key);
+    for (const x of hexes) {
+      const f = foeAt(s, x.key);
+      if (f) playerHits(s, c, f, sk.power ?? 1);
     }
   }
-  s.pos = targetKey;
+  s.spirit -= sk.spirit;
+  afterAction(s, c, g);
+}
+
+/** The enemies' turn. Returns true if it knocked you out. */
+function afterAction(s: GameState, c: Content, g: Grid): boolean {
+  if (!tick(s, c, g)) return false;
+  knockOut(s, c);
+  return true;
+}
+
+/** The last bed you slept in, or the first bed in the world. */
+function restSpot(s: GameState, c: Content): { point: string; key: string } | null {
+  if (s.restAt) {
+    const point = s.restAt.split(':')[0];
+    if (c.points[point]) return { point, key: s.restAt };
+  }
+  for (const pid of Object.keys(c.points)) {
+    const x = grid(c, pid, s.day).cells.find((y) => y.p && c.props[y.p]?.type === 'rest');
+    if (x) return { point: pid, key: x.key };
+  }
+  return null;
+}
+
+/** Knocked out: the enemies here reset, and you wake at your last rest spot with part of your HP. No items lost. */
+export function knockOut(s: GameState, c: Content): void {
+  if (s.point) resetFoes(s, c, s.point);
+  s.hp = Math.ceil(PLAYER_STATS.hp * KO_HP);
+  const spot = restSpot(s, c);
+  if (spot) enterPoint(s, c, spot.point, spot.key);
+  say(s, 'You black out… and wake in a bed, sore. Nothing is missing from your bag.');
 }
 
 // ---------- doing things ----------
@@ -196,18 +366,6 @@ export function actionsHere(s: GameState, c: Content): Action[] {
           s.depleted[x.key] = true;
         },
       });
-  } else if (pr?.type === 'enemy') {
-    out.push({
-      id: 'fight',
-      label: `Fight the ${pr.name}`,
-      cost: COST.fight,
-      run: (now) => {
-        if (!spend(s, COST.fight, now)) return;
-        s.beaten[x.key] = true;
-        if (pr.item) give(s, pr.item, 1);
-        say(s, `You beat the ${pr.name}. It'll be back tomorrow.`);
-      },
-    });
   } else if (pr?.type === 'secret') {
     out.push({
       id: 'take',
@@ -237,8 +395,11 @@ export function actionsHere(s: GameState, c: Content): Action[] {
       run: (now) => {
         s.energy = MAX_ENERGY;
         s.lastRegen = now;
+        s.hp = PLAYER_STATS.hp;
+        s.hpAt = now;
         s.rested = true;
-        say(s, 'You sleep for an hour. Energy full.');
+        s.restAt = x.key;
+        say(s, 'You sleep for an hour. Energy and health full.');
       },
     });
   }
@@ -263,15 +424,21 @@ export function actionsHere(s: GameState, c: Content): Action[] {
         say(s, found ? `You search and spot ${found} thing${found > 1 ? 's' : ''}.` : 'You search. Nothing new nearby.');
       },
     });
+  // with an enemy after you, the field is out of reach: gathering, taking, talking, resting
+  if (inFight(s)) for (const a of out) if (!a.disabled) a.disabled = 'Not with an enemy after you';
   return out;
 }
 
 // ---------- time ----------
 
-export function nextDay(s: GameState, now: number): void {
+
+export function nextDay(s: GameState, c: Content, now: number): void {
   s.day++;
   s.depleted = {};
   s.beaten = {};
+  s.foes = {};
+  s.foeRolls = {};
+  ensureFoes(s, c, now);
   s.rested = false;
   s.energy = MAX_ENERGY;
   s.lastRegen = now;

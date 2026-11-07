@@ -1,10 +1,67 @@
 // What buttons and hotkeys do. Both go through here, so a hotkey and its button always agree.
 
 import { DEV, G, act, setDev } from '../lib/game.svelte';
-import { UI, inIntro, notify, type PanelId } from '../lib/ui.svelte';
+import { UI, inIntro, notify, savePref, type PanelId } from '../lib/ui.svelte';
 import { content } from '../content';
 import * as E from '../engine/actions';
+import { inFight } from '../engine/combat';
 import { nextTheme, themeOf } from './themes';
+
+// ---------- walking, step by step ----------
+// Each step is one tick, so enemies move between steps; the walk stops when the engine says so.
+
+const STEP_MS = 170; // keep in step with the walk animation in HexView
+let queue: string[] = [];
+let timer: ReturnType<typeof setTimeout> | undefined;
+
+export function stopWalk(): void {
+  queue = [];
+  clearTimeout(timer);
+  timer = undefined;
+}
+
+function nextStep(): void {
+  timer = undefined;
+  const k = queue.shift();
+  if (!k || UI.map) return stopWalk();
+  const go = act((s) => E.step(s, content, k, G.now));
+  if (go && queue.length) timer = setTimeout(nextStep, STEP_MS);
+  else stopWalk();
+}
+
+/** Walk a route of cell keys, one step at a time. */
+export function walk(keys: string[]): void {
+  stopWalk();
+  queue = [...keys];
+  nextStep();
+}
+
+// ---------- skills ----------
+
+/** A skill's slot or hotkey: self-aimed skills fire at once; others wait for a click on the field. Again cancels. */
+export function pressSkill(id: string): void {
+  if (UI.map || !G.s.point) return;
+  if (UI.aim === id) {
+    UI.aim = null;
+    return;
+  }
+  const sk = content.skills[id];
+  if (!sk) return;
+  const why = E.skillBlocked(G.s, content, id);
+  if (why) return notify(`${sk.name}: ${why}`);
+  stopWalk();
+  if (sk.aim === 'self') {
+    UI.aim = null;
+    act((s) => E.useSkill(s, content, id, undefined, G.now));
+  } else UI.aim = id;
+}
+
+/** A click on the field while a skill is aimed. */
+export function fireAim(key: string): void {
+  const id = UI.aim;
+  UI.aim = null;
+  if (id) act((s) => E.useSkill(s, content, id, key, G.now));
+}
 
 /** Run one of the actions available on the current hex, by id ("gather", "search", "talk"…). */
 export function runAction(id: string): void {
@@ -16,6 +73,36 @@ export function runAction(id: string): void {
 export function togglePanel(p: PanelId): void {
   UI.panel = UI.panel === p ? null : p;
   UI.people = false;
+}
+
+/** Show or hide the whole UI. Hiding also closes any open panel. */
+export function toggleUi(): void {
+  UI.hidden = !UI.hidden;
+  if (UI.hidden) {
+    UI.panel = null;
+    UI.people = false;
+  }
+}
+
+/** The bottom-right menu: keep it expanded, or collapse it to one button (it still opens on hover). */
+export function toggleMenu(): void {
+  UI.menuOpen = !UI.menuOpen;
+  savePref('menuOpen', UI.menuOpen);
+}
+
+/** Roll the enemies where you are again (2 free per point per cycle). */
+export function rerollEnemies(): void {
+  if (UI.map || !G.s.point) return;
+  const why = inFight(G.s) ? 'Not in a fight' : null;
+  if (why) return notify(`Reroll: ${why}`);
+  stopWalk();
+  act((s) => E.reroll(s, content, G.now));
+}
+
+/** Turn the hex field by some degrees. Remembered between visits. */
+export function turnField(deg: number): void {
+  UI.angle += deg;
+  savePref('angle', UI.angle);
 }
 
 export function togglePeople(): void {
@@ -78,13 +165,22 @@ export function enterLand(): void {
 /** Go to a point from the map. The point you're already in just takes you back to it. */
 export function travelTo(pointId: string): void {
   if (pointId === G.s.point) return closeMap();
+  if (blockedByFight()) return;
   UI.panel = null;
   act((s) => E.enterPoint(s, content, pointId));
   UI.map = null;
 }
 
 /** Going to a person is free from anywhere: questing is kept apart from adventuring. */
+/** You can't leave a point while an enemy is after you. */
+function blockedByFight(): boolean {
+  if (!inFight(G.s)) return false;
+  notify("You can't get away: something is after you.");
+  return true;
+}
+
 export function goToPerson(npcId: string): void {
+  if (blockedByFight()) return;
   UI.panel = null;
   UI.people = false;
   act((s) => E.teleportTo(s, content, npcId));
@@ -107,7 +203,13 @@ const KEYS: Record<string, () => void> = {
   g: () => runAction('gather'),
   f: () => runAction('search'),
   t: cycleTheme,
+  h: toggleUi,
+  r: rerollEnemies,
+  '[': () => turnField(-15),
+  ']': () => turnField(15),
 };
+// 1, 2…: the player's skills, in hotbar order
+(content.player.skills ?? []).forEach((id, i) => (KEYS[String(i + 1)] = () => pressSkill(id)));
 
 export function onKey(e: KeyboardEvent): void {
   if (e.metaKey || e.ctrlKey || e.altKey || e.repeat) return;
@@ -122,7 +224,8 @@ export function onKey(e: KeyboardEvent): void {
     return;
   }
   if (k === 'escape') {
-    if (UI.people) UI.people = false;
+    if (UI.aim) UI.aim = null;
+    else if (UI.people) UI.people = false;
     else if (UI.panel) UI.panel = null;
     else if (UI.map) closeMap();
     e.preventDefault();

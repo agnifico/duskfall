@@ -47,7 +47,7 @@
   .prompt {
     position: absolute;
     left: 50%;
-    bottom: 22px;
+    bottom: 126px;
     translate: -50% 0;
     display: flex;
     align-items: flex-end;

@@ -1,5 +1,5 @@
 import type { GameState } from './types';
-import { MAX_ENERGY } from './rules';
+import { MAX_ENERGY, PLAYER_STATS } from './rules';
 
 /** Bump when the save shape changes in a way old saves can't be read as. Upgrades live in lib/save.ts. */
 export const SAVE_VERSION = 4;
@@ -24,5 +24,13 @@ export function newGame(now = Date.now()): GameState {
     talk: {},
     log: ['You wake on the sand. Somewhere above the beach, smoke rises from a chimney.'],
     seq: 1,
+    hp: PLAYER_STATS.hp,
+    spirit: 0,
+    hpAt: now,
+    restAt: null,
+    foes: {},
+    foeRolls: {},
+    fx: [],
+    fxSeq: 0,
   };
 }

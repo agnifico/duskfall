@@ -1,12 +1,13 @@
 // Loads the content files. Adding a point = adding a JSON file to points/ whose zone is in a land.
 
-import type { Content, Figure, Item, Land, Npc, Player, Point, Prop, Terrain, World } from '../engine/types';
+import type { Content, Figure, Item, Land, Npc, Player, Point, Prop, Skill, Terrain, World } from '../engine/types';
 import world from './world.json';
 import terrain from './terrain.json';
 import propsRaw from './props.json';
 import items from './items.json';
 import npcs from './npcs.json';
 import player from './player.json';
+import skills from './skills.json';
 import spritesRaw from './sprites.json';
 
 const landFiles = import.meta.glob<Land>('./lands/*.json', { eager: true, import: 'default' });
@@ -30,6 +31,7 @@ export const content: Content = {
   items: items as Record<string, Item>,
   npcs: npcs as Record<string, Npc>,
   player: player as Player,
+  skills: skills as unknown as Record<string, Skill>,
 };
 
 /** The points in each zone, in file order. */
@@ -58,6 +60,7 @@ for (const l of content.world.lands) if (!l.locked && !lands[l.id]) console.warn
 for (const p of Object.values(points)) {
   if (!zoneIds.has(p.zone)) console.warn(`point ${p.id}: zone "${p.zone}" is not in any land`);
   for (const code of p.table) if (!props[code]) console.warn(`point ${p.id}: unknown prop "${code}" in its table`);
+  for (const code of p.enemies?.table ?? []) if (!props[code]?.foe) console.warn(`point ${p.id}: "${code}" in its enemies isn't an enemy`);
   for (const row of p.rows)
     for (const tok of row.trim().split(/\s+/)) {
       const dot = tok.indexOf('.');
@@ -71,6 +74,7 @@ for (const p of Object.values(props)) {
   for (const s of [p.sprite, p.spent]) if (s && !sprites[s]) console.warn(`prop ${p.code}: no sprite "${s}"`);
   for (const id of [p.item, p.extra?.item, p.bonus?.item]) if (id && !itemIds.has(id)) console.warn(`prop ${p.code}: unknown item "${id}"`);
 }
+for (const id of content.player.skills ?? []) if (!content.skills[id]) console.warn(`player: unknown skill "${id}"`);
 for (const [id, it] of Object.entries(content.items)) if (it.sprite && !sprites[it.sprite]) console.warn(`item ${id}: no sprite "${it.sprite}"`);
 const figures: [string, Figure | undefined][] = [['player', content.player.figure], ...Object.entries(content.npcs).map(([id, n]): [string, Figure | undefined] => [id, n.figure])];
 for (const [who, f] of figures)

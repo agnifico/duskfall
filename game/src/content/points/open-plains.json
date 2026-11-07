@@ -6,11 +6,12 @@
   "kind": "secrets",
   "fog": true,
   "table": [],
+  "enemies": {"count": [2, 4], "table": ["bear", "prowler", "prowler", "dragonling"]},
   "rows": [
     "g g g g.glint g g r r",
-    "g g.boar g g g.glint r.boulder r",
-    "g.> g g g.boar g g r",
+    "g g g g g.glint r.boulder r",
+    "g.> g g g g g r",
     "g g.glint g g g g.chest g",
-    "s s g g.boar g g.glint g"
+    "s s g g g g.glint g"
   ]
 }

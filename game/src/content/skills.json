@@ -1,0 +1,6 @@
+{
+  "dash": { "name": "Dash", "icon": "💨", "kind": "dash", "aim": "direction", "spirit": 20, "energy": 1, "range": 3,
+    "text": "Up to 3 hexes in a straight line, in one tick, for 1⚡. Click a hex in the direction to go." },
+  "whirl": { "name": "Whirl", "icon": "🌀", "kind": "attack", "aim": "self", "spirit": 40, "power": 1.2, "shape": { "shape": "area", "rings": 1 },
+    "text": "A spinning cut that hits every hex around you." }
+}

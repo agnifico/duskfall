@@ -6,6 +6,8 @@ Needs Pillow, numpy and scipy. The nsfw_project venv has them. From this project
   ../nsfw_project/.venv/bin/python -I tools/cut_sheets.py
 
 To add a sheet: put it in extras/ and add a line to SHEETS below.
+Single images that already have a transparent background (djv2's enemies) go in SINGLES: they are only
+trimmed, shrunk and measured. `--singles` processes just those and keeps the rest of the manifest.
 
 How a cell is cut:
   0. Sheets in OVERFLOW are cut from a window larger than the cell, because their objects (figures) spill
@@ -18,6 +20,7 @@ How a cell is cut:
 """
 import json
 import os
+import sys
 
 import numpy as np
 from PIL import Image
@@ -49,6 +52,13 @@ SHEETS = [
     ('grok_nodes', 'mlKS4.jpg', 4, 4, NODES),
     ('grok_wreck', 'kpSkq.jpg', 4, 4, WRECK),
     ('grok_chars', '7pwSI.jpg', 2, 2, ['heroine-stand', 'heroine-walk', 'sylvie-stand', 'sylvie-walk']),
+]
+# set name, folder in extras/, file names without .png. Each image is one object on a transparent background.
+# Left out until their backgrounds are cut: bob, inkjet_ray, rock_lion, shark_soldier.
+SINGLES = [
+    ('djv2', 'djv2_enemies', ['aquamech_shark', 'archangel_one', 'bear', 'bear1', 'biceon', 'coral_eyes', 'dragon',
+                              'forest_prowler', 'mountain_basilisk', 'punching_tortoise', 'solis_sentinel', 'toxolotl',
+                              'vanguard_siren', 'white_wyvern', 'wilhemina']),
 ]
 MAX_SIDE = 384
 DESPILL = {'grok_chars'}  # sheets with no magenta in them: remove any magenta cast entirely
@@ -204,7 +214,37 @@ def base_point(a):
     return float(xs.mean()) / w, float(yb + 1) / h, float(lxs.mean()) / w
 
 
+def shrink(im):
+    scale = min(1.0, MAX_SIDE / max(im.size))
+    if scale < 1:  # resize premultiplied so edges do not pick up dark fringes
+        im = im.convert('RGBa').resize((max(1, round(im.width * scale)), max(1, round(im.height * scale))), Image.LANCZOS).convert('RGBA')
+    return im
+
+
+def cut_singles(manifest):
+    for name, folder, names in SINGLES:
+        os.makedirs(os.path.join(PUBLIC, 'sprites', name), exist_ok=True)
+        for obj_name in names:
+            im = Image.open(os.path.join(EXTRAS, folder, obj_name + '.png')).convert('RGBA')
+            a = np.asarray(im)[..., 3]
+            ys, xs = np.where(a > 5)
+            im = shrink(im.crop((xs.min(), ys.min(), xs.max() + 1, ys.max() + 1)))
+            bx, by, fx = base_point(np.asarray(im)[..., 3])
+            rel = f'sprites/{name}/{obj_name}.png'
+            im.save(os.path.join(PUBLIC, rel))
+            manifest[f'{name}/{obj_name}'] = {'file': rel, 'w': im.width, 'h': im.height, 'bx': round(bx, 3), 'by': round(by, 3), 'fx': round(fx, 3)}
+        print(f'  {name}: {len(names)} single images')
+
+
 def main():
+    if '--singles' in sys.argv:
+        with open(MANIFEST) as f:
+            manifest = json.load(f)
+        cut_singles(manifest)
+        with open(MANIFEST, 'w') as f:
+            json.dump(manifest, f, indent=1)
+        print(f'wrote {len(manifest)} sprites to the manifest')
+        return
     manifest = {}
     for name, fname, cols, rows, names in SHEETS:
         sheet = np.asarray(Image.open(os.path.join(EXTRAS, fname)).convert('RGB'), np.float32)
@@ -222,15 +262,13 @@ def main():
             if rgba is None:
                 print(f'  {name}/{obj_name}: nothing found')
                 continue
-            im = Image.fromarray(rgba)
-            scale = min(1.0, MAX_SIDE / max(im.size))
-            if scale < 1:  # resize premultiplied so edges do not pick up dark fringes
-                im = im.convert('RGBa').resize((max(1, round(im.width * scale)), max(1, round(im.height * scale))), Image.LANCZOS).convert('RGBA')
+            im = shrink(Image.fromarray(rgba))
             bx, by, fx = base_point(np.asarray(im)[..., 3])
             rel = f'sprites/{name}/{obj_name}.png'
             im.save(os.path.join(PUBLIC, rel))
             manifest[f'{name}/{obj_name}'] = {'file': rel, 'w': im.width, 'h': im.height, 'bx': round(bx, 3), 'by': round(by, 3), 'fx': round(fx, 3)}
         print(f'  {name}: {len(names)} objects')
+    cut_singles(manifest)
     with open(MANIFEST, 'w') as f:
         json.dump(manifest, f, indent=1)
     print(f'wrote {len(manifest)} sprites to the manifest')

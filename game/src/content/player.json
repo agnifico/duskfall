@@ -3,6 +3,7 @@
     "stand": "grok_chars/heroine-stand",
     "walk": "grok_chars/heroine-walk"
   },
+  "skills": ["dash", "whirl"],
   "portrait": "characters/heroine/portrait.webp",
   "art": [
     "characters/heroine/full.webp",

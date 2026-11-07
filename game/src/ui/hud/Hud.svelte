@@ -4,8 +4,9 @@
   import { fade } from 'svelte/transition';
   import { G } from '../../lib/game.svelte';
   import { UI } from '../../lib/ui.svelte';
-  import BagButton from './BagButton.svelte';
   import EventCard from './EventCard.svelte';
+  import FieldTools from './FieldTools.svelte';
+  import FoeCards from './FoeCards.svelte';
   import Gains from './Gains.svelte';
   import GatherPrompt from './GatherPrompt.svelte';
   import Hotbar from './Hotbar.svelte';
@@ -13,6 +14,8 @@
   import Messages from './Messages.svelte';
   import People from './People.svelte';
   import TopBar from './TopBar.svelte';
+  import UiToggle from './UiToggle.svelte';
+  import Vitals from './Vitals.svelte';
   import BagPanel from '../panels/BagPanel.svelte';
   import ProfilePanel from '../panels/ProfilePanel.svelte';
   import QuestsPanel from '../panels/QuestsPanel.svelte';
@@ -22,18 +25,23 @@
 </script>
 
 <div class="hud" in:fade={{ duration: 300 }}>
-  <TopBar />
-  <People />
   <Messages />
   <Gains />
 
-  {#if onField}
-    <EventCard />
-    <GatherPrompt />
-    <div class="bottom-left"><BagButton /><Hotbar /></div>
-    <MenuDock />
+  {#if UI.hidden}
+    {#if onField}<div class="bottom-left"><UiToggle /></div>{/if}
   {:else}
-    <MenuDock collapsed />
+    <TopBar />
+    <People />
+    {#if onField}
+      <FoeCards />
+      <EventCard />
+      <GatherPrompt />
+      <Vitals />
+      <FieldTools />
+      <div class="bottom-left"><UiToggle /><Hotbar /></div>
+    {/if}
+    <MenuDock />
   {/if}
 
   {#if UI.panel === 'bag'}<BagPanel />{/if}

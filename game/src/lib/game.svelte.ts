@@ -1,7 +1,7 @@
 // The one piece of reactive game state. UI reads G.s; every change goes through act(), which saves.
 
 import { content } from '../content';
-import { regen } from '../engine/actions';
+import { ensureFoes, regen, regenHp } from '../engine/actions';
 import { DEV_RULES } from '../engine/rules';
 import { newGame } from '../engine/state';
 import type { GameState } from '../engine/types';
@@ -17,6 +17,8 @@ function start(): GameState {
     s.pos = null;
   }
   regen(s, Date.now());
+  regenHp(s, Date.now());
+  ensureFoes(s, content, Date.now());
   return s;
 }
 
@@ -33,18 +35,21 @@ openStart();
 setInterval(() => {
   G.now = Date.now();
   regen(G.s, G.now);
+  regenHp(G.s, G.now);
+  ensureFoes(G.s, content, G.now); // a new cycle rolls fresh enemies where you stand
 }, 1000);
 
 /** Run a change to the game state, animate anything that landed in the bag, and save. */
-export function act(fn: (s: GameState) => void): void {
+export function act<T>(fn: (s: GameState) => T): T {
   G.now = Date.now();
   const before = { ...G.s.bag };
-  fn(G.s);
+  const out = fn(G.s);
   for (const [item, n] of Object.entries(G.s.bag)) {
     const gained = n - (before[item] ?? 0);
     if (gained > 0) showGain(item, gained);
   }
   saveGame($state.snapshot(G.s) as GameState);
+  return out;
 }
 
 export function restart(): void {
@@ -62,11 +67,12 @@ const DEV_KEY = 'nuvatra.dev';
 interface Dev {
   on: boolean; // dev mode: shows the dev tools in Settings
   freeEnergy: boolean; // with dev mode on, walking and actions cost no energy
-  angle: number; // how far the hex field is turned, in degrees
   theme: string; // colour theme id, see ui/themes.ts
+  damage: 'dj' | 'ratio'; // damage formula under test (design/COMBAT.md, section 3)
+  chip: number; // chip damage per tick from an enemy next to you that isn't attacking
 }
 function loadDev(): Dev {
-  const base: Dev = { on: false, freeEnergy: false, angle: 0, theme: 'meadow' };
+  const base: Dev = { on: false, freeEnergy: false, theme: 'meadow', damage: 'dj', chip: 2 };
   try {
     return { ...base, ...JSON.parse(localStorage.getItem(DEV_KEY) ?? '{}') };
   } catch {
@@ -75,12 +81,19 @@ function loadDev(): Dev {
 }
 export const DEV = $state(loadDev());
 applyTheme(DEV.theme);
-DEV_RULES.freeEnergy = DEV.on && DEV.freeEnergy;
+applyDevRules();
+
+/** The engine's dev switches follow the dev settings; with dev mode off, the defaults. */
+function applyDevRules(): void {
+  DEV_RULES.freeEnergy = DEV.on && DEV.freeEnergy;
+  DEV_RULES.damage = DEV.on ? DEV.damage : 'dj';
+  DEV_RULES.chip = DEV.on ? DEV.chip : 2;
+}
 
 export function setDev(patch: Partial<Dev>): void {
   Object.assign(DEV, patch);
   if (patch.theme) applyTheme(patch.theme);
-  DEV_RULES.freeEnergy = DEV.on && DEV.freeEnergy;
+  applyDevRules();
   localStorage.setItem(DEV_KEY, JSON.stringify($state.snapshot(DEV)));
 }
 

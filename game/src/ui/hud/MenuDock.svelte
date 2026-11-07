@@ -1,11 +1,11 @@
 <script lang="ts">
-  // The main menu, bottom-right. On a point: a row of buttons. On the maps: one Menu button that
-  // opens the row on hover, or on tap.
+  // The main menu, bottom-right: one Menu button. Clicking it keeps the row of buttons expanded (remembered)
+  // or collapses it again; while collapsed, the row still opens on hover, or on tap.
   import { UI, type PanelId } from '../../lib/ui.svelte';
-  import { toggleMap, togglePanel } from '../commands';
+  import { toggleMap, toggleMenu, togglePanel } from '../commands';
 
-  let { collapsed = false }: { collapsed?: boolean } = $props();
-  let open = $state(false);
+  let open = $state(false); // peeking: hovered or tapped while collapsed
+  const collapsed = $derived(!UI.menuOpen);
 
   const ITEMS: { key: string; label: string; panel?: PanelId; run: () => void }[] = [
     { key: 'B', label: 'Bag', panel: 'bag', run: () => togglePanel('bag') },
@@ -28,17 +28,28 @@
         }}
         title="{it.label} ({it.key})"
       >
-        <span class="disp k">{it.key}</span>
+        {#if it.key === 'B'}
+          {#key UI.bagBump}<span class="disp k" class:bump={UI.bagBump > 0}>{it.key}</span>{/key}
+        {:else}
+          <span class="disp k">{it.key}</span>
+        {/if}
         <span class="lbl">{it.label}</span>
       </button>
     {/each}
   </div>
-  {#if collapsed}
-    <button class="px btn bevel t-accent item toggle" onclick={() => (open = !open)} aria-expanded={open} title="Menu">
-      <span class="disp k">≡</span>
-      <span class="lbl">Menu</span>
-    </button>
-  {/if}
+  <button
+    class="px btn bevel t-accent item toggle"
+    class:on={UI.menuOpen}
+    onclick={() => {
+      toggleMenu();
+      open = false;
+    }}
+    aria-expanded={UI.menuOpen || open}
+    title={UI.menuOpen ? 'Collapse the menu' : 'Keep the menu open'}
+  >
+    <span class="disp k">{UI.menuOpen ? '›' : '≡'}</span>
+    <span class="lbl">Menu</span>
+  </button>
 </nav>
 
 <style>
@@ -71,6 +82,14 @@
   }
   .toggle .k {
     color: inherit;
+  }
+  .bump {
+    animation: bump 260ms steps(4);
+  }
+  @keyframes bump {
+    40% {
+      transform: translateY(-5px) scale(1.12);
+    }
   }
   /* collapsed: the row only shows while hovered, focused or opened by tap */
   .collapsed .items {

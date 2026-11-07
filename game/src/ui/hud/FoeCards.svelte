@@ -1,0 +1,90 @@
+<script lang="ts">
+  // Top right, under the map corner, while you fight: one small card per enemy after you, with its picture,
+  // name and HP.
+  import { G } from '../../lib/game.svelte';
+  import { asset, content, sprites } from '../../content';
+  import { foeStats, foesHere } from '../../engine/combat';
+
+  const foes = $derived(foesHere(G.s).filter((f) => f.engaged));
+</script>
+
+{#if foes.length}
+  <div class="foes">
+    {#each foes as f (f.id)}
+      {@const pr = content.props[f.kind]}
+      {@const sp = pr?.sprite ? sprites[pr.sprite] : undefined}
+      {@const max = foeStats(content, f.kind).hp}
+      <div class="card px flat t-inset">
+        <span class="pic">
+          {#if sp}<img src={asset(sp.file)} alt="" />{:else}<span class="emoji">{pr?.icon ?? '?'}</span>{/if}
+        </span>
+        <span class="info">
+          <span class="lbl m name">{pr?.name ?? f.kind}</span>
+          <span class="track"><b style:width="{Math.max(0, f.hp / max) * 100}%"></b></span>
+          <span class="lbl hpv">{Math.max(0, Math.ceil(f.hp))}/{max}</span>
+        </span>
+      </div>
+    {/each}
+  </div>
+{/if}
+
+<style>
+  .foes {
+    position: absolute;
+    right: 14px;
+    top: 186px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 220px;
+  }
+  .card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 10px 8px 6px;
+  }
+  .pic {
+    flex: none;
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    background: color-mix(in oklab, var(--c-inset) 70%, #000);
+  }
+  .pic img {
+    max-width: 36px;
+    max-height: 36px;
+  }
+  .emoji {
+    font-size: 24px;
+  }
+  .info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .name {
+    text-transform: capitalize;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .track {
+    height: 6px;
+    background: #0a1210;
+    box-shadow: 0 0 0 1px var(--ink);
+  }
+  .track b {
+    display: block;
+    height: 100%;
+    background: #e5484d;
+    transition: width 0.25s;
+  }
+  .hpv {
+    font-size: 10px;
+    color: var(--dim);
+  }
+</style>

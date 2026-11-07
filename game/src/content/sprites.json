@@ -798,5 +798,125 @@
   "bx": 0.844,
   "by": 1.0,
   "fx": 0.586
+ },
+ "djv2/aquamech_shark": {
+  "file": "sprites/djv2/aquamech_shark.png",
+  "w": 384,
+  "h": 185,
+  "bx": 0.718,
+  "by": 0.995,
+  "fx": 0.431
+ },
+ "djv2/archangel_one": {
+  "file": "sprites/djv2/archangel_one.png",
+  "w": 384,
+  "h": 363,
+  "bx": 0.578,
+  "by": 1.0,
+  "fx": 0.5
+ },
+ "djv2/bear": {
+  "file": "sprites/djv2/bear.png",
+  "w": 375,
+  "h": 384,
+  "bx": 0.323,
+  "by": 1.0,
+  "fx": 0.46
+ },
+ "djv2/bear1": {
+  "file": "sprites/djv2/bear1.png",
+  "w": 373,
+  "h": 384,
+  "bx": 0.394,
+  "by": 0.997,
+  "fx": 0.497
+ },
+ "djv2/biceon": {
+  "file": "sprites/djv2/biceon.png",
+  "w": 325,
+  "h": 384,
+  "bx": 0.376,
+  "by": 0.997,
+  "fx": 0.494
+ },
+ "djv2/coral_eyes": {
+  "file": "sprites/djv2/coral_eyes.png",
+  "w": 384,
+  "h": 351,
+  "bx": 0.519,
+  "by": 0.929,
+  "fx": 0.524
+ },
+ "djv2/dragon": {
+  "file": "sprites/djv2/dragon.png",
+  "w": 384,
+  "h": 325,
+  "bx": 0.58,
+  "by": 0.997,
+  "fx": 0.536
+ },
+ "djv2/forest_prowler": {
+  "file": "sprites/djv2/forest_prowler.png",
+  "w": 384,
+  "h": 379,
+  "bx": 0.473,
+  "by": 0.955,
+  "fx": 0.533
+ },
+ "djv2/mountain_basilisk": {
+  "file": "sprites/djv2/mountain_basilisk.png",
+  "w": 246,
+  "h": 384,
+  "bx": 0.558,
+  "by": 0.995,
+  "fx": 0.568
+ },
+ "djv2/punching_tortoise": {
+  "file": "sprites/djv2/punching_tortoise.png",
+  "w": 384,
+  "h": 384,
+  "bx": 0.498,
+  "by": 1.0,
+  "fx": 0.495
+ },
+ "djv2/solis_sentinel": {
+  "file": "sprites/djv2/solis_sentinel.png",
+  "w": 288,
+  "h": 384,
+  "bx": 0.645,
+  "by": 1.0,
+  "fx": 0.518
+ },
+ "djv2/toxolotl": {
+  "file": "sprites/djv2/toxolotl.png",
+  "w": 321,
+  "h": 384,
+  "bx": 0.324,
+  "by": 0.997,
+  "fx": 0.323
+ },
+ "djv2/vanguard_siren": {
+  "file": "sprites/djv2/vanguard_siren.png",
+  "w": 311,
+  "h": 384,
+  "bx": 0.572,
+  "by": 0.997,
+  "fx": 0.562
+ },
+ "djv2/white_wyvern": {
+  "file": "sprites/djv2/white_wyvern.png",
+  "w": 384,
+  "h": 376,
+  "bx": 0.55,
+  "by": 0.984,
+  "fx": 0.528
+ },
+ "djv2/wilhemina": {
+  "file": "sprites/djv2/wilhemina.png",
+  "w": 355,
+  "h": 384,
+  "bx": 0.53,
+  "by": 1.0,
+  "fx": 0.503
  }
 }
