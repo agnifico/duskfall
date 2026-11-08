@@ -2,7 +2,7 @@
 """Cut AI sprite sheets into trimmed, transparent PNGs for the mockup, and write sprites/sprites.js.
 
 Needs Pillow, numpy and scipy. The nsfw_project venv has them:
-  ../nsfw_project/.venv/bin/python -I mockup/tools/cut_sheets.py      (from the code folder's "untitled folder")
+  ../nsfw_project/.venv/bin/python -I mockup/tools/cut_sheets.py      (from the code folder's "duskfall")
 
 How a cell is cut:
   1. Remove the background connected to the cell's edge (colour sampled from the edge).

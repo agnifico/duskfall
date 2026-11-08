@@ -164,7 +164,7 @@ At the start, defence, crit and speed's quarter share all change a fight by only
 - The damage and dodge maths from section 3 on Dawn's Journey's stats, with the formula switchable for testing.
 - The 15-minute cycle with rerolls. Legendaries next.
 
-**Reference:** djv2, the Chessboard Battlefield (`~/Desktop/code/djv2`, design docs in `~/Desktop/code/`). Worth carrying over: the split between shapes and behaviours, one damage pipeline that everything goes through, ground warnings, and balance runs. Port the design, not the code: djv2 is real time on square tiles.
+**Reference:** djv2, the Chessboard Battlefield (`~/Desktop/code/dawns-journey-combat-lab`, design docs in `~/Desktop/code/`). Worth carrying over: the split between shapes and behaviours, one damage pipeline that everything goes through, ground warnings, and balance runs. Port the design, not the code: djv2 is real time on square tiles.
 
 **Where this lands in the game:** `game/src/engine/` (rules, actions, hex grid and routes), enemies as content in `game/src/content/`, the field in `game/src/ui/HexView.svelte`.
 
