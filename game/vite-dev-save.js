@@ -1,15 +1,17 @@
 // Dev only: the map editor (src/lib/editor.svelte.ts) saves here.
 //   /__dev/save-point   a point's rows and settings, into content/points/<file>.json
+//   /__dev/telemetry    playtest log events, appended to game/playtest/<session>.jsonl (lib/telemetry.ts)
 //   /__dev/save-tuning  sprite tuning (content/tuning.json, whole) and prop placement (size, dx, dy, flat),
 //                       patched into the hand-formatted content/props.json line by line
 // Files are rewritten without a page reload, since the editor already shows what was saved.
 // Plain JS so the config needs no Node type definitions.
-import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { appendFileSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const CONTENT = fileURLToPath(new URL('./src/content', import.meta.url));
 const DIR = join(CONTENT, 'points');
+const PLAYTEST = fileURLToPath(new URL('./playtest', import.meta.url));
 
 export function devSave() {
   const quiet = new Set();
@@ -43,6 +45,12 @@ export function devSave() {
         const data = { ...JSON.parse(readFileSync(path, 'utf8')), ...patch };
         for (const k of Object.keys(data)) if (data[k] === null) delete data[k];
         write(path, formatPoint(data));
+      });
+
+      route('/__dev/telemetry', ({ session, events }) => {
+        if (!/^[\w-]+$/.test(session) || !Array.isArray(events)) throw new Error('bad telemetry');
+        mkdirSync(PLAYTEST, { recursive: true });
+        appendFileSync(join(PLAYTEST, `${session}.jsonl`), events.map((e) => JSON.stringify(e)).join('\n') + '\n');
       });
 
       route('/__dev/save-tuning', ({ tuning, props }) => {

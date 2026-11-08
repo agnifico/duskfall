@@ -7,6 +7,9 @@
   import { asset, content } from '../../content';
   import { closeMap, homeLand, openLandMap, showWorld, togglePanel } from '../commands';
   import { PLAYER } from '../placeholders';
+  import { combatProgress } from '../../engine/progress';
+
+  const lv = $derived(combatProgress(G.s));
   import type { Crumb } from '../types';
   import Breadcrumb from './Breadcrumb.svelte';
   import MapCorner from './MapCorner.svelte';
@@ -43,7 +46,7 @@
     {:else}
       <span class="disp mono">{PLAYER.monogram}</span>
     {/if}
-    <span class="lvl px flat t-accent lbl m">{PLAYER.level}</span>
+    <span class="lvl px flat t-accent lbl m">{lv.level}</span>
   </button>
 
   <div class="mid">
@@ -64,10 +67,10 @@
       <div class="chip px flat round t-inset" title="Coins">
         <i class="coin" aria-hidden="true"></i><span class="lbl m">{coins}</span>
       </div>
-      <div class="chip xp px flat round t-inset" title="Experience: {PLAYER.xp} of {PLAYER.xpNext} to level {PLAYER.level + 1}">
+      <div class="chip xp px flat round t-inset" title={lv.max ? 'Experience: the top level for now' : `Experience: ${lv.into} of ${lv.need} to level ${lv.level + 1}, from beating enemies`}>
         <span class="lbl m">XP</span>
-        <span class="track"><b style:width="{(PLAYER.xp / PLAYER.xpNext) * 100}%"></b></span>
-        <span class="lbl m dim">{PLAYER.xp}/{PLAYER.xpNext}</span>
+        <span class="track"><b style:width="{lv.max ? 100 : (lv.into / lv.need) * 100}%"></b></span>
+        <span class="lbl m dim">{lv.max ? 'max' : `${lv.into}/${lv.need}`}</span>
       </div>
       <People />
     </div>

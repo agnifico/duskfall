@@ -20,5 +20,12 @@ The component checklist is `UI_COMPONENTS.md`; this is the list of changes asked
 - **Bottom-right menu:** inside an expandable menu, like the map corner: collapse it, expand it, or keep it expanded.
 - **Move Energy and Spirit to the bottom** (bottom centre, or wherever there's room) once space frees up. Things that change every action or second sit at the bottom; top-level things (time, breadcrumb, currency) stay at the top.
 
+## Inventory and gear (Agni, 2026-11-08)
+- **A full Inventory page**, separate from the profile panel and the small bag (B): modelled on Dawn's Journey's screen. Left: portrait, vitals, level and XP, the full stat grid. Middle: worn gear and set bonuses. Right: the bag with category tabs (materials, weapons, armour, relics) and filters, an item detail panel, and Equip; swap freely.
+- **Comparison, on that page only:** picking an item shows each stat against what you wear in that slot: higher in green (a green highlight, mark or plus), lower in red.
+- **The small bag (B)** stays simple: All / Materials / Gear tabs (done), and item details that read well (done 2026-11-08: darker text, more room, stats with their icons).
+- **Stats always with their icon** wherever there's room: there are ten, and the icons are how players learn them. Names in title case (Elemental Attack).
+- **Profile › Stats, redesigned:** Health as a strip across both columns, then Spirit across both; then pairs: Physical Attack | Physical Defence, Elemental Attack | Elemental Defence, Crit Rate | Crit Damage, Evasion | Precision; Speed last, alone in one column. The profile's Gear tab gets the same care.
+
 ## Mobile pass
 - Readable on a phone; the hotbar may go vertical. Deferred, "very detailed".

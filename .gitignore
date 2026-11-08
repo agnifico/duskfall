@@ -12,3 +12,6 @@ extras/
 
 # Python
 __pycache__/
+
+# playtest logs (lib/telemetry.ts), read locally, not versioned
+game/playtest/

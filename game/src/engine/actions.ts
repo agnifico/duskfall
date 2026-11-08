@@ -1,9 +1,11 @@
 // Everything the player can do. Each function changes the state it is given, and nothing else.
 
 import type { Action, Cell, Content, GameState, Prop } from './types';
-import { BASIC_ATTACK, COST, DEV_RULES, SPIRIT_PER_BASIC, HP_REGEN_MS, KO_HP, MAX_ENERGY, MAX_SPIRIT, PLAYER_STATS, REGEN_MS, SEARCH_RADIUS } from './rules';
+import { BASIC_ATTACK, COST, DEV_RULES, SPIRIT_PER_BASIC, HP_REGEN_MS, KO_HP, MAX_ENERGY, MAX_SPIRIT, REGEN_MS, XP_PER_ENERGY, SEARCH_RADIUS } from './rules';
 import { dirTo, grid, hexDistance, route, shapeCells, stepDir, type Grid } from './hex';
 import { say } from './log';
+import { track } from './telemetry';
+import { addSkillXp, levelledYield, maxHp, skillLevel } from './progress';
 import { ensureFoesAt, foeAt, foesHere, fx, inFight, playerHits, rerollFoes, resetFoes, tick } from './combat';
 
 export { say };
@@ -17,6 +19,8 @@ export function nodeYield(pr: Prop): [number, number] {
 }
 
 export const nodeCost = (pr: Prop) => pr.cost ?? COST.gather;
+/** Skill XP for one gather. */
+export const nodeXp = (pr: Prop) => pr.xp ?? XP_PER_ENERGY * nodeCost(pr);
 
 // ---------- energy ----------
 
@@ -27,7 +31,9 @@ export function regen(s: GameState, now: number): void {
   }
   const ticks = Math.floor((now - s.lastRegen) / REGEN_MS);
   if (ticks <= 0) return;
+  const was = s.energy;
   s.energy = Math.min(MAX_ENERGY, s.energy + ticks);
+  track('regen', { n: s.energy - was, energy: s.energy });
   s.lastRegen = s.energy >= MAX_ENERGY ? now : s.lastRegen + ticks * REGEN_MS;
 }
 
@@ -39,7 +45,8 @@ export function msToFullEnergy(s: GameState, now: number): number {
   return s.energy >= MAX_ENERGY ? 0 : msToNextEnergy(s, now) + (MAX_ENERGY - s.energy - 1) * REGEN_MS;
 }
 
-function spend(s: GameState, n: number, now: number): boolean {
+function spend(s: GameState, n: number, now: number, why: string): boolean {
+  if (n > 0) track('spend', { why, n, free: DEV_RULES.freeEnergy, point: s.point });
   if (n <= 0 || DEV_RULES.freeEnergy) return true;
   regen(s, now);
   if (s.energy < n) {
@@ -54,14 +61,14 @@ function spend(s: GameState, n: number, now: number): boolean {
 // ---------- health ----------
 
 /** HP comes back one point every HP_REGEN_MS, but not while an enemy is after you. */
-export function regenHp(s: GameState, now: number): void {
-  if (s.hp >= PLAYER_STATS.hp || inFight(s)) {
+export function regenHp(s: GameState, c: Content, now: number): void {
+  if (s.hp >= maxHp(s, c) || inFight(s)) {
     s.hpAt = now;
     return;
   }
   const n = Math.floor((now - s.hpAt) / HP_REGEN_MS);
   if (n <= 0) return;
-  s.hp = Math.min(PLAYER_STATS.hp, s.hp + n);
+  s.hp = Math.min(maxHp(s, c), s.hp + n);
   s.hpAt += n * HP_REGEN_MS;
 }
 
@@ -127,6 +134,7 @@ export function enterPoint(s: GameState, c: Content, pointId: string, atKey?: st
   const start = (atKey && g.byKey.get(atKey)) || g.cells.find((x) => x.p === '>') || g.cells[0];
   s.point = pointId;
   s.pos = start.key;
+  track('enter', { point: pointId });
   const land = landOf(c, pointId);
   if (land) markVisited(s, land);
   look(s, g, pointId, start, 1);
@@ -186,7 +194,7 @@ export function step(s: GameState, c: Content, key: string, now: number): boolea
   if (!pid || !g || !from || !to || hexDistance(from, to) !== 1) return false;
   const cost = c.terrain[to.t]?.cost;
   if (cost == null || foeAt(s, key)) return false;
-  if (!spend(s, cost, now)) return false;
+  if (!spend(s, cost, now, 'walk')) return false;
   s.pos = key;
   look(s, g, pid, to, 1);
   let go = true;
@@ -279,7 +287,7 @@ export function useSkill(s: GameState, c: Content, skillId: string, targetKey: s
   if (sk.kind === 'dash') {
     const path = targetKey ? dashPath(s, c, skillId, targetKey) : [];
     if (!path.length) return say(s, "You can't dash that way.");
-    if (!spend(s, sk.energy ?? 0, now)) return;
+    if (!spend(s, sk.energy ?? 0, now, `skill:${skillId}`)) return;
     for (const x of path) {
       look(s, g, pid, x, 1);
       const pr = x.p ? c.props[x.p] : null;
@@ -295,10 +303,11 @@ export function useSkill(s: GameState, c: Content, skillId: string, targetKey: s
     for (const x of hexes) fx(s, x.key, '', 'slash', 0, me.key);
     for (const x of hexes) {
       const f = foeAt(s, x.key);
-      if (f) playerHits(s, c, f, sk.power ?? 1);
+      if (f) playerHits(s, c, f, sk.power ?? 1, sk.damage ?? 'physical');
     }
   }
   s.spirit -= sk.spirit;
+  track('skill', { id: skillId, spirit: sk.spirit });
   afterAction(s, c, g);
 }
 
@@ -324,8 +333,9 @@ function restSpot(s: GameState, c: Content): { point: string; key: string } | nu
 
 /** Knocked out: the enemies here reset, and you wake at your last rest spot with part of your HP. No items lost. */
 export function knockOut(s: GameState, c: Content): void {
+  track('ko', { point: s.point, foes: foesHere(s).filter((f) => f.engaged).map((f) => f.kind) });
   if (s.point) resetFoes(s, c, s.point);
-  s.hp = Math.ceil(PLAYER_STATS.hp * KO_HP);
+  s.hp = Math.ceil(maxHp(s, c) * KO_HP);
   const spot = restSpot(s, c);
   if (spot) enterPoint(s, c, spot.point, spot.key);
   say(s, 'You black out… and wake in a bed, sore. Nothing is missing from your bag.');
@@ -333,8 +343,10 @@ export function knockOut(s: GameState, c: Content): void {
 
 // ---------- doing things ----------
 
-function give(s: GameState, item: string, n: number): void {
-  if (n > 0) s.bag[item] = (s.bag[item] ?? 0) + n;
+function give(s: GameState, item: string, n: number, why: string): void {
+  if (n <= 0) return;
+  s.bag[item] = (s.bag[item] ?? 0) + n;
+  track('gain', { item, n, why, point: s.point });
 }
 
 const roll = ([lo, hi]: [number, number]) => lo + Math.floor(Math.random() * (hi - lo + 1));
@@ -359,11 +371,18 @@ export function actionsHere(s: GameState, c: Content): Action[] {
         label,
         cost,
         run: (now) => {
-          if (!spend(s, cost, now)) return;
-          give(s, pr.item ?? pr.code, roll(nodeYield(pr)));
-          if (pr.extra) give(s, pr.extra.item, pr.extra.amount);
-          if (pr.bonus && Math.random() < pr.bonus.chance) give(s, pr.bonus.item, 1);
+          if (!spend(s, cost, now, 'gather')) return;
+          const lvl = pr.skill ? skillLevel(s, pr.skill) : 1;
+          const got = levelledYield(roll(nodeYield(pr)), Array.isArray(pr.yield), lvl);
+          track('gather', { node: pr.code, tier, cost, n: got, skill: pr.skill, level: lvl, point: pid });
+          give(s, pr.item ?? pr.code, got, `gather:${pr.code}`);
+          if (pr.extra) give(s, pr.extra.item, pr.extra.amount, `extra:${pr.code}`);
+          if (pr.bonus && Math.random() < pr.bonus.chance) give(s, pr.bonus.item, 1, `bonus:${pr.code}`);
           s.depleted[x.key] = true;
+          if (pr.skill) {
+            const xp = addSkillXp(s, c, pr.skill, nodeXp(pr));
+            if (xp) fx(s, x.key, `+${xp} ${c.lifeskills[pr.skill]?.name ?? pr.skill} xp`, 'xp');
+          }
         },
       });
   } else if (pr?.type === 'secret') {
@@ -373,7 +392,7 @@ export function actionsHere(s: GameState, c: Content): Action[] {
       cost: 0,
       run: () => {
         s.taken[x.key] = true;
-        if (pr.item) give(s, pr.item, pr.amount ?? 1);
+        if (pr.item) give(s, pr.item, pr.amount ?? 1, `secret:${pr.code}`);
       },
     });
   } else if (pr?.type === 'npc' && pr.npc) {
@@ -393,9 +412,10 @@ export function actionsHere(s: GameState, c: Content): Action[] {
       cost: 0,
       disabled: s.rested ? 'Already rested today' : undefined,
       run: (now) => {
+        track('rest', { energy: s.energy, hp: s.hp });
         s.energy = MAX_ENERGY;
         s.lastRegen = now;
-        s.hp = PLAYER_STATS.hp;
+        s.hp = maxHp(s, c);
         s.hpAt = now;
         s.rested = true;
         s.restAt = x.key;
@@ -410,7 +430,7 @@ export function actionsHere(s: GameState, c: Content): Action[] {
       label: 'Search nearby',
       cost: COST.search,
       run: (now) => {
-        if (!spend(s, COST.search, now)) return;
+        if (!spend(s, COST.search, now, 'search')) return;
         const g = grid(c, pid, s.day);
         look(s, g, pid, x, SEARCH_RADIUS);
         let found = 0;
@@ -434,6 +454,7 @@ export function actionsHere(s: GameState, c: Content): Action[] {
 
 export function nextDay(s: GameState, c: Content, now: number): void {
   s.day++;
+  track('day', { day: s.day });
   s.depleted = {};
   s.beaten = {};
   s.foes = {};

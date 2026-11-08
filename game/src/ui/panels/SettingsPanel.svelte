@@ -8,6 +8,13 @@
   import { THEMES } from '../themes';
   import { toggleEditor, travelTo } from '../commands';
 
+  /** Dev: one of every gear piece into the bag, to try them on. */
+  function giveGear() {
+    act((s) => {
+      for (const [id, it] of Object.entries(content.items)) if (it.slot) s.bag[id] = (s.bag[id] ?? 0) + 1;
+    });
+  }
+
   function newGame() {
     if (confirm('Start a new game? This save is wiped.')) restart();
   }
@@ -66,6 +73,11 @@
       <div class="row">
         <span class="lbl m">Dev field</span>
         <button class="px btn bevel t-panel wide" onclick={() => travelTo('dev-field')}><span class="lbl m">Go</span></button>
+      </div>
+
+      <div class="row">
+        <span class="lbl m">Gear</span>
+        <button class="px btn bevel t-panel wide" onclick={giveGear}><span class="lbl m">Give one of each</span></button>
       </div>
 
       <div class="row">

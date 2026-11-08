@@ -2,16 +2,19 @@
   // Bottom centre, kept narrow: HP and Spirit, the things a fight changes. Energy is in the top bar
   // (EnergyStrip), always shown.
   import { G } from '../../lib/game.svelte';
-  import { MAX_SPIRIT, PLAYER_STATS } from '../../engine/rules';
+  import { content } from '../../content';
+  import { MAX_SPIRIT } from '../../engine/rules';
+  import { maxHp } from '../../engine/progress';
 
-  const hp = $derived(G.s.hp / PLAYER_STATS.hp);
+  const max = $derived(maxHp(G.s, content));
+  const hp = $derived(G.s.hp / max);
 </script>
 
 <div class="vitals px flat t-panel">
   <div class="row" class:low={hp < 0.3} title="Health: comes back 1 every 9 s outside a fight, or all at once with a rest">
     <span class="lbl name hp">HP</span>
     <span class="track"><b class="fill hp" style:width="{hp * 100}%"></b></span>
-    <span class="lbl m val">{Math.ceil(G.s.hp)}/{PLAYER_STATS.hp}</span>
+    <span class="lbl m val">{Math.ceil(G.s.hp)}/{max}</span>
   </div>
   <div class="row" title="Spirit: basic attacks build it, skills spend it">
     <span class="lbl name sp">Spirit</span>

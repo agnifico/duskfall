@@ -18,7 +18,8 @@
   img {
     object-fit: contain;
     display: block;
-    filter: drop-shadow(0 2px 0 rgb(0 0 0 / 0.35));
+    /* the art has no shadow of its own */
+    filter: drop-shadow(0 2px 0 rgb(0 0 0 / 0.3)) drop-shadow(0 4px 5px rgb(0 0 0 / 0.28));
   }
   .emoji {
     display: grid;

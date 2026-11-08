@@ -5,6 +5,8 @@
   import { content } from '../../content';
   import * as E from '../../engine/actions';
   import { runAction } from '../commands';
+  import { skillProgress } from '../../engine/progress';
+  import { YIELD_PER_LEVEL } from '../../engine/rules';
 
   const here = $derived(E.hereCell(G.s, content));
   const pr = $derived(here ? E.visibleProp(G.s, content, here) : null);
@@ -19,6 +21,11 @@
     const parts = [`${lo === hi ? lo : `${lo}–${hi}`} ${E.itemName(content, pr.item ?? pr.code)}`];
     if (pr.extra) parts.push(`${pr.extra.amount} ${E.itemName(content, pr.extra.item)}`);
     if (pr.bonus) parts.push(`maybe ${E.itemName(content, pr.bonus.item)}`);
+    if (pr.skill) {
+      const p = skillProgress(G.s, pr.skill);
+      if (Array.isArray(pr.yield) && p.level > 1) parts[0] += ` +${Math.round(YIELD_PER_LEVEL * (p.level - 1) * 100)}%`;
+      if (!p.max) parts.push(`${E.nodeXp(pr)} ${content.lifeskills[pr.skill]?.name ?? pr.skill} xp`);
+    }
     return parts.join(' · ');
   });
 </script>

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Bring a character's art into the game: a portrait, the full set of images, and thumbnails.
 
-  ../nsfw_project/.venv/bin/python -I tools/import_character_art.py <folder in extras> <character id> \\
+  ../nsfw_project/.venv/bin/python -I tools/import_character_art.py <folder in extras, e.g. characters/mc> <character id> \\
       --portrait X,Y,SIZE [--player]
 
 The folder holds avatar.jpg (a bust), full.jpg (full body) and side.jpg, plus any other images.

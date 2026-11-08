@@ -3,6 +3,7 @@
 import { content } from '../content';
 import { ensureFoes, regen, regenHp } from '../engine/actions';
 import { DEV_RULES } from '../engine/rules';
+import { track } from '../engine/telemetry';
 import { newGame } from '../engine/state';
 import type { GameState } from '../engine/types';
 import { applyTheme } from '../ui/themes';
@@ -17,7 +18,7 @@ function start(): GameState {
     s.pos = null;
   }
   regen(s, Date.now());
-  regenHp(s, Date.now());
+  regenHp(s, content, Date.now());
   ensureFoes(s, content, Date.now());
   return s;
 }
@@ -35,7 +36,7 @@ openStart();
 setInterval(() => {
   G.now = Date.now();
   regen(G.s, G.now);
-  regenHp(G.s, G.now);
+  regenHp(G.s, content, G.now);
   ensureFoes(G.s, content, G.now); // a new cycle rolls fresh enemies where you stand
 }, 1000);
 
@@ -53,6 +54,7 @@ export function act<T>(fn: (s: GameState) => T): T {
 }
 
 export function restart(): void {
+  track('newgame');
   clearSave();
   G.s = newGame();
   UI.panel = null;
@@ -93,6 +95,7 @@ function applyDevRules(): void {
 
 export function setDev(patch: Partial<Dev>): void {
   Object.assign(DEV, patch);
+  track('dev', { ...patch });
   if (patch.theme) applyTheme(patch.theme);
   applyDevRules();
   localStorage.setItem(DEV_KEY, JSON.stringify($state.snapshot(DEV)));

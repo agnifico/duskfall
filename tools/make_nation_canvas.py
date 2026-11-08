@@ -7,7 +7,7 @@ new islands. After Gemini paints around it, tools/compose_nation.py pastes the o
 
   ../nsfw_project/.venv/bin/python -I tools/make_nation_canvas.py
 
-Writes extras/nation_canvas_<id>.png (Gemini's input), extras/nation_keep_<id>.png (the kept area, full size)
+Writes extras/maps/nation_canvas_<id>.png (Gemini's input), extras/maps/nation_keep_<id>.png (the kept area, full size)
 and tools/nation_<id>.json (where everything sits, for the compose step).
 """
 import json
@@ -80,7 +80,7 @@ def main():
             keep |= lab == i
     keep = ndi.binary_dilation(keep, iterations=SHORE)
     alpha = Image.fromarray((keep * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(14))
-    alpha.save(os.path.join(ROOT, f'extras/nation_keep_{NATION}.png'))
+    alpha.save(os.path.join(ROOT, f'extras/maps/nation_keep_{NATION}.png'))
 
     # the canvas: the new map at a smaller scale
     full = (W * GROW, H * GROW)
@@ -94,7 +94,7 @@ def main():
     draw = ImageDraw.Draw(canvas)
     for name, colour, (cx, cy), rx, ry, wob, seed in SHAPES:
         draw.polygon([(x * scale, y * scale) for x, y in blob(cx, cy, rx, ry, wob, seed)], fill=colour)
-    canvas.save(os.path.join(ROOT, f'extras/nation_canvas_{NATION}.png'))
+    canvas.save(os.path.join(ROOT, f'extras/maps/nation_canvas_{NATION}.png'))
 
     with open(os.path.join(ROOT, f'tools/nation_{NATION}.json'), 'w') as f:
         json.dump({'source': os.path.relpath(SOURCE, ROOT), 'size': [W, H], 'grow': GROW, 'offset': list(OFFSET),

@@ -4,11 +4,14 @@
 // attack lands only on the hexes it showed, so stepping out of them makes it miss.
 // The UI never calls this directly: player actions in actions.ts call tick().
 
-import type { Cell, Content, Foe, FoeData, Fx, GameState, Intent, Stats } from './types';
+import type { Cell, Content, DamageKind, Foe, FoeData, Fx, GameState, Intent, Stats } from './types';
 import { hexDistance, route, shapeCells, type Grid } from './hex';
-import { CYCLE_MS, DEV_RULES, FOE_DEFAULTS, FREE_REROLLS, PLAYER_STATS } from './rules';
+import { CYCLE_MS, DEV_RULES, FOE_DEFAULTS, FREE_REROLLS } from './rules';
 import { hash, mulberry32 } from './rng';
 import { say } from './log';
+import { track } from './telemetry';
+import { addCombatXp, playerStats } from './progress';
+export { playerStats };
 
 // ---------- the maths (design/COMBAT.md, section 3) ----------
 
@@ -29,11 +32,13 @@ export interface Hit {
   dmg: number;
 }
 
-/** One blow through the one damage pipeline everything uses. */
-export function rollHit(att: Stats, def: Stats): Hit {
+/** One blow through the one damage pipeline everything uses. Physical attack meets physical defence,
+ *  elemental meets elemental. */
+export function rollHit(att: Stats, def: Stats, kind: DamageKind = 'physical'): Hit {
   if (Math.random() < dodgeChance(att, def)) return { dodged: true, crit: false, dmg: 0 };
   const crit = Math.random() < att.crit;
-  const dmg = baseDamage(att.atk, def.def) * (crit ? att.critDmg : 1);
+  const [a, d] = kind === 'elemental' ? [att.eatk, def.edef] : [att.patk, def.pdef];
+  const dmg = baseDamage(a, d) * (crit ? att.critDmg : 1);
   return { dodged: false, crit, dmg };
 }
 
@@ -41,14 +46,14 @@ export const fmt = (n: number) => (Math.round(n * 10) / 10).toString();
 
 // ---------- enemies ----------
 
-export const playerStats = (): Stats => ({ ...PLAYER_STATS });
 
 export function foeData(c: Content, kind: string): FoeData | undefined {
   return c.props[kind]?.foe;
 }
 
 export function foeStats(c: Content, kind: string): Stats {
-  return { ...FOE_DEFAULTS, ...(foeData(c, kind)?.stats ?? { hp: 1 }) };
+  const st = { ...FOE_DEFAULTS, ...(foeData(c, kind)?.stats ?? { hp: 1 }) };
+  return { ...st, eatk: st.eatk ?? st.patk, edef: st.edef ?? st.pdef };
 }
 
 /** The enemies on the point you're in. */
@@ -198,7 +203,8 @@ function foeAct(s: GameState, c: Content, g: Grid, f: Foe, shown: Intent | null)
       fx(s, it.hexes[0], 'miss', 'miss', 1); // you stepped out of it
       return true;
     }
-    const h = rollHit(foeStats(c, f.kind), playerStats());
+    const h = rollHit(foeStats(c, f.kind), playerStats(s, c));
+    track('hit', { by: f.kind, to: 'you', dmg: h.dodged ? 0 : h.dmg, crit: h.crit, miss: h.dodged, hp: s.hp });
     if (h.dodged) fx(s, s.pos, 'dodge', 'miss', 1);
     else {
       s.hp = Math.max(0, s.hp - h.dmg);
@@ -211,11 +217,20 @@ function foeAct(s: GameState, c: Content, g: Grid, f: Foe, shown: Intent | null)
   return false;
 }
 
+/** Combat XP for beating an enemy: its own number, or half its HP plus its attack and defence. */
+export function foeXp(c: Content, kind: string): number {
+  const d = foeData(c, kind);
+  if (d?.xp != null) return d.xp;
+  const st = foeStats(c, kind);
+  return Math.round(st.hp / 2 + st.patk + st.pdef);
+}
+
 /** The player hits an enemy, at `power` × damage. Beaten, it's gone until the next cycle and drops its item. */
-export function playerHits(s: GameState, c: Content, f: Foe, power = 1): void {
+export function playerHits(s: GameState, c: Content, f: Foe, power = 1, kind: DamageKind = 'physical'): void {
   const pr = c.props[f.kind];
   f.engaged = true; // even a still enemy fights back once hit
-  const h = rollHit(playerStats(), foeStats(c, f.kind));
+  const h = rollHit(playerStats(s, c), foeStats(c, f.kind), kind);
+  track('hit', { kind, by: 'you', to: f.kind, dmg: h.dodged ? 0 : h.dmg * power, crit: h.crit, miss: h.dodged, power, foeHp: f.hp });
   if (h.dodged) return fx(s, f.pos, 'miss', 'miss');
   h.dmg *= power;
   f.hp -= h.dmg;
@@ -223,12 +238,17 @@ export function playerHits(s: GameState, c: Content, f: Foe, power = 1): void {
   if (f.hp > 0) return;
   s.foes[s.point!] = foesHere(s).filter((x) => x !== f); // gone until the next cycle
   if (pr?.item) s.bag[pr.item] = (s.bag[pr.item] ?? 0) + 1;
+  if (pr?.item) track('gain', { item: pr.item, n: 1, why: `drop:${f.kind}`, point: s.point });
+  track('kill', { foe: f.kind, point: s.point, hp: s.hp });
   say(s, `You beat the ${pr?.name ?? f.kind}.`);
+  const xp = foeXp(c, f.kind);
+  fx(s, s.pos!, `+${xp} xp`, 'xp');
+  addCombatXp(s, xp);
 }
 
 /** Everything that happens after one player action. Returns true if it knocked you out. */
 export function tick(s: GameState, c: Content, g: Grid): boolean {
-  const pspd = PLAYER_STATS.spd;
+  const pspd = playerStats(s, c).spd;
   for (const f of [...foesHere(s)]) {
     const spd = foeStats(c, f.kind).spd;
     if (!f.engaged && !f.intent && f.pos === f.home) {
@@ -249,6 +269,7 @@ export function tick(s: GameState, c: Content, g: Grid): boolean {
     const me = s.pos ? g.byKey.get(s.pos) : undefined;
     if (f.engaged && !attacked && at && me && hexDistance(at, me) === 1 && DEV_RULES.chip > 0 && s.hp > 0) {
       s.hp = Math.max(0, s.hp - DEV_RULES.chip);
+      track('hit', { by: f.kind, to: 'you', dmg: DEV_RULES.chip, chip: true, hp: s.hp });
       fx(s, s.pos!, `-${DEV_RULES.chip}`, 'hurt', 1);
     }
   }

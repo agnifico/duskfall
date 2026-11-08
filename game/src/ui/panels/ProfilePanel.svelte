@@ -4,33 +4,32 @@
   // skills; each will open its own progression page), Fighting (your skills), Images. Other people's: Overview
   // (with a free trip to them), Stats if they fight, Images. Icons are the painted set cut from extras/icons_grok_*.jpg (public/sprites/icons).
   import { G, act } from '../../lib/game.svelte';
-  import { asset, content } from '../../content';
+  import { asset, content, sprites } from '../../content';
   import * as E from '../../engine/actions';
-  import { MAX_ENERGY, MAX_SPIRIT, PLAYER_STATS } from '../../engine/rules';
+  import { MAX_ENERGY, MAX_SPIRIT, SKILL_XP, YIELD_PER_LEVEL } from '../../engine/rules';
+  import { combatProgress, playerStats, skillProgress } from '../../engine/progress';
   import type { Stats } from '../../engine/types';
   import { goToPerson } from '../commands';
   import Panel from './Panel.svelte';
+  import GearTab from './GearTab.svelte';
   import { ACTIVE_QUEST, PLAYER, WORLD_RESONANCE } from '../placeholders';
 
   let { who }: { who: string } = $props(); // 'player', or a person's id
 
-  type Tab = 'overview' | 'stats' | 'skills' | 'fighting' | 'images';
-  const GATHERING = [
-    { name: 'Woodcutting', icon: 'woodcutting', text: 'Trees and driftwood.' },
-    { name: 'Mining', icon: 'mining', text: 'Stones, ore and crystal.' },
-    { name: 'Herblore', icon: 'herblore', text: 'Herbs found while walking.' },
-  ];
+  type Tab = 'overview' | 'stats' | 'gear' | 'skills' | 'fighting' | 'images';
+  const GATHERING = Object.entries(content.lifeskills);
+  const lv = $derived(combatProgress(G.s));
 
   const isPlayer = $derived(who === 'player');
   const npc = $derived(isPlayer ? undefined : content.npcs[who]);
   const art = $derived((isPlayer ? content.player.art : npc?.art) ?? []);
   const portrait = $derived(isPlayer ? content.player.portrait : npc?.portrait);
-  const stats = $derived<Stats | undefined>(isPlayer ? { ...PLAYER_STATS } : npc?.stats);
+  const stats = $derived<Stats | undefined>(isPlayer ? playerStats(G.s, content) : npc?.stats);
 
   const tabs = $derived.by((): { id: Tab; label: string }[] => {
     const out: { id: Tab; label: string }[] = [{ id: 'overview', label: 'Overview' }];
     if (stats) out.push({ id: 'stats', label: 'Stats' });
-    if (isPlayer) out.push({ id: 'skills', label: 'Skills' }, { id: 'fighting', label: 'Fighting' });
+    if (isPlayer) out.push({ id: 'gear', label: 'Gear' }, { id: 'skills', label: 'Skills' }, { id: 'fighting', label: 'Fighting' });
     if (art.length) out.push({ id: 'images', label: `Images · ${art.length}` });
     return out;
   });
@@ -81,13 +80,15 @@
     return [
       { icon: 'health', name: 'Health', colour: '#2f9a5a', value: isPlayer ? `${Math.ceil(G.s.hp)} / ${stats.hp}` : `${stats.hp}`, text: 'Comes back slowly outside a fight, or all at once with a rest.' },
       ...(isPlayer ? [{ icon: 'spirit', name: 'Spirit', colour: '#3a7fc0', value: `${G.s.spirit} / ${MAX_SPIRIT}`, text: 'Built by basic attacks, spent by skills.' }] : []),
-      { icon: 'attack', name: 'Attack', colour: '#4c6f99', value: `${stats.atk}`, text: 'Damage dealt by a hit.' },
-      { icon: 'defence', name: 'Defence', colour: '#4c6f99', value: `${stats.def}`, text: 'Damage taken off each hit.' },
+      { icon: 'attack', name: 'Physical Attack', colour: '#4c6f99', value: `${stats.patk}`, text: 'Damage of basic attacks and physical skills.' },
+      { icon: 'attack', name: 'Elemental Attack', colour: '#7a5bb8', value: `${stats.eatk}`, text: 'Damage of spells and elemental skills.' },
+      { icon: 'defence', name: 'Physical Defence', colour: '#4c6f99', value: `${stats.pdef}`, text: 'Takes damage off physical hits.' },
+      { icon: 'defence', name: 'Elemental Defence', colour: '#7a5bb8', value: `${stats.edef}`, text: 'Takes damage off elemental hits.' },
       { icon: 'speed', name: 'Speed', colour: '#7d6a4f', value: `${stats.spd}`, text: 'A quarter of it adds to evasion and precision.' },
       { icon: 'evasion', name: 'Evasion', colour: '#b8457a', value: `${stats.eva + q}`, note: `${stats.eva} + ${q} from speed`, text: 'Chance to dodge a hit.' },
       { icon: 'precision', name: 'Precision', colour: '#b8457a', value: `${stats.prc + q}`, note: `${stats.prc} + ${q} from speed`, text: 'Cuts into the other side’s evasion.' },
-      { icon: 'crit', name: 'Crit rate', colour: '#5b8a4f', value: `${Math.round(stats.crit * 100)}%`, text: 'Chance a hit is critical.' },
-      { icon: 'critdmg', name: 'Crit damage', colour: '#5b8a4f', value: `${stats.critDmg}×`, text: 'How much harder a critical hit lands.' },
+      { icon: 'crit', name: 'Crit Rate', colour: '#5b8a4f', value: `${Math.round(stats.crit * 100)}%`, text: 'Chance a hit is critical.' },
+      { icon: 'critdmg', name: 'Crit Damage', colour: '#5b8a4f', value: `${stats.critDmg}×`, text: 'How much harder a critical hit lands.' },
     ];
   });
 
@@ -126,17 +127,17 @@
               <button class="disp name rename" onclick={startEdit} title="Rename">{myName}<span class="pen" aria-hidden="true">✎</span></button>
             {/if}
             <div class="badges">
-              <span class="badge px flat t-inset" title="Your level: XP from fights, gathering and quests raises it">
-                <img src={icon('level')} alt="" /><span class="lbl m">Level {PLAYER.level}</span>
+              <span class="badge px flat t-inset" title="Your combat level: XP from beating enemies raises it, and with it health, attack and defence">
+                <img src={icon('level')} alt="" /><span class="lbl m">Level {lv.level}</span>
               </span>
               <span class="badge wr px flat t-inset" title="World Resonance: how attuned you are to the world. Some places and fights need more of it.">
                 <img src={icon('resonance')} alt="" /><span class="lbl m">World Resonance</span><b class="lbl m">{WORLD_RESONANCE}</b>
               </span>
             </div>
-            <div class="bar xp" title="{PLAYER.xp} of {PLAYER.xpNext} XP to level {PLAYER.level + 1}">
+            <div class="bar xp" title={lv.max ? 'The top level for now' : `${lv.into} of ${lv.need} XP to level ${lv.level + 1}`}>
               <span class="lbl">XP</span>
-              <span class="track"><b style:width="{(PLAYER.xp / PLAYER.xpNext) * 100}%"></b></span>
-              <span class="lbl dim">{PLAYER.xp} / {PLAYER.xpNext}</span>
+              <span class="track"><b style:width="{lv.max ? 100 : (lv.into / lv.need) * 100}%"></b></span>
+              <span class="lbl dim">{lv.max ? 'max' : `${lv.into} / ${lv.need}`}</span>
             </div>
           {:else if npc}
             {#if npc.title}<div class="lbl m eyebrow">{npc.title}</div>{/if}
@@ -156,7 +157,7 @@
         <div class="cols">
           <section class="card px flat t-inset">
             <div class="lbl section">Vitals</div>
-            <div class="bar"><span class="lbl">HP</span><span class="track"><b class="hp" style:width="{(G.s.hp / PLAYER_STATS.hp) * 100}%"></b></span><span class="lbl dim">{Math.ceil(G.s.hp)} / {PLAYER_STATS.hp}</span></div>
+            <div class="bar"><span class="lbl">HP</span><span class="track"><b class="hp" style:width="{(G.s.hp / stats!.hp) * 100}%"></b></span><span class="lbl dim">{Math.ceil(G.s.hp)} / {stats!.hp}</span></div>
             <div class="bar"><span class="lbl">Spirit</span><span class="track"><b class="sp" style:width="{(G.s.spirit / MAX_SPIRIT) * 100}%"></b></span><span class="lbl dim">{G.s.spirit} / {MAX_SPIRIT}</span></div>
             <div class="bar"><span class="lbl">Energy</span><span class="track"><b class="en" style:width="{(G.s.energy / MAX_ENERGY) * 100}%"></b></span><span class="lbl dim">{G.s.energy} / {MAX_ENERGY}</span></div>
           </section>
@@ -179,6 +180,8 @@
         </div>
       {/each}
     </div>
+  {:else if tab === 'gear'}
+    <GearTab />
   {:else if tab === 'skills'}
     <div class="page">
       <section class="card tools px flat t-inset">
@@ -194,18 +197,19 @@
       </section>
       <section>
         <div class="lbl section">Gathering</div>
-        {#each GATHERING as sk (sk.name)}
+        {#each GATHERING as [id, sk] (id)}
+          {@const p = skillProgress(G.s, id)}
           <div class="skill">
-            <span class="disc"><img src={asset(`sprites/lifeskills/${sk.icon}.png`)} alt="" /></span>
+            <span class="disc"><img src={asset(sprites[sk.icon]?.file ?? '')} alt="" /></span>
             <div class="grow">
-              <div class="top"><span class="body strong">{sk.name}</span><span class="lbl m">Lv 1</span></div>
-              <div class="bar slim"><span class="track"><b class="en" style:width="0%"></b></span><span class="lbl dim">0 / 100</span></div>
+              <div class="top"><span class="body strong">{sk.name}</span><span class="lbl m">Lv {p.level} / {SKILL_XP.length}</span></div>
+              <div class="bar slim" title={p.max ? 'The top level for now' : `${p.into} of ${p.need} XP to level ${p.level + 1}`}><span class="track"><b class="en" style:width="{p.max ? 100 : (p.into / p.need) * 100}%"></b></span><span class="lbl dim">{p.max ? 'max' : `${p.into} / ${p.need}`}</span></div>
               <div class="lbl dim">{sk.text}</div>
             </div>
             <span class="more lbl dim" title="Its own page, with what each level unlocks, comes later">›</span>
           </div>
         {/each}
-        <p class="lbl dim note">Skill XP isn't built yet. Each skill will open its own page.</p>
+        <p class="lbl dim note">Gathering gives skill XP; each level adds {Math.round(YIELD_PER_LEVEL * 100)}% to what ranged nodes give. Each skill will open its own page.</p>
       </section>
     </div>
   {:else if tab === 'fighting'}

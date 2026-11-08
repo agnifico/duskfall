@@ -113,6 +113,12 @@ Dawn's Journey's rules (+1 every 96 minutes, +5 for each first kill, quest rewar
 
 ---
 
+### Decided 2026-11-08: physical and elemental, levels
+- **Attack and defence split in two**, as in Dawn's Journey: physical attack and defence, elemental attack and defence. Physical attack meets physical defence; elemental meets elemental. Built: `Stats.patk/eatk/pdef/edef`, `rollHit(…, kind)`, skills carry `damage` (physical if missing). An enemy's missing elemental stats copy its physical ones.
+- **Basic attacks are always physical**, unless an infusion modifier says otherwise (later). Spells are almost always elemental. An elemental build is weaker in the overworld by design and leans on low-cooldown skills.
+- **One combat level** from beating enemies. Each level adds 5 HP and 1 to all four attacks and defences, so you stay rounded. The combat level will gate gear and higher-level areas.
+- **Later:** one free stat point per level, put into any one stat (by level 60: 60 from levels plus up to 60 more in one stat, before gear).
+
 ## 4. Worked example: the first fights
 
 The starting heroine against two made-up enemies, on the formulas above:

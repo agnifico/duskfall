@@ -1,5 +1,8 @@
 import type { GameState } from './types';
-import { MAX_ENERGY, PLAYER_STATS } from './rules';
+import { MAX_ENERGY, PLAYER_STATS, RELIC_SLOTS } from './rules';
+import type { Worn } from './types';
+
+export const noneWorn = (): Worn => ({ head: null, body: null, hands: null, legs: null, feet: null, main: null, off: null, relics: Array(RELIC_SLOTS).fill(null) });
 
 /** Bump when the save shape changes in a way old saves can't be read as. Upgrades live in lib/save.ts. */
 export const SAVE_VERSION = 4;
@@ -32,5 +35,8 @@ export function newGame(now = Date.now()): GameState {
     foeRolls: {},
     fx: [],
     fxSeq: 0,
+    xp: 0,
+    skills: {},
+    worn: noneWorn(),
   };
 }

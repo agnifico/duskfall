@@ -1335,6 +1335,990 @@
   "by": 1.0,
   "fx": 0.519
  },
+ "weapons/traveller_sword": {
+  "file": "sprites/weapons/traveller_sword.png",
+  "w": 323,
+  "h": 384,
+  "bx": 0.13,
+  "by": 0.992,
+  "fx": 0.256
+ },
+ "weapons/traveller_dagger": {
+  "file": "sprites/weapons/traveller_dagger.png",
+  "w": 318,
+  "h": 384,
+  "bx": 0.114,
+  "by": 0.997,
+  "fx": 0.259
+ },
+ "weapons/traveller_mace": {
+  "file": "sprites/weapons/traveller_mace.png",
+  "w": 327,
+  "h": 384,
+  "bx": 0.088,
+  "by": 0.997,
+  "fx": 0.197
+ },
+ "weapons/traveller_axe": {
+  "file": "sprites/weapons/traveller_axe.png",
+  "w": 375,
+  "h": 384,
+  "bx": 0.093,
+  "by": 0.997,
+  "fx": 0.173
+ },
+ "weapons/traveller_spear": {
+  "file": "sprites/weapons/traveller_spear.png",
+  "w": 325,
+  "h": 384,
+  "bx": 0.062,
+  "by": 0.995,
+  "fx": 0.194
+ },
+ "weapons/traveller_staff": {
+  "file": "sprites/weapons/traveller_staff.png",
+  "w": 329,
+  "h": 384,
+  "bx": 0.064,
+  "by": 0.997,
+  "fx": 0.284
+ },
+ "weapons/iron_sword": {
+  "file": "sprites/weapons/iron_sword.png",
+  "w": 323,
+  "h": 384,
+  "bx": 0.079,
+  "by": 0.997,
+  "fx": 0.236
+ },
+ "weapons/iron_dagger": {
+  "file": "sprites/weapons/iron_dagger.png",
+  "w": 315,
+  "h": 384,
+  "bx": 0.092,
+  "by": 0.997,
+  "fx": 0.246
+ },
+ "weapons/iron_mace": {
+  "file": "sprites/weapons/iron_mace.png",
+  "w": 312,
+  "h": 384,
+  "bx": 0.081,
+  "by": 0.997,
+  "fx": 0.192
+ },
+ "weapons/iron_axe": {
+  "file": "sprites/weapons/iron_axe.png",
+  "w": 350,
+  "h": 384,
+  "bx": 0.078,
+  "by": 0.997,
+  "fx": 0.179
+ },
+ "weapons/iron_spear": {
+  "file": "sprites/weapons/iron_spear.png",
+  "w": 315,
+  "h": 384,
+  "bx": 0.056,
+  "by": 0.997,
+  "fx": 0.19
+ },
+ "weapons/iron_staff": {
+  "file": "sprites/weapons/iron_staff.png",
+  "w": 319,
+  "h": 384,
+  "bx": 0.075,
+  "by": 0.997,
+  "fx": 0.187
+ },
+ "weapons/silversteel_sword": {
+  "file": "sprites/weapons/silversteel_sword.png",
+  "w": 320,
+  "h": 384,
+  "bx": 0.064,
+  "by": 0.995,
+  "fx": 0.255
+ },
+ "weapons/silversteel_dagger": {
+  "file": "sprites/weapons/silversteel_dagger.png",
+  "w": 309,
+  "h": 384,
+  "bx": 0.071,
+  "by": 0.997,
+  "fx": 0.239
+ },
+ "weapons/silversteel_mace": {
+  "file": "sprites/weapons/silversteel_mace.png",
+  "w": 305,
+  "h": 384,
+  "bx": 0.075,
+  "by": 0.995,
+  "fx": 0.183
+ },
+ "weapons/silversteel_axe": {
+  "file": "sprites/weapons/silversteel_axe.png",
+  "w": 337,
+  "h": 384,
+  "bx": 0.063,
+  "by": 0.997,
+  "fx": 0.168
+ },
+ "weapons/silversteel_spear": {
+  "file": "sprites/weapons/silversteel_spear.png",
+  "w": 316,
+  "h": 384,
+  "bx": 0.054,
+  "by": 0.997,
+  "fx": 0.195
+ },
+ "weapons/silversteel_staff": {
+  "file": "sprites/weapons/silversteel_staff.png",
+  "w": 310,
+  "h": 384,
+  "bx": 0.057,
+  "by": 0.995,
+  "fx": 0.183
+ },
+ "weapons/adamantine_sword": {
+  "file": "sprites/weapons/adamantine_sword.png",
+  "w": 328,
+  "h": 384,
+  "bx": 0.07,
+  "by": 0.997,
+  "fx": 0.269
+ },
+ "weapons/adamantine_dagger": {
+  "file": "sprites/weapons/adamantine_dagger.png",
+  "w": 313,
+  "h": 384,
+  "bx": 0.072,
+  "by": 0.997,
+  "fx": 0.248
+ },
+ "weapons/adamantine_mace": {
+  "file": "sprites/weapons/adamantine_mace.png",
+  "w": 315,
+  "h": 384,
+  "bx": 0.08,
+  "by": 0.997,
+  "fx": 0.18
+ },
+ "weapons/adamantine_axe": {
+  "file": "sprites/weapons/adamantine_axe.png",
+  "w": 329,
+  "h": 384,
+  "bx": 0.068,
+  "by": 0.997,
+  "fx": 0.19
+ },
+ "weapons/adamantine_spear": {
+  "file": "sprites/weapons/adamantine_spear.png",
+  "w": 321,
+  "h": 384,
+  "bx": 0.071,
+  "by": 1.0,
+  "fx": 0.213
+ },
+ "weapons/adamantine_staff": {
+  "file": "sprites/weapons/adamantine_staff.png",
+  "w": 326,
+  "h": 384,
+  "bx": 0.081,
+  "by": 1.0,
+  "fx": 0.214
+ },
+ "weapons/traveller_bow": {
+  "file": "sprites/weapons/traveller_bow.png",
+  "w": 363,
+  "h": 384,
+  "bx": 0.067,
+  "by": 0.997,
+  "fx": 0.173
+ },
+ "weapons/traveller_shield": {
+  "file": "sprites/weapons/traveller_shield.png",
+  "w": 377,
+  "h": 384,
+  "bx": 0.551,
+  "by": 0.997,
+  "fx": 0.472
+ },
+ "weapons/traveller_quiver": {
+  "file": "sprites/weapons/traveller_quiver.png",
+  "w": 313,
+  "h": 384,
+  "bx": 0.231,
+  "by": 0.997,
+  "fx": 0.31
+ },
+ "weapons/iron_bow": {
+  "file": "sprites/weapons/iron_bow.png",
+  "w": 369,
+  "h": 384,
+  "bx": 0.035,
+  "by": 0.997,
+  "fx": 0.354
+ },
+ "weapons/iron_shield": {
+  "file": "sprites/weapons/iron_shield.png",
+  "w": 384,
+  "h": 383,
+  "bx": 0.498,
+  "by": 0.997,
+  "fx": 0.499
+ },
+ "weapons/iron_quiver": {
+  "file": "sprites/weapons/iron_quiver.png",
+  "w": 323,
+  "h": 384,
+  "bx": 0.316,
+  "by": 0.997,
+  "fx": 0.311
+ },
+ "weapons/silversteel_bow": {
+  "file": "sprites/weapons/silversteel_bow.png",
+  "w": 376,
+  "h": 384,
+  "bx": 0.023,
+  "by": 0.997,
+  "fx": 0.366
+ },
+ "weapons/silversteel_shield": {
+  "file": "sprites/weapons/silversteel_shield.png",
+  "w": 275,
+  "h": 384,
+  "bx": 0.499,
+  "by": 0.997,
+  "fx": 0.499
+ },
+ "weapons/silversteel_quiver": {
+  "file": "sprites/weapons/silversteel_quiver.png",
+  "w": 325,
+  "h": 384,
+  "bx": 0.222,
+  "by": 0.997,
+  "fx": 0.309
+ },
+ "weapons/adamantine_bow": {
+  "file": "sprites/weapons/adamantine_bow.png",
+  "w": 377,
+  "h": 384,
+  "bx": 0.043,
+  "by": 0.997,
+  "fx": 0.347
+ },
+ "weapons/adamantine_shield": {
+  "file": "sprites/weapons/adamantine_shield.png",
+  "w": 303,
+  "h": 384,
+  "bx": 0.499,
+  "by": 0.997,
+  "fx": 0.499
+ },
+ "weapons/adamantine_quiver": {
+  "file": "sprites/weapons/adamantine_quiver.png",
+  "w": 316,
+  "h": 384,
+  "bx": 0.344,
+  "by": 0.997,
+  "fx": 0.319
+ },
+ "relics/helas_whip": {
+  "file": "sprites/relics/helas_whip.png",
+  "w": 208,
+  "h": 200,
+  "bx": 0.389,
+  "by": 0.99,
+  "fx": 0.421
+ },
+ "relics/helas_corset": {
+  "file": "sprites/relics/helas_corset.png",
+  "w": 150,
+  "h": 203,
+  "bx": 0.411,
+  "by": 0.995,
+  "fx": 0.491
+ },
+ "relics/garter_straps": {
+  "file": "sprites/relics/garter_straps.png",
+  "w": 184,
+  "h": 194,
+  "bx": 0.53,
+  "by": 0.995,
+  "fx": 0.486
+ },
+ "relics/spiked_choker": {
+  "file": "sprites/relics/spiked_choker.png",
+  "w": 211,
+  "h": 135,
+  "bx": 0.535,
+  "by": 0.978,
+  "fx": 0.553
+ },
+ "relics/the_fire_dress": {
+  "file": "sprites/relics/the_fire_dress.png",
+  "w": 183,
+  "h": 256,
+  "bx": 0.391,
+  "by": 0.992,
+  "fx": 0.5
+ },
+ "relics/hellfire_crown": {
+  "file": "sprites/relics/hellfire_crown.png",
+  "w": 198,
+  "h": 226,
+  "bx": 0.334,
+  "by": 0.996,
+  "fx": 0.49
+ },
+ "relics/command_of_hell": {
+  "file": "sprites/relics/command_of_hell.png",
+  "w": 147,
+  "h": 269,
+  "bx": 0.5,
+  "by": 0.996,
+  "fx": 0.501
+ },
+ "relics/magma_fossil": {
+  "file": "sprites/relics/magma_fossil.png",
+  "w": 193,
+  "h": 208,
+  "bx": 0.496,
+  "by": 0.995,
+  "fx": 0.494
+ },
+ "relics/ring_of_the_sky": {
+  "file": "sprites/relics/ring_of_the_sky.png",
+  "w": 159,
+  "h": 170,
+  "bx": 0.33,
+  "by": 0.994,
+  "fx": 0.402
+ },
+ "relics/sky_bracers": {
+  "file": "sprites/relics/sky_bracers.png",
+  "w": 213,
+  "h": 217,
+  "bx": 0.61,
+  "by": 0.995,
+  "fx": 0.443
+ },
+ "relics/sky_amulet": {
+  "file": "sprites/relics/sky_amulet.png",
+  "w": 144,
+  "h": 235,
+  "bx": 0.477,
+  "by": 0.991,
+  "fx": 0.499
+ },
+ "relics/drops_of_fire": {
+  "file": "sprites/relics/drops_of_fire.png",
+  "w": 119,
+  "h": 155,
+  "bx": 0.69,
+  "by": 0.987,
+  "fx": 0.501
+ },
+ "relics/dragon_rider_helmet": {
+  "file": "sprites/relics/dragon_rider_helmet.png",
+  "w": 166,
+  "h": 197,
+  "bx": 0.317,
+  "by": 0.985,
+  "fx": 0.401
+ },
+ "relics/seabed_fossil": {
+  "file": "sprites/relics/seabed_fossil.png",
+  "w": 183,
+  "h": 170,
+  "bx": 0.465,
+  "by": 0.994,
+  "fx": 0.485
+ },
+ "relics/dragon_tooth_amulet": {
+  "file": "sprites/relics/dragon_tooth_amulet.png",
+  "w": 135,
+  "h": 187,
+  "bx": 0.158,
+  "by": 1.0,
+  "fx": 0.352
+ },
+ "gear/traveller_head": {
+  "file": "sprites/gear/traveller_head.png",
+  "w": 287,
+  "h": 347,
+  "bx": 0.577,
+  "by": 0.991,
+  "fx": 0.48
+ },
+ "gear/traveller_body": {
+  "file": "sprites/gear/traveller_body.png",
+  "w": 241,
+  "h": 374,
+  "bx": 0.426,
+  "by": 0.995,
+  "fx": 0.496
+ },
+ "gear/traveller_hands": {
+  "file": "sprites/gear/traveller_hands.png",
+  "w": 326,
+  "h": 307,
+  "bx": 0.629,
+  "by": 0.993,
+  "fx": 0.436
+ },
+ "gear/traveller_legs": {
+  "file": "sprites/gear/traveller_legs.png",
+  "w": 221,
+  "h": 334,
+  "bx": 0.686,
+  "by": 0.994,
+  "fx": 0.538
+ },
+ "gear/traveller_feet": {
+  "file": "sprites/gear/traveller_feet.png",
+  "w": 346,
+  "h": 318,
+  "bx": 0.639,
+  "by": 0.997,
+  "fx": 0.532
+ },
+ "gear/traveller_cloak": {
+  "file": "sprites/gear/traveller_cloak.png",
+  "w": 333,
+  "h": 347,
+  "bx": 0.738,
+  "by": 0.997,
+  "fx": 0.584
+ },
+ "gear/padded_head": {
+  "file": "sprites/gear/padded_head.png",
+  "w": 254,
+  "h": 342,
+  "bx": 0.812,
+  "by": 0.994,
+  "fx": 0.547
+ },
+ "gear/padded_body": {
+  "file": "sprites/gear/padded_body.png",
+  "w": 247,
+  "h": 337,
+  "bx": 0.543,
+  "by": 0.997,
+  "fx": 0.497
+ },
+ "gear/padded_hands": {
+  "file": "sprites/gear/padded_hands.png",
+  "w": 336,
+  "h": 310,
+  "bx": 0.683,
+  "by": 0.994,
+  "fx": 0.458
+ },
+ "gear/padded_legs": {
+  "file": "sprites/gear/padded_legs.png",
+  "w": 222,
+  "h": 368,
+  "bx": 0.678,
+  "by": 0.995,
+  "fx": 0.534
+ },
+ "gear/padded_feet": {
+  "file": "sprites/gear/padded_feet.png",
+  "w": 354,
+  "h": 332,
+  "bx": 0.628,
+  "by": 0.997,
+  "fx": 0.524
+ },
+ "gear/padded_pouchbelt": {
+  "file": "sprites/gear/padded_pouchbelt.png",
+  "w": 360,
+  "h": 282,
+  "bx": 0.582,
+  "by": 0.996,
+  "fx": 0.647
+ },
+ "gear/iron_head": {
+  "file": "sprites/gear/iron_head.png",
+  "w": 259,
+  "h": 345,
+  "bx": 0.252,
+  "by": 0.994,
+  "fx": 0.426
+ },
+ "gear/iron_body": {
+  "file": "sprites/gear/iron_body.png",
+  "w": 261,
+  "h": 345,
+  "bx": 0.498,
+  "by": 0.997,
+  "fx": 0.509
+ },
+ "gear/iron_hands": {
+  "file": "sprites/gear/iron_hands.png",
+  "w": 347,
+  "h": 348,
+  "bx": 0.601,
+  "by": 0.994,
+  "fx": 0.45
+ },
+ "gear/iron_legs": {
+  "file": "sprites/gear/iron_legs.png",
+  "w": 273,
+  "h": 338,
+  "bx": 0.83,
+  "by": 0.997,
+  "fx": 0.507
+ },
+ "gear/iron_feet": {
+  "file": "sprites/gear/iron_feet.png",
+  "w": 384,
+  "h": 345,
+  "bx": 0.523,
+  "by": 0.997,
+  "fx": 0.495
+ },
+ "gear/iron_starbelt": {
+  "file": "sprites/gear/iron_starbelt.png",
+  "w": 362,
+  "h": 258,
+  "bx": 0.908,
+  "by": 0.996,
+  "fx": 0.664
+ },
+ "gear/silversteel_head": {
+  "file": "sprites/gear/silversteel_head.png",
+  "w": 271,
+  "h": 384,
+  "bx": 0.223,
+  "by": 0.997,
+  "fx": 0.381
+ },
+ "gear/silversteel_body": {
+  "file": "sprites/gear/silversteel_body.png",
+  "w": 273,
+  "h": 384,
+  "bx": 0.328,
+  "by": 0.995,
+  "fx": 0.469
+ },
+ "gear/silversteel_hands": {
+  "file": "sprites/gear/silversteel_hands.png",
+  "w": 342,
+  "h": 384,
+  "bx": 0.574,
+  "by": 0.997,
+  "fx": 0.443
+ },
+ "gear/silversteel_legs": {
+  "file": "sprites/gear/silversteel_legs.png",
+  "w": 300,
+  "h": 384,
+  "bx": 0.81,
+  "by": 0.997,
+  "fx": 0.499
+ },
+ "gear/silversteel_feet": {
+  "file": "sprites/gear/silversteel_feet.png",
+  "w": 347,
+  "h": 384,
+  "bx": 0.587,
+  "by": 0.997,
+  "fx": 0.52
+ },
+ "gear/silversteel_chainskirt": {
+  "file": "sprites/gear/silversteel_chainskirt.png",
+  "w": 370,
+  "h": 384,
+  "bx": 0.617,
+  "by": 1.0,
+  "fx": 0.581
+ },
+ "elem1/fire_head": {
+  "file": "sprites/elem1/fire_head.png",
+  "w": 283,
+  "h": 350,
+  "bx": 0.559,
+  "by": 0.994,
+  "fx": 0.545
+ },
+ "elem1/fire_body": {
+  "file": "sprites/elem1/fire_body.png",
+  "w": 262,
+  "h": 334,
+  "bx": 0.369,
+  "by": 0.994,
+  "fx": 0.444
+ },
+ "elem1/fire_hands": {
+  "file": "sprites/elem1/fire_hands.png",
+  "w": 324,
+  "h": 306,
+  "bx": 0.717,
+  "by": 0.997,
+  "fx": 0.501
+ },
+ "elem1/fire_legs": {
+  "file": "sprites/elem1/fire_legs.png",
+  "w": 192,
+  "h": 384,
+  "bx": 0.57,
+  "by": 0.997,
+  "fx": 0.532
+ },
+ "elem1/fire_feet": {
+  "file": "sprites/elem1/fire_feet.png",
+  "w": 318,
+  "h": 353,
+  "bx": 0.616,
+  "by": 0.997,
+  "fx": 0.521
+ },
+ "elem1/fire_bow": {
+  "file": "sprites/elem1/fire_bow.png",
+  "w": 361,
+  "h": 384,
+  "bx": 0.152,
+  "by": 0.997,
+  "fx": 0.226
+ },
+ "elem1/water_head": {
+  "file": "sprites/elem1/water_head.png",
+  "w": 282,
+  "h": 298,
+  "bx": 0.636,
+  "by": 0.997,
+  "fx": 0.556
+ },
+ "elem1/water_body": {
+  "file": "sprites/elem1/water_body.png",
+  "w": 238,
+  "h": 308,
+  "bx": 0.368,
+  "by": 0.997,
+  "fx": 0.507
+ },
+ "elem1/water_hands": {
+  "file": "sprites/elem1/water_hands.png",
+  "w": 343,
+  "h": 321,
+  "bx": 0.517,
+  "by": 0.997,
+  "fx": 0.405
+ },
+ "elem1/water_legs": {
+  "file": "sprites/elem1/water_legs.png",
+  "w": 272,
+  "h": 338,
+  "bx": 0.584,
+  "by": 0.997,
+  "fx": 0.536
+ },
+ "elem1/water_feet": {
+  "file": "sprites/elem1/water_feet.png",
+  "w": 314,
+  "h": 326,
+  "bx": 0.6,
+  "by": 0.994,
+  "fx": 0.527
+ },
+ "elem1/water_bow": {
+  "file": "sprites/elem1/water_bow.png",
+  "w": 369,
+  "h": 384,
+  "bx": 0.176,
+  "by": 0.997,
+  "fx": 0.317
+ },
+ "elem1/wind_head": {
+  "file": "sprites/elem1/wind_head.png",
+  "w": 324,
+  "h": 340,
+  "bx": 0.885,
+  "by": 0.997,
+  "fx": 0.643
+ },
+ "elem1/wind_body": {
+  "file": "sprites/elem1/wind_body.png",
+  "w": 358,
+  "h": 350,
+  "bx": 0.667,
+  "by": 0.994,
+  "fx": 0.48
+ },
+ "elem1/wind_hands": {
+  "file": "sprites/elem1/wind_hands.png",
+  "w": 331,
+  "h": 333,
+  "bx": 0.551,
+  "by": 0.994,
+  "fx": 0.419
+ },
+ "elem1/wind_legs": {
+  "file": "sprites/elem1/wind_legs.png",
+  "w": 304,
+  "h": 380,
+  "bx": 0.457,
+  "by": 0.997,
+  "fx": 0.486
+ },
+ "elem1/wind_feet": {
+  "file": "sprites/elem1/wind_feet.png",
+  "w": 307,
+  "h": 343,
+  "bx": 0.541,
+  "by": 0.994,
+  "fx": 0.487
+ },
+ "elem1/wind_bow": {
+  "file": "sprites/elem1/wind_bow.png",
+  "w": 357,
+  "h": 384,
+  "bx": 0.15,
+  "by": 0.997,
+  "fx": 0.309
+ },
+ "elem1/earth_head": {
+  "file": "sprites/elem1/earth_head.png",
+  "w": 334,
+  "h": 367,
+  "bx": 0.549,
+  "by": 0.997,
+  "fx": 0.543
+ },
+ "elem1/earth_body": {
+  "file": "sprites/elem1/earth_body.png",
+  "w": 244,
+  "h": 353,
+  "bx": 0.459,
+  "by": 0.997,
+  "fx": 0.504
+ },
+ "elem1/earth_hands": {
+  "file": "sprites/elem1/earth_hands.png",
+  "w": 347,
+  "h": 353,
+  "bx": 0.567,
+  "by": 0.997,
+  "fx": 0.433
+ },
+ "elem1/earth_legs": {
+  "file": "sprites/elem1/earth_legs.png",
+  "w": 236,
+  "h": 384,
+  "bx": 0.636,
+  "by": 0.997,
+  "fx": 0.511
+ },
+ "elem1/earth_feet": {
+  "file": "sprites/elem1/earth_feet.png",
+  "w": 345,
+  "h": 375,
+  "bx": 0.587,
+  "by": 0.997,
+  "fx": 0.499
+ },
+ "elem1/earth_bow": {
+  "file": "sprites/elem1/earth_bow.png",
+  "w": 328,
+  "h": 384,
+  "bx": 0.112,
+  "by": 0.997,
+  "fx": 0.243
+ },
+ "elem2/fire_head": {
+  "file": "sprites/elem2/fire_head.png",
+  "w": 333,
+  "h": 348,
+  "bx": 0.381,
+  "by": 0.997,
+  "fx": 0.492
+ },
+ "elem2/fire_body": {
+  "file": "sprites/elem2/fire_body.png",
+  "w": 274,
+  "h": 351,
+  "bx": 0.443,
+  "by": 0.994,
+  "fx": 0.493
+ },
+ "elem2/fire_hands": {
+  "file": "sprites/elem2/fire_hands.png",
+  "w": 375,
+  "h": 322,
+  "bx": 0.626,
+  "by": 0.997,
+  "fx": 0.48
+ },
+ "elem2/fire_legs": {
+  "file": "sprites/elem2/fire_legs.png",
+  "w": 206,
+  "h": 384,
+  "bx": 0.668,
+  "by": 0.997,
+  "fx": 0.518
+ },
+ "elem2/fire_feet": {
+  "file": "sprites/elem2/fire_feet.png",
+  "w": 331,
+  "h": 359,
+  "bx": 0.569,
+  "by": 0.994,
+  "fx": 0.499
+ },
+ "elem2/fire_bow": {
+  "file": "sprites/elem2/fire_bow.png",
+  "w": 384,
+  "h": 357,
+  "bx": 0.154,
+  "by": 0.997,
+  "fx": 0.233
+ },
+ "elem2/water_head": {
+  "file": "sprites/elem2/water_head.png",
+  "w": 311,
+  "h": 384,
+  "bx": 0.524,
+  "by": 0.997,
+  "fx": 0.512
+ },
+ "elem2/water_body": {
+  "file": "sprites/elem2/water_body.png",
+  "w": 298,
+  "h": 360,
+  "bx": 0.737,
+  "by": 0.997,
+  "fx": 0.498
+ },
+ "elem2/water_hands": {
+  "file": "sprites/elem2/water_hands.png",
+  "w": 384,
+  "h": 351,
+  "bx": 0.558,
+  "by": 0.997,
+  "fx": 0.432
+ },
+ "elem2/water_legs": {
+  "file": "sprites/elem2/water_legs.png",
+  "w": 250,
+  "h": 374,
+  "bx": 0.557,
+  "by": 0.997,
+  "fx": 0.498
+ },
+ "elem2/water_feet": {
+  "file": "sprites/elem2/water_feet.png",
+  "w": 341,
+  "h": 370,
+  "bx": 0.569,
+  "by": 0.995,
+  "fx": 0.51
+ },
+ "elem2/water_bow": {
+  "file": "sprites/elem2/water_bow.png",
+  "w": 350,
+  "h": 384,
+  "bx": 0.163,
+  "by": 0.997,
+  "fx": 0.261
+ },
+ "elem2/air_head": {
+  "file": "sprites/elem2/air_head.png",
+  "w": 339,
+  "h": 375,
+  "bx": 0.399,
+  "by": 0.995,
+  "fx": 0.47
+ },
+ "elem2/air_body": {
+  "file": "sprites/elem2/air_body.png",
+  "w": 298,
+  "h": 368,
+  "bx": 0.608,
+  "by": 0.992,
+  "fx": 0.447
+ },
+ "elem2/air_hands": {
+  "file": "sprites/elem2/air_hands.png",
+  "w": 375,
+  "h": 351,
+  "bx": 0.543,
+  "by": 0.994,
+  "fx": 0.419
+ },
+ "elem2/air_legs": {
+  "file": "sprites/elem2/air_legs.png",
+  "w": 200,
+  "h": 373,
+  "bx": 0.787,
+  "by": 0.997,
+  "fx": 0.563
+ },
+ "elem2/air_feet": {
+  "file": "sprites/elem2/air_feet.png",
+  "w": 329,
+  "h": 375,
+  "bx": 0.519,
+  "by": 0.995,
+  "fx": 0.473
+ },
+ "elem2/air_bow": {
+  "file": "sprites/elem2/air_bow.png",
+  "w": 361,
+  "h": 384,
+  "bx": 0.123,
+  "by": 0.995,
+  "fx": 0.194
+ },
+ "elem2/earth_head": {
+  "file": "sprites/elem2/earth_head.png",
+  "w": 325,
+  "h": 384,
+  "bx": 0.481,
+  "by": 0.997,
+  "fx": 0.488
+ },
+ "elem2/earth_body": {
+  "file": "sprites/elem2/earth_body.png",
+  "w": 298,
+  "h": 384,
+  "bx": 0.739,
+  "by": 0.995,
+  "fx": 0.509
+ },
+ "elem2/earth_hands": {
+  "file": "sprites/elem2/earth_hands.png",
+  "w": 384,
+  "h": 358,
+  "bx": 0.586,
+  "by": 0.997,
+  "fx": 0.451
+ },
+ "elem2/earth_legs": {
+  "file": "sprites/elem2/earth_legs.png",
+  "w": 216,
+  "h": 383,
+  "bx": 0.771,
+  "by": 0.997,
+  "fx": 0.552
+ },
+ "elem2/earth_feet": {
+  "file": "sprites/elem2/earth_feet.png",
+  "w": 346,
+  "h": 384,
+  "bx": 0.589,
+  "by": 0.995,
+  "fx": 0.516
+ },
+ "elem2/earth_bow": {
+  "file": "sprites/elem2/earth_bow.png",
+  "w": 382,
+  "h": 384,
+  "bx": 0.125,
+  "by": 0.997,
+  "fx": 0.235
+ },
  "grok_chars/heroine-stand": {
   "file": "sprites/grok_chars/heroine-stand.png",
   "w": 157,

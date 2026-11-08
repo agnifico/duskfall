@@ -206,9 +206,9 @@
       const st = K.foeStats(content, hoverFoe.kind);
       const name = cap(content.props[hoverFoe.kind]?.name ?? hoverFoe.kind);
       if (E.canHit(G.s, content, hoverFoe.id)) {
-        const me = K.playerStats();
+        const me = K.playerStats(G.s, content);
         const hit = Math.round((1 - K.dodgeChance(me, st)) * 100);
-        return { hx, text: `Attack · ${K.fmt(K.baseDamage(me.atk, st.def))} dmg · ${hit}%`, bad: false };
+        return { hx, text: `Attack · ${K.fmt(K.baseDamage(me.patk, st.pdef))} dmg · ${hit}%`, bad: false };
       }
       return { hx, text: `${name} · ${Math.ceil(hoverFoe.hp)}/${st.hp}${plan ? ` · ${plan.cost}⚡` : ''}`, bad: !!plan && short(plan.cost) };
     }
@@ -542,7 +542,7 @@
 
   const FX_MS = 900;
   const PHASE_MS = 220;
-  const TEXT = new Set(['hit', 'crit', 'miss', 'hurt']);
+  const TEXT = new Set(['hit', 'crit', 'miss', 'hurt', 'xp']);
   type Shown = Fx & { t0: number; delay: number };
   let shown = $state<Shown[]>([]);
   let lastFx = untrack(() => G.s.fxSeq);
@@ -1142,6 +1142,11 @@
   .fx.miss {
     fill: #b8c4c0;
     font-size: 14px;
+  }
+  .fx.xp {
+    fill: #9be37a;
+    font-size: 13px;
+    animation-duration: 1.4s;
   }
   @keyframes rise {
     0% {

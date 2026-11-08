@@ -23,6 +23,8 @@ export interface Prop {
 
   // nodes
   tier?: number; // tool tier needed
+  skill?: string; // the life skill it trains (lifeskills.json)
+  xp?: number; // skill XP per gather; XP_PER_ENERGY × its energy cost if missing
   verb?: string; // "Chop", "Mine"
   item?: string; // item id. Also what an enemy drops and what a secret holds.
   yield?: number | [number, number]; // how many per gather: fixed, or a range
@@ -38,10 +40,15 @@ export interface Prop {
 }
 
 /** Fighting stats. Player's are in rules.ts; an enemy's in its prop's `foe.stats`. */
+/** Which attack meets which defence. */
+export type DamageKind = 'physical' | 'elemental';
+
 export interface Stats {
   hp: number;
-  atk: number;
-  def: number;
+  patk: number; // physical attack: basic attacks, always (unless an infusion changes that, later)
+  eatk: number; // elemental attack: spells, mostly
+  pdef: number; // physical defence
+  edef: number; // elemental defence
   spd: number; // tempo: actions per tick, against the player's speed
   eva: number;
   prc: number;
@@ -58,6 +65,7 @@ export type Shape =
 export interface FoeData {
   stats: Partial<Stats> & { hp: number };
   res?: number; // World Resonance it asks for (not used yet)
+  xp?: number; // combat XP for beating it; worked out from its stats if missing (engine/progress.ts)
   behaviour: 'still' | 'territorial'; // still: never moves or notices; territorial: chases within its notice range
   notice?: number; // territorial: rings it notices you within (default 1)
   attack: Shape;
@@ -85,7 +93,7 @@ export interface Fx {
   id: number;
   key: string; // cell it happens on
   text: string;
-  kind: 'hit' | 'crit' | 'miss' | 'hurt' | 'slash' | 'lunge' | 'flash' | 'dash';
+  kind: 'hit' | 'crit' | 'miss' | 'hurt' | 'slash' | 'lunge' | 'flash' | 'dash' | 'xp';
   from?: string; // slash, lunge: the attacker's cell
   phase: 0 | 1; // 0: your action; 1: the enemies' turn after it, shown a beat later
 }
@@ -103,6 +111,7 @@ export interface Skill {
   range?: number; // dash: hexes
   shape?: Shape; // attack
   power?: number; // attack: damage multiplier per target
+  damage?: DamageKind; // attack: physical if missing; spells will be elemental
 }
 
 export interface Item {
@@ -111,6 +120,39 @@ export interface Item {
   icon?: string; // emoji, used when there is no sprite
   text?: string;
   currency?: boolean; // counted in the top bar, not kept in the bag
+
+  // gear (content/gear.json): worn in a slot, adds its stats
+  slot?: Slot;
+  level?: number; // combat level needed to wear it
+  stats?: Partial<Stats>;
+  set?: string; // sets.json: wearing enough pieces adds a bonus
+  element?: string;
+  twoHanded?: boolean; // main hand: the off hand stays empty…
+  offhand?: string[]; // …except for these off-hand kinds (a bow allows a quiver)
+  kind?: string; // weapon type: sword, axe, bow, shield…
+  placeholder?: boolean; // its numbers aren't set yet
+}
+
+/** Where gear is worn. Relics have several slots (RELIC_SLOTS). */
+export type Slot = 'head' | 'body' | 'hands' | 'legs' | 'feet' | 'main' | 'off' | 'relic';
+export type WornSlot = Exclude<Slot, 'relic'>;
+
+/** A gear set: names its bonuses by how many pieces you wear. */
+export interface GearSet {
+  name: string;
+  bonuses: { pieces: number; stats: Partial<Stats> }[];
+}
+
+/** What you're wearing: item ids, or null. Worn things leave the bag. */
+export interface Worn {
+  head: string | null;
+  body: string | null;
+  hands: string | null;
+  legs: string | null;
+  feet: string | null;
+  main: string | null;
+  off: string | null;
+  relics: (string | null)[];
 }
 
 export interface MapImage {
@@ -206,7 +248,16 @@ export interface Content {
   items: Record<string, Item>;
   npcs: Record<string, Npc>;
   player: Player;
-  skills: Record<string, Skill>;
+  skills: Record<string, Skill>; // fighting skills
+  lifeskills: Record<string, LifeSkill>;
+  sets: Record<string, GearSet>;
+}
+
+/** A gathering or making skill: woodcutting, mining… Levels come from XP (engine/progress.ts). */
+export interface LifeSkill {
+  name: string;
+  icon: string; // sprite id
+  text: string;
 }
 
 export interface Cell {
@@ -245,6 +296,9 @@ export interface GameState {
   foes: Record<string, Foe[]>; // point -> enemies standing there this cycle
   foeRolls: Record<string, { cycle: number; rerolls: number }>; // point -> the cycle its enemies were rolled in, and rerolls used
   fx: Fx[]; // what the last action did, for the UI to float up
+  xp: number; // combat XP; your level comes from it (engine/progress.ts)
+  skills: Record<string, number>; // life skill -> XP
+  worn: Worn;
   fxSeq: number;
 }
 

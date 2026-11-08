@@ -12,5 +12,5 @@ export const TIME_OF_DAY = 'Morning';
 /** Until World Resonance is built (Dawn's Journey's attunement level; gates places and fights). */
 export const WORLD_RESONANCE = 0;
 
-/** Until the player has levels. The name is in the save (GameState.name) once you set it. */
-export const PLAYER = { name: 'Washed ashore', monogram: '?', level: 1, xp: 0, xpNext: 100 };
+/** Until the player names themselves (GameState.name). Levels are real now: engine/progress.ts. */
+export const PLAYER = { name: 'Washed ashore', monogram: '?' };

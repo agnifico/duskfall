@@ -1,6 +1,6 @@
 // Loads the content files. Adding a point = adding a JSON file to points/ whose zone is in a land.
 
-import type { Content, Figure, Item, Land, Npc, Player, Point, Prop, Skill, Terrain, World } from '../engine/types';
+import type { Content, Figure, GearSet, Item, Land, LifeSkill, Npc, Player, Point, Prop, Skill, Terrain, World } from '../engine/types';
 import world from './world.json';
 import terrain from './terrain.json';
 import propsRaw from './props.json';
@@ -8,6 +8,9 @@ import items from './items.json';
 import npcs from './npcs.json';
 import player from './player.json';
 import skills from './skills.json';
+import lifeskills from './lifeskills.json';
+import gear from './gear.json';
+import sets from './sets.json';
 import spritesRaw from './sprites.json';
 import tuningRaw from './tuning.json';
 
@@ -29,10 +32,12 @@ export const content: Content = {
   points,
   terrain: terrain as Record<string, Terrain>,
   props,
-  items: items as Record<string, Item>,
+  items: { ...(items as Record<string, Item>), ...(gear as Record<string, Item>) },
   npcs: npcs as Record<string, Npc>,
   player: player as Player,
   skills: skills as unknown as Record<string, Skill>,
+  lifeskills: lifeskills as Record<string, LifeSkill>,
+  sets: sets as Record<string, GearSet>,
 };
 
 /** The points in each zone, in file order. */
@@ -97,6 +102,7 @@ for (const p of Object.values(points)) {
     }
 }
 for (const p of Object.values(props)) {
+  if (p.skill && !content.lifeskills[p.skill]) console.warn(`prop ${p.code}: unknown life skill "${p.skill}"`);
   for (const s of [p.sprite, p.spent]) if (s && !sprites[s]) console.warn(`prop ${p.code}: no sprite "${s}"`);
   for (const id of [p.item, p.extra?.item, p.bonus?.item]) if (id && !itemIds.has(id)) console.warn(`prop ${p.code}: unknown item "${id}"`);
 }
@@ -105,3 +111,4 @@ for (const [id, it] of Object.entries(content.items)) if (it.sprite && !sprites[
 const figures: [string, Figure | undefined][] = [['player', content.player.figure], ...Object.entries(content.npcs).map(([id, n]): [string, Figure | undefined] => [id, n.figure])];
 for (const [who, f] of figures)
   for (const s of [f?.stand, f?.walk]) if (s && !sprites[s]) console.warn(`${who}'s figure: no sprite "${s}"`);
+for (const [id, it] of Object.entries(content.items)) if (it.set && !content.sets[it.set]) console.warn(`item ${id}: unknown set "${it.set}"`);

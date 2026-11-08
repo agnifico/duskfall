@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Put a grown nation map together, after Gemini has painted around the input from make_nation_canvas.py.
 
-  ../nsfw_project/.venv/bin/python -I tools/compose_nation.py extras/<gemini result>.png
+  ../nsfw_project/.venv/bin/python -I tools/compose_nation.py extras/maps/<gemini result>.png
 
 1. Scales Gemini's result up to the new map's full size.
 2. Covers Gemini's sparkle mark (bottom-right) with nearby open sea.
@@ -100,7 +100,7 @@ def main():
     full = result.resize(tuple(meta['full']), Image.LANCZOS)
 
     # the original map: from its saved copy if this has run before (the source file is the new map by then)
-    old_copy = os.path.join(ROOT, f'extras/{NATION}_map_before_growing.webp')
+    old_copy = os.path.join(ROOT, f'extras/maps/{NATION}_map_before_growing.webp')
     if not os.path.exists(old_copy):
         Image.open(os.path.join(ROOT, meta['source'])).convert('RGB').save(old_copy, quality=95)
     original = Image.open(old_copy).convert('RGB')

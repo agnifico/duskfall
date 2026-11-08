@@ -1,0 +1,5 @@
+{
+  "woodcutting": { "name": "Woodcutting", "icon": "lifeskills/woodcutting", "text": "Trees and driftwood." },
+  "mining": { "name": "Mining", "icon": "lifeskills/mining", "text": "Stones, ore and crystal." },
+  "foraging": { "name": "Foraging", "icon": "lifeskills/foraging", "text": "Berries, mushrooms and what grows wild." }
+}
