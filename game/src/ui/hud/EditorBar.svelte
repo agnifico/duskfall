@@ -23,8 +23,8 @@
     const hit = (p: Prop) => !q || p.code.includes(q) || p.name.toLowerCase().includes(q);
     const out: [string, Prop[]][] = [
       ['Nodes', all.filter((p) => p.type === 'node')],
-      ['Things', all.filter((p) => p.type === 'look' || p.type === 'rest' || p.type === 'secret')],
-      ['People & exits', all.filter((p) => p.type === 'npc' || p.type === 'exit')],
+      ['Things', all.filter((p) => p.type === 'look' || p.type === 'rest' || p.type === 'fire' || p.type === 'secret')],
+      ['People & exits', all.filter((p) => p.type === 'npc' || p.type === 'exit' || p.type === 'start')],
     ];
     if (ED.mode === 'tune') {
       out[2][1] = [YOU, ...out[2][1].filter((p) => p.type === 'npc')];

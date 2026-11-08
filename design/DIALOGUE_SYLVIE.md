@@ -39,7 +39,7 @@
 ▸ *Usually?*
 **Sylvie:** The animals have been… wrong, lately. Jumpier. Meaner. I keep telling myself it's the weather.
 
-*[System] A crash outside. The ambush: two level 1 enemies (a pinchwarden and a toxolotl, or two of either) by the house. You're unarmed, so each takes about 7 hits. Sylvie stays back.*
+*[System] A crash outside. The ambush: two level 1 enemies (a crab runt and a toxolotl, or two of either) by the house. You're unarmed, so each takes about 7 hits. Sylvie stays back.*
 
 **Sylvie:** Speak of it. Stay behind me. No, wait, you can fight?
 

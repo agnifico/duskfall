@@ -1,5 +1,5 @@
 import type { GameState } from './types';
-import { MAX_ENERGY, PLAYER_STATS, RELIC_SLOTS } from './rules';
+import { HOTBAR_START, MAX_ENERGY, PLAYER_STATS, RELIC_SLOTS } from './rules';
 import type { Worn } from './types';
 
 export const noneWorn = (): Worn => ({ head: null, body: null, hands: null, legs: null, feet: null, main: null, off: null, relics: Array(RELIC_SLOTS).fill(null) });
@@ -16,7 +16,6 @@ export function newGame(now = Date.now()): GameState {
     energy: MAX_ENERGY,
     lastRegen: now,
     day: 1,
-    toolTier: 1,
     bag: {},
     depleted: {},
     beaten: {},
@@ -31,6 +30,8 @@ export function newGame(now = Date.now()): GameState {
     spirit: 0,
     hpAt: now,
     restAt: null,
+    stoked: {},
+    hotbar: [...HOTBAR_START],
     foes: {},
     foeRolls: {},
     fx: [],

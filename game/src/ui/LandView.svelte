@@ -14,7 +14,7 @@
   import { untrack } from 'svelte';
   import { fade } from 'svelte/transition';
   import { asset, content, pointsByZone } from '../content';
-  import { G } from '../lib/game.svelte';
+  import { DEV, G } from '../lib/game.svelte';
   import type { Zone } from '../engine/types';
   import { enterLand, travelTo } from './commands';
   import { focusQuest, pointClosed } from '../engine/story';
@@ -287,7 +287,7 @@
             class="map-pin"
             class:current={p.id === G.s.point}
             class:closed={!!closed}
-            disabled={!!closed}
+            disabled={!!closed && !DEV.on}
             style:left="{s[0]}px"
             style:top="{s[1]}px"
             style:opacity={pinsIn}

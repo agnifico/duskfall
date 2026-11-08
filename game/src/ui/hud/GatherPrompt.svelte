@@ -10,7 +10,7 @@
 
   const here = $derived(E.hereCell(G.s, content));
   const pr = $derived(here ? E.visibleProp(G.s, content, here) : null);
-  const acts = $derived(E.actionsHere(G.s, content));
+  const acts = $derived(E.actionsHere(G.s, content, G.now));
   const gather = $derived(acts.find((a) => a.id === 'gather'));
   const search = $derived(acts.find((a) => a.id === 'search'));
 
@@ -20,11 +20,11 @@
     const [lo, hi] = E.nodeYield(pr);
     const parts = [`${lo === hi ? lo : `${lo}–${hi}`} ${E.itemName(content, pr.item ?? pr.code)}`];
     if (pr.extra) parts.push(`${pr.extra.amount} ${E.itemName(content, pr.extra.item)}`);
-    if (pr.bonus) parts.push(`maybe ${E.itemName(content, pr.bonus.item)}`);
+    for (const b of E.bonuses(pr)) parts.push(`maybe ${E.itemName(content, b.item)}`);
     if (pr.skill) {
       const p = skillProgress(G.s, pr.skill);
       if (Array.isArray(pr.yield) && p.level > 1) parts[0] += ` +${Math.round(YIELD_PER_LEVEL * (p.level - 1) * 100)}%`;
-      if (!p.max) parts.push(`${E.nodeXp(pr)} ${content.lifeskills[pr.skill]?.name ?? pr.skill} xp`);
+      if (!p.max) parts.push(`${E.nodeXp(pr, p.level)} ${content.lifeskills[pr.skill]?.name ?? pr.skill} xp`);
     }
     return parts.join(' · ');
   });

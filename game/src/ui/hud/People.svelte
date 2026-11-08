@@ -50,7 +50,7 @@
               </span>
             </button>
             <button class="px btn bevel t-accent go" onclick={() => goToPerson(id)} title="Go to {n.name}">
-              <span class="lbl m">Go to</span><span class="cost free">Free</span>
+              <span class="lbl m">Go to</span>
             </button>
           </div>
         {/each}

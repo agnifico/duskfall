@@ -6,11 +6,13 @@
 
 import type { Beat, Cond, Content, Effect, GameState, QuestProgress } from './types';
 import { say } from './log';
+import { MAX_ENERGY } from './rules';
 import { track } from './telemetry';
 import { addCombatXp, combatLevel } from './progress';
 import { wear } from './gear';
 import { enterPoint } from './actions';
 import { spawnAround } from './combat';
+import { errandKill } from './errands';
 
 /** Whether a condition holds. `q` is the quest whose stage asks (for kills and talks since the stage began). */
 export function check(s: GameState, c: Content, cond: Cond, q?: QuestProgress): boolean {
@@ -26,6 +28,13 @@ export function check(s: GameState, c: Content, cond: Cond, q?: QuestProgress): 
   if ('notTag' in cond) return !s.tags?.[cond.notTag];
   if ('quest' in cond) return s.quests?.[cond.quest]?.state === cond.state;
   return false;
+}
+
+/** The people the story has standing on a point right now, by cell key (content/points › people). */
+export function peopleOn(s: GameState, c: Content, pointId: string | null): Map<string, string> {
+  const out = new Map<string, string>();
+  for (const p of (pointId && c.points[pointId]?.people) || []) if (!p.while || check(s, c, p.while)) out.set(`${pointId}:${p.at[0]}:${p.at[1]}`, p.npc);
+  return out;
 }
 
 /** The kill condition inside a stage's need, if any. */
@@ -83,6 +92,7 @@ export function talkTo(s: GameState, c: Content, npc: string): boolean {
 
 /** An enemy was beaten: count it toward any stage that wants it. */
 export function onKill(s: GameState, c: Content, kind: string, point: string | null): void {
+  errandKill(s, c, kind, point);
   for (const [id, p] of Object.entries(s.quests ?? {})) {
     const st = p.state === 'active' ? c.quests[id]?.stages[p.stage] : undefined;
     const k = st && killOf(st.need);
@@ -127,6 +137,7 @@ export function applyEffects(s: GameState, c: Content, effects: Effect[]): void 
       s.bag[e.take] = (s.bag[e.take] ?? 0) - e.n;
       if (s.bag[e.take] <= 0) delete s.bag[e.take];
     } else if ('xp' in e) addCombatXp(s, e.xp);
+    else if ('energy' in e) s.energy = Math.min(MAX_ENERGY, s.energy + e.energy);
     else if ('tag' in e) s.tags[e.tag] = true;
     else if ('untag' in e) delete s.tags[e.untag];
     else if ('goto' in e) enterPoint(s, c, e.goto, e.at);

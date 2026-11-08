@@ -1,0 +1,30 @@
+{
+  "id": "lily-ponds",
+  "name": "Lily Ponds",
+  "zone": "plains",
+  "pin": [2190, 1960],
+  "opensWith": {"tag": "ponds-hint"},
+  "closedText": "Not yet",
+  "kind": "gathering",
+  "levels": [18, 22],
+  "backdrop": "sky",
+  "fog": false,
+  "enemies": {"place": [{"kind": "toxolotl", "on": ["h"]}, {"kind": "toxolotl", "on": ["h"]}, {"kind": "toxolotl", "on": ["h"]}, {"kind": "prowler", "on": ["f"]}, {"kind": "biceon", "on": ["g"]}]},
+  "table": ["berries", "sapling"],
+  "rows": [
+    "_          f          f          f          f          f          f          f.pine     f          f          f          f          f.pine     f          f.oak      _",
+    "f          f          f.pine     f.birch    f.oak      f          f          f.birch    f          f.pine     f          f.pine     f.pine     f          f.birch    f.birch",
+    "g          g          g          r          g          g          g.berries  g          g          h          h          h          g          g.berries  f.pine     f.pine",
+    "g          r          g.deadtree h          h          h          g          g          r          h          w          h          g          g.deadtree f          f",
+    "g.deadtree g          g          w          w          w          r.stones   g          g.berries  h          h          h          g          r          f          f",
+    "g.sapling  g          g          h          h          h          g.sapling  g          g          g          g          r          g.verona   g          f.deadtree f.deadtree",
+    "p.start    p          p          p          p          p          h          h          h          r          g          g.tree     g          g          f          f",
+    "r.deadtree g          g.deadtree g          g          h          h          w          h          h          g.sapling  g          g.sapling  g          f.deadtree f",
+    "g          g          g          g          g          h          w          w          w          h          g          g          h          h          h          f.deadtree",
+    "g.sapling  g          h          r          g          h          h          w          h          h          r          g          h          w          h          f",
+    "g          h          w          h          g.deadtree g          h          h          h          g          g          g          h          h          h          f",
+    "g          g          h          g          g          g          r          g          g.berries  g          g          g          g          r          f          f.birch",
+    "_          f          f          f          f          f          f          f          f          f.pine     f.birch    f          f          f.birch    f          f"
+  ],
+  "pad": 2
+}

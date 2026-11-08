@@ -91,6 +91,11 @@ export function wear(s: GameState, c: Content, id: string, index?: number): void
   s.worn = worn;
   for (const x of back) toBag(s, x);
   track('wear', { item: id, slot: c.items[id].slot });
+  // a weapon's own skill goes on the hotbar, in the first empty slot, if it isn't there already
+  for (const sk of c.items[id].grants ?? []) {
+    const bar = s.hotbar ?? [];
+    if (!bar.includes(`skill:${sk}`) && bar.indexOf(null) >= 0) bar[bar.indexOf(null)] = `skill:${sk}`;
+  }
 }
 
 /** Take it off, back into the bag. */

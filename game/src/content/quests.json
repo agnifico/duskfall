@@ -15,8 +15,30 @@
     },
     "auto": true,
     "say": [
-     "The storm is gone. Gulls overhead, a pale clean sky, and sand under your cheek.",
-     "sylvie: Easy. Don't sit up too fast. You've swallowed half the sea.",
+     {
+      "image": "story/opening-1.webp",
+      "text": "Night, and the sea gone mad. The little boat climbs a wave the size of a hill, and drops."
+     },
+     {
+      "image": "story/opening-2.webp",
+      "text": "Then the deck is gone, and the cold has you. Black water. Which way is up?"
+     },
+     {
+      "image": "story/opening-3.webp",
+      "text": "Fire, somewhere above the water. Thunder that sounds almost like a voice. Something takes hold of you."
+     },
+     {
+      "image": "story/opening-4.webp",
+      "text": "Wind and water, carrying you somewhere. Then nothing at all."
+     },
+     {
+      "image": "story/opening-5.webp",
+      "text": "The storm is gone. Gulls overhead, a pale clean sky, and sand under your cheek."
+     },
+     {
+      "image": null,
+      "text": "sylvie: Easy. Don't sit up too fast. You've swallowed half the sea."
+     },
      "sylvie: Can you stand? Good. Nobody washes up on this side of the island.",
      "you: Where am I?",
      "sylvie: Nuvatra. The north shore. My house is just past the trees: fire, dry clothes, something hot.",
@@ -82,8 +104,18 @@
      "sylvie: Funny thing: the sky over the island stayed clear. Only out there, over the water.",
      "you: Was there a ship? Anyone else?",
      "sylvie: Just you, and some planks. Whatever you were on, the sea has it now. I'm sorry.",
+     "sylvie: And take these. Acorns, from the old oaks out back. Bake one with a bit of wood and you'll walk all day.",
      "sylvie: Stay as long as you like. This island's quiet. Usually.",
      "sylvie: You saw those animals. They've been wrong for weeks now. Jumpier. Meaner."
+    ],
+    "then": [
+     {
+      "give": "acorns",
+      "n": 5
+     },
+     {
+      "energy": 30
+     }
     ]
    }
   ]
@@ -130,6 +162,18 @@
          },
          {
           "tag": "path-bow"
+         }
+        ]
+       },
+       {
+        "text": "The staff",
+        "then": [
+         {
+          "give": "traveller-staff",
+          "wear": true
+         },
+         {
+          "tag": "path-staff"
          }
         ]
        }
@@ -194,7 +238,7 @@
     "auto": true,
     "say": [
      "sylvie: One more thing, and it's a dull one. The nights are getting colder, and my woodpile isn't growing.",
-     "sylvie: Twenty wood from the trees around here would do it. Mind the stumps: they need a day to grow back."
+     "sylvie: Twenty wood from the trees around here would do it. Mind the stumps: give them a little while to grow back."
     ]
    },
    {
@@ -216,7 +260,7 @@
     ],
     "say": [
      "sylvie: That'll see me through the week. Thank you, {name}. Truly.",
-     "sylvie: You're ready for more than the beach now. There's the Pine Grove, east of the house. Mind yourself in there."
+     "sylvie: You're ready for more than the beach now. There's the Pine Grove, east of the house. A healer lives in there, Heidi. Tell her I sent you."
     ],
     "then": [
      {
@@ -235,6 +279,654 @@
      },
      {
       "tag": "grove-open"
+     }
+    ]
+   }
+  ]
+ },
+ "the-healer": {
+  "title": "The Healer in the Grove",
+  "main": true,
+  "giver": "heidi",
+  "text": "Sylvie sent you to Heidi, a healer in the Pine Grove. The bears there have turned as strange as everything else.",
+  "start": {
+   "quest": "firewood",
+   "state": "done"
+  },
+  "stages": [
+   {
+    "objective": "Find Heidi in the Pine Grove",
+    "who": "heidi",
+    "need": {
+     "talk": "heidi"
+    },
+    "say": [
+     "heidi: Oh! You're not a bear. Good. Sorry, it's been that sort of week.",
+     "you: Sylvie sent me. She said you might need a hand.",
+     "heidi: Sylvie said that? Then I do. I'm Heidi. I patch up whatever wanders in here, people and otherwise.",
+     "heidi: The bears used to let me walk right past. Now they guard the berry bushes like it's the end of the world. I can calm one at a time. Not three.",
+     "heidi: Could you drive them back? Not to hurt them, if you can help it. Just to remind them who lives here."
+    ],
+    "then": [
+     {
+      "tag": "met-heidi"
+     }
+    ]
+   },
+   {
+    "objective": "Drive back 3 bears in the Pine Grove",
+    "who": "heidi",
+    "need": {
+     "all": [
+      {
+       "kill": "bear",
+       "n": 3,
+       "at": [
+        "pine-grove"
+       ]
+      },
+      {
+       "talk": "heidi"
+      }
+     ]
+    },
+    "remind": [
+     "heidi: They're still out there. Take something to eat first, they hit like falling trees."
+    ],
+    "say": [
+     "heidi: That's the berry patch quiet. Thank you, {name}.",
+     "heidi: Something's frightening the animals, all over the island. Sylvie feels it too, she just won't say so.",
+     "heidi: Here, take this. Someone left it with me to mend and never came back for it. It'll fit you.",
+     "heidi: And come back when you like. There's always something that needs doing in here."
+    ],
+    "then": [
+     {
+      "xp": 200
+     },
+     {
+      "give": "traveller-body"
+     },
+     {
+      "give": "minor-health-potion",
+      "n": 3
+     }
+    ]
+   }
+  ]
+ },
+ "smoke-on-the-rocks": {
+  "title": "Smoke on the Rocks",
+  "main": true,
+  "giver": "heidi",
+  "text": "A dragonling has settled on the rocks past the grove, and it's burning anything that comes close.",
+  "start": {
+   "all": [
+    {
+     "quest": "the-healer",
+     "state": "done"
+    },
+    {
+     "level": 8
+    }
+   ]
+  },
+  "stages": [
+   {
+    "objective": "Hear Heidi out",
+    "who": "heidi",
+    "need": {
+     "talk": "heidi"
+    },
+    "say": [
+     "heidi: {name}, there's smoke over the rocks at the edge of the grove. A dragonling. They never come this far down.",
+     "heidi: It's small, but it breathes fire two steps out. Don't stand in front of it. Please."
+    ]
+   },
+   {
+    "objective": "Beat the dragonling on the rocks",
+    "who": "heidi",
+    "need": {
+     "all": [
+      {
+       "kill": "dragonling",
+       "n": 1,
+       "at": [
+        "pine-grove"
+       ]
+      },
+      {
+       "talk": "heidi"
+      }
+     ]
+    },
+    "remind": [
+     "heidi: Past the stones, on the rocky ground. Keep to its side."
+    ],
+    "say": [
+     "heidi: You're singed. Sit. No, sit.",
+     "heidi: Bears, boars, now a dragon this far from the mountains. It's not the animals, {name}. Something's pushing them.",
+     "heidi: Go and tell Sylvie. She's been watching the north-east shore every night. I think she knows more than she's saying."
+    ],
+    "then": [
+     {
+      "xp": 300
+     },
+     {
+      "give": "health-potion",
+      "n": 2
+     },
+     {
+      "tag": "drill-hint"
+     }
+    ]
+   }
+  ]
+ },
+ "the-west-fields": {
+  "title": "The West Fields",
+  "main": true,
+  "giver": "sylvie",
+  "text": "Heidi sent you back to Sylvie. Before anything else, Sylvie wants you stronger, and the open plains west of the house will do that.",
+  "start": {
+   "quest": "smoke-on-the-rocks",
+   "state": "done"
+  },
+  "stages": [
+   {
+    "objective": "Tell Sylvie what Heidi said",
+    "who": "sylvie",
+    "need": {
+     "talk": "sylvie"
+    },
+    "say": [
+     "sylvie: A dragonling, in the grove. Heidi's right. Something's pushing them down from the mountains.",
+     "sylvie: And yes, I've been watching the north-east shore. There are lights there at night now. Machines. People who aren't from here.",
+     "you: Then let's go and look.",
+     "sylvie: Not yet. Whoever they are, they came with machines that big. You're good, {name}, but you're not ready for that.",
+     "sylvie: West of the house the land opens up into the plains. Prowlers, tortoises, worse on the rocks. Go and get strong out there. Come back when you could take me in a fight."
+    ],
+    "then": [
+     {
+      "tag": "plains-open"
+     },
+     {
+      "notify": "The Open Plains are open, west of Sylvie's house."
+     }
+    ]
+   },
+   {
+    "objective": "Reach level 15, then talk to Sylvie",
+    "who": "sylvie",
+    "need": {
+     "all": [
+      {
+       "level": 15
+      },
+      {
+       "talk": "sylvie"
+      }
+     ]
+    },
+    "remind": [
+     "sylvie: Not yet. The plains first. I'll know when you're ready."
+    ],
+    "say": [
+     "sylvie: Look at you. All right. You're ready.",
+     "sylvie: The machines on the north-east shore. A drill, the size of a house, and a village living in its shadow. Go and see who's running it. Be polite. Be careful.",
+     "sylvie: And {name}? Come back and tell me. Whatever it is."
+    ],
+    "then": [
+     {
+      "xp": 500
+     },
+     {
+      "tag": "drill-open"
+     },
+     {
+      "notify": "The Drill is open, on the north-east shore."
+     }
+    ]
+   }
+  ]
+ },
+ "heidis-gift": {
+  "title": "Heidi's Gift",
+  "main": false,
+  "giver": "heidi",
+  "text": "Heidi knows a way to put a little of the world's element into every blow. Small characters, big secrets.",
+  "start": {
+   "all": [
+    {
+     "quest": "the-healer",
+     "state": "done"
+    },
+    {
+     "level": 6
+    }
+   ]
+  },
+  "stages": [
+   {
+    "objective": "Ask Heidi what she meant",
+    "who": "heidi",
+    "need": {
+     "talk": "heidi"
+    },
+    "say": [
+     "heidi: Can I show you something? Hold out your hand.",
+     "heidi: Feel that? Warm, then cold, then something like static. Everything here has it. The water, the stones, you.",
+     "heidi: I use it to mend. You could use it to hit things a little harder. I won't judge.",
+     "heidi: Bring me six bunches of wild herbs and three toxolotl frills, and I'll make you something that wakes it up."
+    ]
+   },
+   {
+    "objective": "Bring Heidi 6 wild herbs and 3 toxolotl frills",
+    "who": "heidi",
+    "need": {
+     "all": [
+      {
+       "have": "herbs",
+       "n": 6
+      },
+      {
+       "have": "toxolotl-frill",
+       "n": 3
+      },
+      {
+       "talk": "heidi"
+      }
+     ]
+    },
+    "remind": [
+     "heidi: Six herbs, three frills. The frills are on the toxolotls down by the beach. They won't hand them over."
+    ],
+    "say": [
+     "heidi: Drink. All of it. Yes, it tastes like a pond.",
+     "heidi: There. Swing at something and you'll feel it go with the blow. Not much. Enough.",
+     "heidi: Don't tell Sylvie I gave you that. She'll want one."
+    ],
+    "then": [
+     {
+      "take": "herbs",
+      "n": 6
+     },
+     {
+      "take": "toxolotl-frill",
+      "n": 3
+     },
+     {
+      "tag": "infused"
+     },
+     {
+      "xp": 150
+     },
+     {
+      "notify": "Infused: every basic attack that lands adds an elemental hit (30%)."
+     }
+    ]
+   }
+  ]
+ },
+ "saltmere": {
+  "title": "Saltmere",
+  "main": true,
+  "giver": "aurelie",
+  "text": "Past the drill's noise there's a fishing village, Saltmere, and a priestess who speaks well of the Saints.",
+  "start": {
+   "tag": "drill-open"
+  },
+  "stages": [
+   {
+    "objective": "Visit Saltmere and meet its priestess",
+    "who": "aurelie",
+    "need": {
+     "talk": "aurelie"
+    },
+    "say": [
+     "aurelie: Peace be with you, traveller. Saltmere welcomes anyone who comes in good faith.",
+     "aurelie: You've come about the drill, I expect. Everyone does, eventually.",
+     "aurelie: I'll tell you plainly. The Solis Saints took me in when I had no one. They brought me here, and they helped this village through years the sea gave us nothing.",
+     "aurelie: When they asked to lease the headland, I said yes. They pay fairly, and they pay on time. Not everyone in Saltmere agrees with me. Marisol least of all.",
+     "aurelie: Go and meet Claudia and Cygwin, at the drill. Judge them yourself. I'd rather you did."
+    ],
+    "then": [
+     {
+      "tag": "met-aurelie"
+     },
+     {
+      "xp": 300
+     }
+    ]
+   }
+  ]
+ },
+ "guests-on-the-headland": {
+  "title": "Guests on the Headland",
+  "main": true,
+  "giver": "claudia",
+  "text": "Claudia and Cygwin run the Saints' drill on the headland by Saltmere. They want the village's goodwill back, and they could use a hand.",
+  "start": {
+   "quest": "saltmere",
+   "state": "done"
+  },
+  "stages": [
+   {
+    "objective": "Meet Claudia and Cygwin at the drill",
+    "who": "claudia",
+    "need": {
+     "talk": "claudia"
+    },
+    "say": [
+     "claudia: Ah, there you are. Sylvie's friend, yes? Word travels fast in a village this size. Sit, if you like.",
+     "claudia: I'm Claudia. The tall one scowling at the machine is Cygwin. She likes you already; that's what that face means.",
+     "cygwin: It does not.",
+     "claudia: We're surveying. Reading the rock, measuring the deep heat of the island. Dull, important work. The trouble is, the village doesn't love us.",
+     "claudia: They'll listen to you, though. Help them. Marisol, Brann, Old Tova, the Sister: whatever they need. Every favour you do them, they'll remember we sent you.",
+     "cygwin: And the boar-men we hired off the boats have stopped taking orders. Three of them. Remind them."
+    ],
+    "then": [
+     {
+      "tag": "village-favours"
+     },
+     {
+      "notify": "Saltmere's people now have daily quests for you."
+     }
+    ]
+   },
+   {
+    "objective": "Remind 3 boaring captains who they work for",
+    "who": "cygwin",
+    "need": {
+     "all": [
+      {
+       "kill": "boaring-captain",
+       "n": 3,
+       "at": [
+        "the-drill"
+       ]
+      },
+      {
+       "talk": "cygwin"
+      }
+     ]
+    },
+    "remind": [
+     "cygwin: Three. In the scrub, west of the machine. They won't come quietly."
+    ],
+    "say": [
+     "cygwin: Good. They'll remember that.",
+     "cygwin: You fight like someone with nothing to prove. That is rare. Keep it."
+    ],
+    "then": [
+     {
+      "xp": 700
+     },
+     {
+      "give": "health-potion",
+      "n": 2
+     }
+    ]
+   },
+   {
+    "objective": "Bring Claudia 12 iron ore for the drill's bracing",
+    "who": "claudia",
+    "need": {
+     "all": [
+      {
+       "have": "iron-ore",
+       "n": 12
+      },
+      {
+       "talk": "claudia"
+      }
+     ]
+    },
+    "remind": [
+     "claudia: The veins are on the rocks around the drill. You'll need a steady hand: Mining 5 at least."
+    ],
+    "say": [
+     "claudia: Twelve, exactly. Cygwin owes me a coin; she said you'd bring ten and call it close enough.",
+     "claudia: Brann can work iron, by the way. Bring him ore and you can have a proper set made. Iron suits you.",
+     "claudia: Thank you. Truly. The island is kinder to us when you're around."
+    ],
+    "then": [
+     {
+      "take": "iron-ore",
+      "n": 12
+     },
+     {
+      "xp": 800
+     },
+     {
+      "give": "iron-hands"
+     },
+     {
+      "give": "coin",
+      "n": 40
+     }
+    ]
+   }
+  ]
+ },
+ "where-the-fish-went": {
+  "title": "Where the Fish Went",
+  "main": true,
+  "giver": "marisol",
+  "text": "Saltmere's nets come up emptier every week, and Marisol blames the drill.",
+  "start": {
+   "all": [
+    {
+     "quest": "guests-on-the-headland",
+     "state": "done"
+    },
+    {
+     "level": 19
+    }
+   ]
+  },
+  "stages": [
+   {
+    "objective": "Hear Marisol out",
+    "who": "marisol",
+    "need": {
+     "talk": "marisol"
+    },
+    "say": [
+     "marisol: You're the one running errands for the drill folk. Don't look like that, I don't mind. Somebody has to listen to them.",
+     "marisol: Listen to me too, then. The fish left the bay the season that machine came. Not all at once. Just less, and less.",
+     "marisol: And the crabscallions came up from the deep water. Big ones. They never used to come up. Clear them off the headland's shore, and look at the water while you're there."
+    ]
+   },
+   {
+    "objective": "Clear 3 crabscallions off the headland's shore",
+    "who": "marisol",
+    "need": {
+     "all": [
+      {
+       "kill": "crabscallion",
+       "n": 3,
+       "at": [
+        "the-drill"
+       ]
+      },
+      {
+       "talk": "marisol"
+      }
+     ]
+    },
+    "remind": [
+     "marisol: On the sand and the shallows, round the drill. You'll know them."
+    ],
+    "say": [
+     "you: The water by the drill. It's cold. Colder at the bottom than the top.",
+     "marisol: In summer. You see it too. Nobody believes me.",
+     "marisol: Go and ask Old Tova. She remembers things the rest of us forgot."
+    ]
+   },
+   {
+    "objective": "Ask Old Tova about the cold water",
+    "who": "tova",
+    "need": {
+     "talk": "tova"
+    },
+    "say": [
+     "tova: Sit, child. Cold water, in summer. Yes.",
+     "tova: My grandmother used to say this island has a warm heart. That it keeps the sea around it gentle, the way a hearth keeps a house.",
+     "tova: If the water's going cold, then something's drinking from that hearth.",
+     "tova: I don't say it's the Saints. I don't say it isn't. I'm old. I just say what my grandmother said.",
+     "tova: There's a girl out past the burnt woods, where the ponds came up. Verona. Wanders the world chasing things like this. Ask her. Mind, she bites."
+    ],
+    "then": [
+     {
+      "xp": 900
+     },
+     {
+      "tag": "fish-clue"
+     },
+     {
+      "tag": "ponds-hint"
+     },
+     {
+      "give": "coin",
+      "n": 30
+     }
+    ]
+   }
+  ]
+ },
+ "the-girl-at-the-ponds": {
+  "title": "The Girl at the Ponds",
+  "main": false,
+  "giver": "verona",
+  "text": "Old Tova sent you to Verona, out where lightning burnt the woods and the craters filled with water. Mind, she bites.",
+  "start": {
+   "tag": "ponds-hint"
+  },
+  "stages": [
+   {
+    "objective": "Find Verona at the Lily Ponds",
+    "who": "verona",
+    "need": {
+     "talk": "verona"
+    },
+    "say": [
+     "verona: Tova sent you. She sends me everyone who asks the wrong questions.",
+     "verona: Cold water in summer. Ground healing faster than it should. Animals going wrong. Yes. I've seen it. I've been seeing it for a month.",
+     "verona: I don't talk to people who can't keep up with me, though. Draw. If you're still standing at the end, we'll talk."
+    ],
+    "then": [
+     {
+      "spawn": [
+       {
+        "kind": "verona-duel",
+        "n": 1
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "objective": "Beat Verona",
+    "need": {
+     "kill": "verona-duel",
+     "n": 1,
+     "at": [
+      "lily-ponds"
+     ]
+    },
+    "auto": true,
+    "say": [
+     "verona: …Fine. Fine! You can keep up.",
+     "verona: Listen. I walk from land to land, wherever the ground remembers something. This island remembers a lot. There's something under it. Old. Warm. Big.",
+     "verona: And someone has their hands on it. I don't know who yet. When I do, you'll be the first I tell. Come back and spar. It's the only fun I get out here."
+    ],
+    "then": [
+     {
+      "xp": 1200
+     },
+     {
+      "tag": "verona-respect"
+     },
+     {
+      "give": "health-potion",
+      "n": 2
+     }
+    ]
+   }
+  ]
+ },
+ "what-lies-beneath": {
+  "title": "What Lies Beneath",
+  "main": true,
+  "giver": "marisol",
+  "text": "Marisol's boat can reach the shoals past the bay. If the fish went anywhere, they went out there.",
+  "start": {
+   "all": [
+    {
+     "quest": "where-the-fish-went",
+     "state": "done"
+    },
+    {
+     "level": 20
+    }
+   ]
+  },
+  "stages": [
+   {
+    "objective": "Ask Marisol for the boat",
+    "who": "marisol",
+    "need": {
+     "talk": "marisol"
+    },
+    "say": [
+     "marisol: Tova told you about the warm heart. I can see it on your face.",
+     "marisol: Take the boat. Past the bay there are shoals: sandbars, old wrecks. The fish went somewhere. Maybe there.",
+     "marisol: And if you see anything singing out there, don't sing back."
+    ],
+    "then": [
+     {
+      "tag": "shoals-open"
+     },
+     {
+      "notify": "The Shoals are open: off Saltmere's docks, by boat."
+     }
+    ]
+   },
+   {
+    "objective": "Drive off 2 sirens on the shoals",
+    "who": "marisol",
+    "need": {
+     "all": [
+      {
+       "kill": "vanguard-siren",
+       "n": 2,
+       "at": [
+        "the-shoals"
+       ]
+      },
+      {
+       "talk": "marisol"
+      }
+     ]
+    },
+    "remind": [
+     "marisol: The shoals. By boat. Don't make me row you."
+    ],
+    "say": [
+     "you: Sirens. Patrolling, in circles. And something under the water, bigger than the boat. Much bigger.",
+     "marisol: Sirens. My grandmother's songs said they answer to a queen under the sea. I thought they were songs.",
+     "marisol: If the sea has a queen, and she's sending her guards to watch us… then she's worried too. That's what scares me."
+    ],
+    "then": [
+     {
+      "xp": 1400
+     },
+     {
+      "tag": "marjane-hint"
+     },
+     {
+      "give": "coin",
+      "n": 60
      }
     ]
    }

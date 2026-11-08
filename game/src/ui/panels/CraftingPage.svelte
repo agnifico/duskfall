@@ -4,7 +4,8 @@
   // Recipes are content/recipes.json; making is engine/craft.ts (free and instant for now).
   import { G, act } from '../../lib/game.svelte';
   import { asset, content } from '../../content';
-  import { craft, maxCrafts } from '../../engine/craft';
+  import { craft, materialCrafts, maxCrafts } from '../../engine/craft';
+  import { CRAFT_ENERGY } from '../../engine/rules';
   import { SLOT_NAME } from '../../engine/gear';
   import type { Recipe } from '../../engine/types';
   import ItemIcon from '../ItemIcon.svelte';
@@ -44,7 +45,7 @@
   function make() {
     if (!picked || max < n) return;
     const id = picked;
-    act((s) => craft(s, content, id, n));
+    act((s) => craft(s, content, id, n, Date.now()));
     qty = 1;
   }
   const icon = (id: string) => asset(`sprites/icons/${id}.png`);
@@ -120,7 +121,7 @@
             <button class="px btn t-inset maxb" onclick={() => (qty = max)} disabled={max <= 1}><span class="lbl">Max {max > 1 ? max : ''}</span></button>
           </div>
           <button class="px btn bevel t-accent go" disabled={max < n || max === 0} onclick={make}>
-            <span class="lbl m">{max ? `Craft${n > 1 ? ` ${n}` : ''}` : 'Missing ingredients'}</span>
+            <span class="lbl m">{max ? `Craft${n > 1 ? ` ${n}` : ''} · ${n * CRAFT_ENERGY}⚡` : picked && materialCrafts(G.s, content, picked) ? 'Not enough energy' : 'Missing ingredients'}</span>
           </button>
         </div>
       {:else}

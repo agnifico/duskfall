@@ -7,7 +7,23 @@ export interface Terrain {
   cost: number | null; // energy to step onto it; null = can't walk there
 }
 
-export type PropType = 'node' | 'enemy' | 'secret' | 'npc' | 'rest' | 'look' | 'exit';
+/** A gather's extra: given on top, this often. */
+export type Bonus = { item: string; chance: number };
+
+/** A daily quest: a person offers a few from their pool each day. Beat `kill` (counted from when you take it)
+ *  or bring `bring` (taken when you hand it in), then hand it in to them for `reward`. */
+export interface Errand {
+  id: string;
+  title: string;
+  ask: string; // what they say when offering it
+  thanks?: string; // what they say when you hand it in
+  kill?: { kind: string | string[]; n: number; at?: string[] }; // "*" is any enemy
+  bring?: { item: string; n: number };
+  reward: Effect[];
+  opens?: Cond; // offered only once this holds
+}
+
+export type PropType = 'node' | 'enemy' | 'secret' | 'npc' | 'rest' | 'fire' | 'look' | 'exit' | 'start';
 
 export interface Prop {
   code: string; // filled in by the content loader from the props.json key
@@ -24,13 +40,14 @@ export interface Prop {
   // nodes
   tier?: number; // tool tier needed
   skill?: string; // the life skill it trains (lifeskills.json)
-  xp?: number; // skill XP per gather; XP_PER_ENERGY × its energy cost if missing
+  xp?: number; // skill XP per gather; by its size (rules.ts › NODE_XP) if missing
+  need?: number; // skill level needed to gather it; by its size if missing
   verb?: string; // "Chop", "Mine"
   item?: string; // item id. Also what an enemy drops and what a secret holds.
   yield?: number | [number, number]; // how many per gather: fixed, or a range
   cost?: number; // energy per gather; COST.gather if missing
   extra?: { item: string; amount: number }; // always given as well (ore veins also give stone)
-  bonus?: { item: string; chance: number }; // sometimes given as well (birch bark, acorns)
+  bonus?: Bonus | Bonus[]; // sometimes given as well (birch bark, acorns): one, or several rolled apart
   spent?: string; // sprite shown once used up today (stump, rubble); otherwise it fades
 
   amount?: number; // secret: how many of its item
@@ -96,6 +113,8 @@ export interface Foe {
   hp: number;
   charge: number; // speed banked towards its next action
   engaged: boolean; // after you
+  level?: number; // rolled inside its point's level range; missing: its kind's own level
+  riled?: boolean; // you hit it: it chases you anywhere on the point and never gives up (until a knockout)
   intent: Intent | null;
 }
 
@@ -106,8 +125,8 @@ export interface Fx {
   id: number;
   key: string; // cell it happens on
   text: string;
-  kind: 'hit' | 'crit' | 'miss' | 'hurt' | 'slash' | 'lunge' | 'flash' | 'dash' | 'xp';
-  from?: string; // slash, lunge: the attacker's cell
+  kind: 'hit' | 'crit' | 'miss' | 'hurt' | 'slash' | 'lunge' | 'flash' | 'dash' | 'xp' | 'shot' | 'bolt';
+  from?: string; // slash, lunge, shot: the attacker's cell
   phase: 0 | 1; // 0: your action; 1: the enemies' turn after it, shown a beat later
 }
 
@@ -118,10 +137,11 @@ export interface Skill {
   badge?: string; // public/sprites/skills/<badge>.png
   text?: string;
   kind: 'dash' | 'attack';
-  aim: 'self' | 'direction'; // fires at once, or pick a hex to aim at
+  aim: 'self' | 'direction' | 'target'; // fires at once, pick a hex to aim at, or pick an enemy within `range`
   spirit: number;
   energy?: number;
-  range?: number; // dash: hexes
+  range?: number; // dash: hexes; target: reach
+  refund?: number; // Spirit back when it lands (a staff's spell keeps itself going)
   shape?: Shape; // attack
   power?: number; // attack: damage multiplier per target
   damage?: DamageKind; // attack: physical if missing; spells will be elemental
@@ -143,7 +163,11 @@ export interface Item {
   twoHanded?: boolean; // main hand: the off hand stays empty…
   offhand?: string[]; // …except for these off-hand kinds (a bow allows a quiver)
   kind?: string; // weapon type: sword, axe, bow, shield…
+  grants?: string[]; // skills you have while wearing it (a staff's Spark)
+  range?: number; // main hand: basic attack reach in hexes; default by kind (rules.ts › WEAPON_RANGE), else 1
   placeholder?: boolean; // its numbers aren't set yet
+  value?: number; // coins a shop pays for one; missing: shops won't buy it
+  formula?: boolean; // its numbers came from the gear formula (engine/gearFormula.ts), not set by hand
 
   // food and potions: used from the bag (engine/actions.ts › useItem)
   use?: ItemUse;
@@ -173,6 +197,7 @@ export type WornSlot = Exclude<Slot, 'relic'>;
 /** A gear set: names its bonuses by how many pieces you wear. */
 export interface GearSet {
   name: string;
+  profile?: 'heavy' | 'light' | 'arcane'; // how the gear formula leans its pieces (engine/gearFormula.ts)
   bonuses: { pieces: number; stats: Partial<Stats> }[];
 }
 
@@ -238,6 +263,7 @@ export type Effect =
   | { give: string; n?: number; wear?: boolean } // into the bag (and put on)
   | { take: string; n: number } // out of the bag
   | { xp: number }
+  | { energy: number } // ⚡ back, up to the full bar
   | { tag: string }
   | { untag: string }
   | { goto: string; at?: string } // move to this point (a scene jump)
@@ -245,7 +271,9 @@ export type Effect =
   | { notify: string };
 
 /** One step of dialogue. A string is a line: "sylvie: …", "you: …", or narration. {name} becomes your name. */
-export type Line = string | { name: true } | { choose: { text: string; then: Effect[] }[] };
+/** A dialogue step: a spoken or narrated line, the name list, a choice, or a picture. A picture fills the screen
+ *  (with `text` as its caption, which can be spoken: "sylvie: …") and stays behind the lines after it until `{ "image": null }` or the beat ends. */
+export type Line = string | { name: true } | { choose: { text: string; then: Effect[] }[] } | { image: string | null; text?: string };
 
 export type QuestState = 'active' | 'done';
 
@@ -311,6 +339,11 @@ export interface Point {
   pad?: number; // rings of drawn-only padding around the field (default 2; 0 for none)
   opensWith?: Cond; // closed (on the map, and to travel) until this holds; the story opens it
   closedText?: string; // shown while closed ("Not yet")
+  /** People the story stands here: on hex [row, col] while `while` holds (Sylvie on the beach until you've met). */
+  people?: { npc: string; at: [number, number]; while?: Cond }[];
+  /** The area's level range: its enemies roll at about your level (each kind keeping its lead over the area's
+   *  easiest), never below their own level, never above the top. Missing: enemies keep their own levels. */
+  levels?: [number, number];
 }
 
 /** A character's figure on the hex field: painted facing right, mirrored to face left. */
@@ -330,6 +363,7 @@ export interface Npc {
   lines: string[];
   figure?: Figure;
   stats?: Stats; // once they can fight on your team
+  shop?: { item: string; price: number }[]; // what they sell, for coins; anyone with a shop also buys things that have a `value`
 }
 
 export interface Player {
@@ -360,6 +394,7 @@ export interface Content {
   sets: Record<string, GearSet>;
   recipes: Record<string, Recipe>;
   quests: Record<string, Quest>;
+  errands: Record<string, Errand[]>; // person -> their pool of daily quests
 }
 
 /** Something to make (content/recipes.json): uses up `needs`, gives `n` of `makes`. Free and instant for now. */
@@ -394,9 +429,9 @@ export interface GameState {
   energy: number;
   lastRegen: number; // ms timestamp the next energy is counted from
   day: number;
-  toolTier: number;
+  toolTier?: number; // unused: nodes are gated by skill level now (kept so old saves load)
   bag: Record<string, number>; // item id -> count
-  depleted: Record<string, true>; // nodes used up today
+  depleted: Record<string, number | true>; // node cell -> the 15-minute cycle it was used up in (true: old saves, until the next day)
   beaten: Record<string, true>; // unused since enemies roll per cycle; kept so old saves load
   taken: Record<string, true>; // secrets taken, for good
   revealed: Record<string, true>; // hidden things found
@@ -410,6 +445,8 @@ export interface GameState {
   spirit: number; // built by basic attacks, spent by skills; kept between fights
   hpAt: number; // ms timestamp the next HP is counted from
   restAt: string | null; // cell key of the last bed you slept in; knocked out, you wake there
+  stoked: Record<string, number>; // campfire cell key -> when you last stoked it (ms)
+  hotbar: (string | null)[]; // the quick slots, keys 1–6: "skill:dash", "item:seed-bread", or empty
   foes: Record<string, Foe[]>; // point -> enemies standing there this cycle
   foeRolls: Record<string, { cycle: number; rerolls: number }>; // point -> the cycle its enemies were rolled in, and rerolls used
   fx: Fx[]; // what the last action did, for the UI to float up
@@ -418,6 +455,7 @@ export interface GameState {
   worn: Worn;
   buffs: Buff[];
   quests: Record<string, QuestProgress>; // quests started (absent: not yet)
+  errands?: { date: string; taken: Record<string, { count: number }>; done: string[] }; // today's daily quests (engine/errands.ts)
   tags: Record<string, true>; // story flags: choices made, beats seen
   beats: Beat[]; // story beats waiting to play (kept in the save, so a reload replays them)
   fxSeq: number;

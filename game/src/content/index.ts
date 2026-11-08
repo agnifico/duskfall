@@ -1,6 +1,7 @@
 // Loads the content files. Adding a point = adding a JSON file to points/ whose zone is in a land.
 
-import type { Content, Figure, GearSet, Item, Land, LifeSkill, Npc, Player, Point, Prop, Quest, Recipe, Skill, Terrain, World } from '../engine/types';
+import { applyGearFormula } from '../engine/gearFormula';
+import type { Content, Errand, Figure, GearSet, Item, Land, LifeSkill, Npc, Player, Point, Prop, Quest, Recipe, Skill, Terrain, World } from '../engine/types';
 import world from './world.json';
 import terrain from './terrain.json';
 import propsRaw from './props.json';
@@ -13,6 +14,7 @@ import gear from './gear.json';
 import sets from './sets.json';
 import recipes from './recipes.json';
 import quests from './quests.json';
+import errands from './errands.json';
 import spritesRaw from './sprites.json';
 import tuningRaw from './tuning.json';
 
@@ -42,7 +44,10 @@ export const content: Content = {
   sets: sets as Record<string, GearSet>,
   recipes: recipes as Record<string, Recipe>,
   quests: quests as unknown as Record<string, Quest>,
+  errands: errands as unknown as Record<string, Errand[]>,
 };
+
+applyGearFormula(content.items, content.sets); // numbers for gear that has none yet
 
 /** The points in each zone, in file order. */
 export const pointsByZone: Record<string, Point[]> = {};

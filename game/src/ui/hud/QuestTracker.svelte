@@ -3,17 +3,25 @@
   import { G } from '../../lib/game.svelte';
   import { content } from '../../content';
   import { activeStages } from '../../engine/story';
+  import { takenErrands } from '../../engine/errands';
   import { togglePanel } from '../commands';
 
   const list = $derived(activeStages(G.s, content));
+  const errands = $derived(takenErrands(G.s, content, G.now));
 </script>
 
-{#if list.length}
+{#if list.length || errands.length}
   <button class="tracker px flat t-panel" onclick={() => togglePanel('quests')} title="Your quests (Q)">
     {#each list as a (a.id)}
       <div class="q" class:main={a.q.main}>
         <div class="lbl m title">{a.q.title}</div>
         <div class="body obj">{a.st?.objective}{#if a.progress}<b> {a.progress}</b>{/if}</div>
+      </div>
+    {/each}
+    {#each errands as d (d.e.id)}
+      <div class="q daily">
+        <div class="lbl m title">{d.e.title}</div>
+        <div class="body obj">{d.ready ? `Hand in to ${content.npcs[d.npc]?.name ?? d.npc}` : d.e.kill ? 'Beat them' : `Bring ${content.items[d.e.bring?.item ?? '']?.name ?? ''}`}<b> {d.progress}</b></div>
       </div>
     {/each}
   </button>
@@ -41,6 +49,9 @@
   }
   .q.main {
     border-left-color: var(--hl);
+  }
+  .q.daily {
+    border-left-color: #7cc4d6;
   }
   .title {
     color: var(--hl);

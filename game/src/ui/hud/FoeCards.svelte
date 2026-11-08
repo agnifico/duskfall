@@ -3,7 +3,7 @@
   // name and HP.
   import { G } from '../../lib/game.svelte';
   import { asset, content, sprites } from '../../content';
-  import { foeStats, foesHere } from '../../engine/combat';
+  import { statsOf, foesHere } from '../../engine/combat';
 
   const foes = $derived(foesHere(G.s).filter((f) => f.engaged));
 </script>
@@ -13,13 +13,13 @@
     {#each foes as f (f.id)}
       {@const pr = content.props[f.kind]}
       {@const sp = pr?.sprite ? sprites[pr.sprite] : undefined}
-      {@const max = foeStats(content, f.kind).hp}
+      {@const max = statsOf(content, f).hp}
       <div class="card px flat t-inset">
         <span class="pic">
           {#if sp}<img src={asset(sp.file)} alt="" />{:else}<span class="emoji">{pr?.icon ?? '?'}</span>{/if}
         </span>
         <span class="info">
-          <span class="lbl m name">{pr?.name ?? f.kind}</span>
+          <span class="lbl m name">{pr?.name ?? f.kind}{#if f.level ?? pr?.foe?.level} · Lv {f.level ?? pr?.foe?.level}{/if}</span>
           <span class="track"><b style:width="{Math.max(0, f.hp / max) * 100}%"></b></span>
           <span class="lbl hpv">{Math.max(0, Math.ceil(f.hp))}/{max}</span>
         </span>

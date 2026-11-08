@@ -1,6 +1,40 @@
 {
-  "dash": { "name": "Dash", "icon": "💨", "badge": "dash", "kind": "dash", "aim": "direction", "spirit": 20, "energy": 1, "range": 3,
-    "text": "Up to 3 hexes in a straight line, in one tick, for 1⚡. Click a hex in the direction to go." },
-  "whirl": { "name": "Whirl", "icon": "🌀", "badge": "whirl", "kind": "attack", "aim": "self", "spirit": 40, "power": 1.2, "shape": { "shape": "area", "rings": 1 },
-    "text": "A spinning cut that hits every hex around you." }
+ "dash": {
+  "name": "Dash",
+  "icon": "💨",
+  "badge": "dash",
+  "kind": "dash",
+  "aim": "direction",
+  "spirit": 20,
+  "energy": 1,
+  "range": 3,
+  "text": "Up to 3 hexes in a straight line, in one tick, for 1⚡. Click a hex in the direction to go."
+ },
+ "whirl": {
+  "name": "Whirl",
+  "icon": "🌀",
+  "badge": "whirl",
+  "kind": "attack",
+  "aim": "self",
+  "spirit": 40,
+  "power": 1.2,
+  "shape": {
+   "shape": "area",
+   "rings": 1
+  },
+  "text": "A spinning cut that hits every hex around you."
+ },
+ "spark": {
+  "name": "Spark",
+  "icon": "✨",
+  "badge": "focus",
+  "kind": "attack",
+  "aim": "target",
+  "range": 2,
+  "spirit": 10,
+  "refund": 15,
+  "power": 1.3,
+  "damage": "elemental",
+  "text": "A bolt of raw element at an enemy up to 2 hexes away. Elemental damage, from your elemental attack. Landing it gives back 15 Spirit, so once it's going it keeps itself going. Needs a staff."
+ }
 }

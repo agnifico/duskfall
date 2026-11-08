@@ -6,6 +6,7 @@ import { SCREEN_KEYS, UI, inIntro, notify, savePref, screenFromHash, type PanelI
 import { content } from '../content';
 import * as E from '../engine/actions';
 import { inFight } from '../engine/combat';
+import * as K from '../engine/combat';
 import { pointClosed } from '../engine/story';
 import { nextTheme, themeOf } from './themes';
 
@@ -15,9 +16,11 @@ import { nextTheme, themeOf } from './themes';
 const STEP_MS = 170; // keep in step with the walk animation in HexView
 let queue: string[] = [];
 let timer: ReturnType<typeof setTimeout> | undefined;
+let onArrive: (() => void) | null = null; // what to do if the walk gets all the way (attack, cast)
 
 export function stopWalk(): void {
   queue = [];
+  onArrive = null;
   clearTimeout(timer);
   timer = undefined;
 }
@@ -28,14 +31,28 @@ function nextStep(): void {
   if (!k || UI.map) return stopWalk();
   const go = act((s) => E.step(s, content, k, G.now));
   if (go && queue.length) timer = setTimeout(nextStep, STEP_MS);
-  else stopWalk();
+  else {
+    const then = go ? onArrive : null; // stopped early (an attack aimed at you, a find): don't follow through
+    stopWalk();
+    if (then) timer = setTimeout(then, STEP_MS);
+  }
 }
 
-/** Walk a route of cell keys, one step at a time. */
-export function walk(keys: string[]): void {
+/** Walk a route of cell keys, one step at a time; `then` runs if it gets all the way. */
+export function walk(keys: string[], then?: () => void): void {
   stopWalk();
+  if (!keys.length) return then?.();
   queue = [...keys];
+  onArrive = then ?? null;
   nextStep();
+}
+
+/** Attack an enemy: at once if it's in reach, else walk until it is, then attack. */
+export function attackFoe(foeId: string, key: string): void {
+  if (E.canHit(G.s, content, foeId)) return void act((s) => E.attack(s, content, foeId));
+  const keys = E.approach(G.s, content, key, E.attackRange(G.s, content));
+  if (!keys) return;
+  walk(keys, () => E.canHit(G.s, content, foeId) && act((s) => E.attack(s, content, foeId)));
 }
 
 // ---------- skills ----------
@@ -58,17 +75,36 @@ export function pressSkill(id: string): void {
   } else UI.aim = id;
 }
 
+/** A quick slot (its button or its key): a skill is pressed, food or a potion is used. */
+export function pressSlot(i: number): void {
+  const entry = G.s.hotbar?.[i];
+  if (!entry || UI.map) return;
+  const [kind, id] = entry.split(':');
+  if (kind === 'skill') return pressSkill(id);
+  const why = E.cantUse(G.s, content, id);
+  if (why) return notify(`${content.items[id]?.name ?? id}: ${why}`);
+  stopWalk();
+  act((s) => E.useItem(s, content, id, G.now));
+}
+
 /** A click on the field while a skill is aimed. */
 export function fireAim(key: string): void {
   const id = UI.aim;
   UI.aim = null;
-  if (id) act((s) => E.useSkill(s, content, id, key, G.now));
+  if (!id) return;
+  const sk = content.skills[id];
+  // a targeted spell at an enemy out of reach: walk until it's in reach, then cast
+  if (sk?.aim === 'target' && !E.skillHexes(G.s, content, id, key).length && K.foeAt(G.s, key)) {
+    const keys = E.approach(G.s, content, key, sk.range ?? 1);
+    if (keys) return walk(keys, () => E.skillHexes(G.s, content, id, key).length && act((s) => E.useSkill(s, content, id, key, G.now)));
+  }
+  act((s) => E.useSkill(s, content, id, key, G.now));
 }
 
 /** Run one of the actions available on the current hex, by id ("gather", "search", "talk"…). */
 export function runAction(id: string): void {
   if (UI.map) return;
-  const a = E.actionsHere(G.s, content).find((x) => x.id === id);
+  const a = E.actionsHere(G.s, content, G.now).find((x) => x.id === id);
   if (a && !a.disabled) act(() => a.run(G.now));
 }
 
@@ -200,24 +236,16 @@ export function enterLand(): void {
 /** Go to a point from the map. The point you're already in just takes you back to it. */
 export function travelTo(pointId: string): void {
   if (pointId === G.s.point) return closeMap();
-  if (blockedByFight()) return;
   const closed = pointClosed(G.s, content, pointId);
-  if (closed) return notify(`${content.points[pointId]?.name}: ${closed.toLowerCase()}.`);
+  if (closed && !DEV.on) return notify(`${content.points[pointId]?.name}: ${closed.toLowerCase()}.`); // dev mode goes anywhere
   UI.panel = null;
   act((s) => E.enterPoint(s, content, pointId));
   UI.map = null;
 }
 
-/** Going to a person is free from anywhere: questing is kept apart from adventuring. */
-/** You can't leave a point while an enemy is after you. */
-function blockedByFight(): boolean {
-  if (!inFight(G.s)) return false;
-  notify("You can't get away: something is after you.");
-  return true;
-}
-
+/** Going to a person is free from anywhere: questing is kept apart from adventuring. Leaving a point is always
+ *  allowed, even mid-fight: it's the way out (engine/actions.ts › enterPoint). */
 export function goToPerson(npcId: string): void {
-  if (blockedByFight()) return;
   UI.panel = null;
   UI.people = false;
   act((s) => E.teleportTo(s, content, npcId));
@@ -261,8 +289,8 @@ const KEYS: Record<string, () => void> = {
   '[': () => turnField(-15),
   ']': () => turnField(15),
 };
-// 1, 2…: the player's skills, in hotbar order
-(content.player.skills ?? []).forEach((id, i) => (KEYS[String(i + 1)] = () => pressSkill(id)));
+// 1–6: the quick slots, whatever the player put in them
+for (let i = 0; i < 6; i++) KEYS[String(i + 1)] = () => pressSlot(i);
 
 export function onKey(e: KeyboardEvent): void {
   if (e.metaKey || e.ctrlKey || e.altKey || e.repeat) return;

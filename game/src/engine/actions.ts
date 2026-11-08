@@ -1,13 +1,13 @@
 // Everything the player can do. Each function changes the state it is given, and nothing else.
 
 import type { Action, Cell, Content, GameState, Prop } from './types';
-import { BASIC_ATTACK, COST, DEV_RULES, SPIRIT_PER_BASIC, HP_REGEN_MS, KO_HP, MAX_ENERGY, MAX_SPIRIT, REGEN_MS, XP_PER_ENERGY, SEARCH_RADIUS } from './rules';
+import { BASIC_ATTACK, INFUSION_POWER, HOTBAR_SLOTS, FIRE_ENERGY, FIRE_MS, FIRE_WOOD, RANGED_POWER, WEAPON_RANGE, COST, DEV_RULES, SPIRIT_PER_BASIC, HP_REGEN_MS, KO_HP, MAX_ENERGY, MAX_SPIRIT, REGEN_MS, NODE_FALLOFF, NODE_FLOOR, NODE_XP, SEARCH_RADIUS } from './rules';
 import { dirTo, grid, hexDistance, route, shapeCells, stepDir, type Grid } from './hex';
 import { say } from './log';
 import { track } from './telemetry';
 import { addSkillXp, levelledYield, maxHp, skillLevel } from './progress';
-import { talkTo } from './story';
-import { ensureFoesAt, foeAt, foesHere, fx, inFight, playerHits, rerollFoes, resetFoes, tick } from './combat';
+import { peopleOn, talkTo } from './story';
+import { cycleOf, ensureFoesAt, foeAt, foesHere, fx, inFight, playerHits, rerollFoes, resetFoes, tick } from './combat';
 
 export { say };
 
@@ -21,7 +21,28 @@ export function nodeYield(pr: Prop): [number, number] {
 
 export const nodeCost = (pr: Prop) => pr.cost ?? COST.gather;
 /** Skill XP for one gather. */
-export const nodeXp = (pr: Prop) => pr.xp ?? XP_PER_ENERGY * nodeCost(pr);
+const nodeSize = (pr: Prop) => NODE_XP[Math.min(4, Math.max(1, nodeCost(pr)))];
+/** A gather's skill XP at your level: full up to the node's level, then less for each level past it. */
+export function nodeXp(pr: Prop, level = 1): number {
+  const sz = nodeSize(pr);
+  const over = Math.max(0, level - sz.full);
+  return Math.max(1, Math.round((pr.xp ?? sz.xp) * Math.max(NODE_FLOOR, NODE_FALLOFF ** over)));
+}
+/** A node's extras as a list (content may give one or several). */
+export const bonuses = (pr: Prop) => (pr.bonus ? (Array.isArray(pr.bonus) ? pr.bonus : [pr.bonus]) : []);
+/** The skill level a node needs. */
+export const nodeNeed = (pr: Prop) => pr.need ?? nodeSize(pr).need;
+/** Used up and not yet regrown: nodes come back each 15-minute cycle, with the enemies. */
+export const isDepleted = (s: GameState, key: string, now = Date.now()) => isDepletedIn(s, key, cycleOf(now));
+/** The same, for a given cycle: the field passes the cycle so it redraws every 15 minutes, not every second. */
+export const isDepletedIn = (s: GameState, key: string, cycle: number) => {
+  const v = s.depleted[key];
+  return v === true || (v != null && v === cycle);
+};
+/** Spend ⚡ (anything that makes something: gathering, crafting). False, and says why, if you're short. */
+export function spendEnergy(s: GameState, n: number, now: number, why: string): boolean {
+  return spend(s, n, now, why);
+}
 
 // ---------- energy ----------
 
@@ -104,7 +125,9 @@ export function visibleProp(s: GameState, c: Content, x: Cell): Prop | null {
   const pr = c.props[x.p];
   if (!pr) return null;
   if (pr.hidden && !s.revealed[x.key]) return null;
-  if (pr.type === 'enemy') return null;
+  if (pr.type === 'enemy' || pr.type === 'start') return null; // the start marker only shows in the editor
+  // the way out only shows on fog maps, as a beacon to find your way back by; elsewhere the map is enough
+  if (pr.type === 'exit' && !c.points[x.key.split(':')[0]]?.fog) return null;
   if (pr.type === 'secret' && s.taken[x.key]) return null;
   return pr;
 }
@@ -132,13 +155,19 @@ export function markVisited(s: GameState, landId: string): void {
 
 export function enterPoint(s: GameState, c: Content, pointId: string, atKey?: string, now = Date.now()): void {
   const g = grid(c, pointId, s.day);
-  const start = (atKey && g.byKey.get(atKey)) || g.cells.find((x) => x.p === '>') || g.cells[0];
+  const start = (atKey && g.byKey.get(atKey)) || g.cells.find((x) => x.p === 'start') || g.cells.find((x) => x.p === '>') || g.cells[0];
+  // leaving is always a way out: what was after you calms down, heals and goes home
+  if (s.point && s.point !== pointId) {
+    if (inFight(s)) say(s, 'You got away.');
+    resetFoes(s, c, s.point);
+  }
   s.point = pointId;
   s.pos = start.key;
   track('enter', { point: pointId });
   const land = landOf(c, pointId);
   if (land) markVisited(s, land);
   look(s, g, pointId, start, 1);
+  if (c.points[pointId].fog) for (const x of g.cells) if (x.p === '>') look(s, g, pointId, x, 0); // the beacon is seen from anywhere
   ensureFoesAt(s, c, g, pointId, now);
 }
 
@@ -169,12 +198,13 @@ export function planRoute(s: GameState, c: Content, targetKey: string) {
   const g = hereGrid(s, c);
   const from = hereCell(s, c);
   const to = g?.byKey.get(targetKey);
-  if (!pid || !g || !from || !to) return null;
+  const people = peopleOn(s, c, pid);
+  if (!pid || !g || !from || !to || people.has(to.key)) return null;
   const r = route(
     g,
     from,
     to,
-    (x) => c.terrain[x.t]?.cost != null && isSeen(s, c, pid, x) && (x === to || !foeAt(s, x.key)),
+    (x) => c.terrain[x.t]?.cost != null && isSeen(s, c, pid, x) && !people.has(x.key) && (x === to || !foeAt(s, x.key)),
     (x) => c.terrain[x.t].cost ?? Infinity,
   );
   if (r && foeAt(s, to.key)) {
@@ -184,7 +214,7 @@ export function planRoute(s: GameState, c: Content, targetKey: string) {
   return r;
 }
 
-/** One step onto a neighbouring hex: pays its ⚡, then the enemies act. Returns whether a walk should go on:
+/** One step onto a neighbouring hex (free), then the enemies act. Returns whether a walk should go on:
  *  it stops on a hidden find, when an enemy's attack is aimed at you, or when you can't step. */
 export function step(s: GameState, c: Content, key: string, now: number): boolean {
   s.fx = [];
@@ -194,8 +224,7 @@ export function step(s: GameState, c: Content, key: string, now: number): boolea
   const to = g?.byKey.get(key);
   if (!pid || !g || !from || !to || hexDistance(from, to) !== 1) return false;
   const cost = c.terrain[to.t]?.cost;
-  if (cost == null || foeAt(s, key)) return false;
-  if (!spend(s, cost, now, 'walk')) return false;
+  if (cost == null || foeAt(s, key)) return false; // walking is free: terrain cost only steers the route
   s.pos = key;
   look(s, g, pid, to, 1);
   let go = true;
@@ -210,13 +239,41 @@ export function step(s: GameState, c: Content, key: string, now: number): boolea
   return go;
 }
 
-/** Whether your basic attack reaches an enemy from where you stand. */
+/** Your basic attack's reach in hexes: the main-hand weapon's range, or its kind's (a bow: 3), else 1. */
+export function attackRange(s: GameState, c: Content): number {
+  const w = s.worn?.main ? c.items[s.worn.main] : undefined;
+  return w?.range ?? (w?.kind ? WEAPON_RANGE[w.kind] : undefined) ?? 1;
+}
+
+/** The steps toward an enemy until it's within `range`: the route to it, cut where it first comes in reach.
+ *  Empty if it already is; null if there's no way there. */
+export function approach(s: GameState, c: Content, targetKey: string, range: number): string[] | null {
+  const g = hereGrid(s, c);
+  const me = hereCell(s, c);
+  const t = g?.byKey.get(targetKey);
+  if (!g || !me || !t) return null;
+  if (hexDistance(me, t) <= range) return [];
+  const r = planRoute(s, c, targetKey);
+  if (!r) return null;
+  const keys: string[] = [];
+  for (const x of r.path) {
+    keys.push(x.key);
+    if (hexDistance(x, t) <= range) break;
+  }
+  return keys;
+}
+
+/** Whether your basic attack reaches an enemy from where you stand. A ranged weapon reaches any enemy you
+ *  can see within its range. */
 export function canHit(s: GameState, c: Content, foeId: string): boolean {
   const g = hereGrid(s, c);
   const me = hereCell(s, c);
   const f = foesHere(s).find((x) => x.id === foeId);
   const at = f && g?.byKey.get(f.pos);
-  return !!(g && me && at && shapeCells(g, me, at, BASIC_ATTACK).includes(at));
+  if (!g || !me || !at) return false;
+  const range = attackRange(s, c);
+  if (range > 1) return at !== me && hexDistance(me, at) <= range && isSeen(s, c, s.point!, at);
+  return shapeCells(g, me, at, BASIC_ATTACK).includes(at);
 }
 
 /** Your basic attack: free, one tick. */
@@ -225,9 +282,15 @@ export function attack(s: GameState, c: Content, foeId: string): void {
   const g = hereGrid(s, c);
   const f = foesHere(s).find((x) => x.id === foeId);
   if (!g || !f || !canHit(s, c, foeId)) return;
-  fx(s, f.pos, '', 'lunge', 0, s.pos!);
-  fx(s, f.pos, '', 'slash', 0, s.pos!);
-  playerHits(s, c, f);
+  const ranged = attackRange(s, c) > 1;
+  if (ranged) fx(s, f.pos, '', c.items[s.worn?.main ?? '']?.kind === 'bow' ? 'shot' : 'bolt', 0, s.pos!);
+  else {
+    fx(s, f.pos, '', 'lunge', 0, s.pos!);
+    fx(s, f.pos, '', 'slash', 0, s.pos!);
+  }
+  const landed = playerHits(s, c, f, ranged ? RANGED_POWER : 1);
+  // infused (Heidi's gift): a landed blow carries a little element too
+  if (landed && s.tags?.infused && foesHere(s).includes(f)) playerHits(s, c, f, INFUSION_POWER, 'elemental');
   s.spirit = Math.min(MAX_SPIRIT, (s.spirit ?? 0) + SPIRIT_PER_BASIC);
   afterAction(s, c, g);
 }
@@ -262,14 +325,26 @@ export function skillHexes(s: GameState, c: Content, skillId: string, targetKey?
   const me = hereCell(s, c);
   if (!sk || !g || !me) return [];
   if (sk.kind === 'dash') return targetKey ? dashPath(s, c, skillId, targetKey) : [];
+  if (sk.aim === 'target') {
+    const t = targetKey ? g.byKey.get(targetKey) : undefined;
+    const ok = t && t !== me && hexDistance(me, t) <= (sk.range ?? 1) && isSeen(s, c, s.point!, t);
+    return ok ? [t] : [];
+  }
   const at = (targetKey && g.byKey.get(targetKey)) || me;
   return sk.shape ? shapeCells(g, me, at, sk.shape) : [];
+}
+
+/** The skills you have: your own, and any your worn gear grants (a staff's Spark). */
+export function knownSkills(s: GameState, c: Content): string[] {
+  const granted = Object.values(s.worn ?? {}).flat().flatMap((id) => (typeof id === 'string' ? (c.items[id]?.grants ?? []) : []));
+  return [...new Set([...(c.player.skills ?? []), ...granted])];
 }
 
 /** Why a skill can't be used right now, or null. */
 export function skillBlocked(s: GameState, c: Content, skillId: string): string | null {
   const sk = c.skills[skillId];
   if (!sk) return 'Unknown skill';
+  if (!knownSkills(s, c).includes(skillId)) return 'Needs the right weapon';
   if ((s.spirit ?? 0) < sk.spirit) return `Needs ${sk.spirit} Spirit`;
   if (sk.energy && !DEV_RULES.freeEnergy && s.energy < sk.energy) return `Needs ${sk.energy}⚡`;
   return null;
@@ -301,11 +376,18 @@ export function useSkill(s: GameState, c: Content, skillId: string, targetKey: s
     s.pos = path[path.length - 1].key;
   } else {
     const hexes = skillHexes(s, c, skillId, targetKey);
-    for (const x of hexes) fx(s, x.key, '', 'slash', 0, me.key);
+    if (sk.aim === 'target' && !hexes.length) return say(s, `${sk.name}: pick an enemy within ${sk.range ?? 1}.`);
+    for (const x of hexes) fx(s, x.key, '', sk.aim === 'target' ? (sk.damage === 'elemental' ? 'bolt' : 'shot') : 'slash', 0, me.key);
+    let landed = 0;
     for (const x of hexes) {
       const f = foeAt(s, x.key);
-      if (f) playerHits(s, c, f, sk.power ?? 1, sk.damage ?? 'physical');
+      if (f && playerHits(s, c, f, sk.power ?? 1, sk.damage ?? 'physical')) landed++;
     }
+    s.spirit -= sk.spirit;
+    if (sk.refund && landed) s.spirit = Math.min(MAX_SPIRIT, s.spirit + sk.refund);
+    track('skill', { id: skillId, spirit: sk.spirit, landed });
+    afterAction(s, c, g);
+    return;
   }
   s.spirit -= sk.spirit;
   track('skill', { id: skillId, spirit: sk.spirit });
@@ -323,6 +405,21 @@ export function cantUse(s: GameState, c: Content, id: string): string | null {
   const full = (!u.hp || s.hp >= maxHp(s, c)) && (!u.energy || s.energy >= MAX_ENERGY) && (!u.spirit || s.spirit >= MAX_SPIRIT);
   if (full && !u.buff) return u.hp ? 'Your health is full' : u.energy ? 'Your energy is full' : 'Your spirit is full';
   return null;
+}
+
+/** Put a skill or item ("skill:dash", "item:seed-bread") in a quick slot, or empty it (null). A thing sits in
+ *  one slot only: setting it elsewhere moves it. Without a slot, it goes in the first empty one. */
+export function setHotbar(s: GameState, entry: string | null, slot?: number): void {
+  const bar = [...(s.hotbar ?? [])];
+  while (bar.length < HOTBAR_SLOTS) bar.push(null);
+  const at = slot ?? bar.indexOf(null);
+  if (at < 0 || at >= HOTBAR_SLOTS) return;
+  if (entry) {
+    const was = bar.indexOf(entry);
+    if (was >= 0) bar[was] = null;
+  }
+  bar[at] = entry;
+  s.hotbar = bar;
 }
 
 /** Eat or drink it. A potion drunk in a fight takes your turn. */
@@ -396,7 +493,7 @@ function give(s: GameState, item: string, n: number, why: string): void {
 const roll = ([lo, hi]: [number, number]) => lo + Math.floor(Math.random() * (hi - lo + 1));
 
 // Item gains are not said: the UI animates them from the bag's change.
-export function actionsHere(s: GameState, c: Content): Action[] {
+export function actionsHere(s: GameState, c: Content, now = Date.now()): Action[] {
   const pid = currentPoint(s);
   const x = hereCell(s, c);
   if (!pid || !x) return [];
@@ -407,8 +504,10 @@ export function actionsHere(s: GameState, c: Content): Action[] {
     const tier = pr.tier ?? 1;
     const cost = nodeCost(pr);
     const label = `${pr.verb ?? 'Gather'} ${pr.name}`;
-    if (s.depleted[x.key]) out.push({ id: 'gather', label, cost, disabled: 'Regrows tomorrow', run: () => {} });
-    else if (tier > s.toolTier) out.push({ id: 'gather', label, cost, disabled: `Needs a tier-${tier} tool`, run: () => {} });
+    const need = nodeNeed(pr);
+    if (isDepleted(s, x.key, now)) out.push({ id: 'gather', label, cost, disabled: 'Regrows soon', run: () => {} });
+    else if (pr.skill && skillLevel(s, pr.skill) < need)
+      out.push({ id: 'gather', label, cost, disabled: `Needs ${c.lifeskills[pr.skill]?.name ?? pr.skill} ${need}`, run: () => {} });
     else
       out.push({
         id: 'gather',
@@ -421,10 +520,10 @@ export function actionsHere(s: GameState, c: Content): Action[] {
           track('gather', { node: pr.code, tier, cost, n: got, skill: pr.skill, level: lvl, point: pid });
           give(s, pr.item ?? pr.code, got, `gather:${pr.code}`);
           if (pr.extra) give(s, pr.extra.item, pr.extra.amount, `extra:${pr.code}`);
-          if (pr.bonus && Math.random() < pr.bonus.chance) give(s, pr.bonus.item, 1, `bonus:${pr.code}`);
-          s.depleted[x.key] = true;
+          for (const b of bonuses(pr)) if (Math.random() < b.chance) give(s, b.item, 1, `bonus:${pr.code}`);
+          s.depleted[x.key] = cycleOf(now);
           if (pr.skill) {
-            const xp = addSkillXp(s, c, pr.skill, nodeXp(pr));
+            const xp = addSkillXp(s, c, pr.skill, nodeXp(pr, lvl));
             if (xp) fx(s, x.key, `+${xp} ${c.lifeskills[pr.skill]?.name ?? pr.skill} xp`, 'xp');
           }
         },
@@ -447,6 +546,38 @@ export function actionsHere(s: GameState, c: Content): Action[] {
       cost: 0,
       run: () => {
         if (!talkTo(s, c, npcId)) s.talk[npcId] = (s.talk[npcId] ?? 0) + 1; // a quest stage with them, or their own lines
+      },
+    });
+  } else if (pr?.type === 'fire') {
+    const full = s.hp >= maxHp(s, c);
+    out.push({
+      id: 'warm',
+      label: 'Warm up by the fire',
+      cost: 0,
+      disabled: full ? 'Your health is full' : undefined,
+      run: (now) => {
+        track('fire', { kind: 'warm', hp: s.hp });
+        s.hp = maxHp(s, c);
+        s.hpAt = now;
+        say(s, 'You sit by the fire a while. Health full.');
+      },
+    });
+    const wait = FIRE_MS - (now - (s.stoked?.[x.key] ?? -Infinity));
+    out.push({
+      id: 'stoke',
+      label: `Stoke the fire: ${FIRE_WOOD} wood for +${FIRE_ENERGY}⚡`,
+      cost: 0,
+      disabled:
+        wait > 0 ? `Burning well: again in ${Math.ceil(wait / 60_000)} min`
+        : (s.bag.wood ?? 0) < FIRE_WOOD ? `Needs ${FIRE_WOOD} wood`
+        : s.energy >= MAX_ENERGY ? 'Your energy is full'
+        : undefined,
+      run: (t) => {
+        s.bag.wood -= FIRE_WOOD;
+        s.energy = Math.min(MAX_ENERGY, s.energy + FIRE_ENERGY);
+        (s.stoked ??= {})[x.key] = t;
+        track('fire', { kind: 'stoke', energy: s.energy });
+        say(s, `You feed the fire and rest your legs. +${FIRE_ENERGY}⚡.`);
       },
     });
   } else if (pr?.type === 'rest') {

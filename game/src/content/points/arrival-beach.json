@@ -5,8 +5,10 @@
   "pin": [2810, 1157],
   "kind": "gathering",
   "backdrop": "sea",
+  "levels": [1, 10],
   "fog": false,
   "table": ["palm", "driftwood", "stones", "palm"],
+  "people": [{"npc": "sylvie", "at": [8, 6], "while": {"notTag": "met-sylvie"}}],
   "enemies": {"place":[{"kind":"toxolotl","on":["h"]},{"kind":"toxolotl","on":["h"]},{"kind":"crab","on":["s"]},{"kind":"boar","on":["f"]},{"kind":"boar","on":["f"]}]},
   "rows": [
     "_",
@@ -17,11 +19,11 @@
     "_ w           w      w           w.driftwood w         w        w         w.driftwood w         w s      s.stones f.tree g.tree g         s      h",
     "_ w           w      w           h           h         h        h         w           w         w w      h        f.tree g      g.stones  g      h",
     "w h           h      h           s           s         s.palm   h         h           h         h h      h        h      g      g         g.oak",
-    "_ h.driftwood s      s.driftwood s           s.*       s        s         h           s         s s.palm s        g      g      f         f",
+    "_ h.driftwood s      s.driftwood s           s.*       s        s.start   h           s         s s.palm s        g      g      f         f",
     "h h           s      s.fire      s           g         g        s         s.palm      s         s s      f        g      f.oak  f",
     "h g.palm      g      g           s           g.stones  g        f.boulder f           s         g f      f        f.oak  r      f.boulder",
     "h f.stones    f.tree g.stones    g           g.boulder f        f.tree    f           f.tree    f f      f.oak    r      r      f.stones",
-    "_ _           f.tree f.shrooms   g.>         f.tree    f.stones f.oak     f.oak       f.shrooms r r      r        r      r      r",
+    "_ _           f.tree f.shrooms   g           f.tree    f.stones f.oak     f.oak       f.shrooms r r      r        r      r      r",
     "_ _           _      _           _           _         _        _         _           _         r r      r        _      r"
   ],
   "pad": 0

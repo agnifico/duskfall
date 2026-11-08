@@ -3,16 +3,29 @@
   "name": "Sylvie's Home",
   "zone": "plains",
   "pin": [2220, 1593],
-  "opensWith": {"tag": "met-sylvie"},
+  "opensWith": {"tag":"met-sylvie"},
   "closedText": "Not yet",
   "kind": "people",
+  "levels": [1, 10],
   "fog": false,
+  "enemies": {"place":[{"kind":"boar","on":["f"]},{"kind":"boar","on":["f"]}]},
   "table": ["tree", "berries", "stones"],
   "rows": [
-    "f f.birch f.birch f.pine f.oak f.oak f",
-    "f g g g.house g g f",
-    "g g.sylvie g p g g.* g",
-    "g.> p p p g.fire g.* g",
-    "g g.berries g p g g.stones g"
-  ]
+    "_ _ _ _ _       w       w",
+    "_ _ w w w       h       h",
+    "_ _ w h h       h       s        s",
+    "_ w h h s       s       g        f",
+    "_ w h h s       g       f.oak    f.oak   f",
+    "w h s s g.birch f       f.birch  f       f.oak   p",
+    "_ w h s g.birch g       f.birch  f       g.birch p        f.oak    f",
+    "_ w h s g       g       g        g       p       f        f.stones f",
+    "_ w h s g.tree  g.birch g        p       p.birch f        g.tree   f.oak    f.oak",
+    "w h s h g       g       p.sylvie p.house p.birch g        f        f        f.oak",
+    "w h h h s       g.birch g        p       p       g.*      g        f        f     f",
+    "w h h h p.>     g       p        g       g.fire  g.*      g.tree   f        f.oak f.stones",
+    "w h s s s       _       _        g       g.birch g.stones g.tree   f.stones f     f",
+    "w h s _ _       _       _        f       g       f.oak    f        f.oak    f.oak",
+    "_ w s _ _       _       _        _       f       f.oak"
+  ],
+  "pad": 0
 }

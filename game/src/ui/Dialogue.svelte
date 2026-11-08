@@ -2,7 +2,7 @@
   // Story mode: a story beat waiting in G.s.beats takes the screen. The HUD hides, black bars close in at the top
   // and bottom, and the lines play in a box with the speaker's portrait. Click, Space or Enter goes on. Steps can
   // ask for your name (the name list) or a choice; a choice's effects apply when you pick it, the beat's own
-  // effects when it ends (engine/story.ts › finishBeat). Image-driven scenes come later.
+  // effects when it ends (engine/story.ts › finishBeat). A picture step fills the screen behind the box.
   import { fly, fade } from 'svelte/transition';
   import { G, act } from '../lib/game.svelte';
   import { asset, content } from '../content';
@@ -20,15 +20,28 @@
     }
   });
   const step = $derived(beat?.lines[i]);
+  /** The picture behind this step: the last image step at or before it (null clears it). */
+  const image = $derived.by(() => {
+    if (!beat) return null;
+    for (let k = i; k >= 0; k--) {
+      const l = beat.lines[k];
+      if (typeof l === 'object' && 'image' in l) return l.image;
+    }
+    return null;
+  });
+  const isPicture = (l: unknown): l is { image: string | null; text?: string } => typeof l === 'object' && l !== null && 'image' in l;
+  /** Steps you click through: lines and pictures (not the name list or a choice). */
+  const clickable = $derived(typeof step === 'string' || isPicture(step));
   const NAMES = content.player.names ?? [PLAYER.name];
   const myName = $derived(G.s.name || NAMES[0]);
 
   /** "sylvie: text" → Sylvie speaks; "you: text" → you; anything else is narration. */
   const line = $derived.by(() => {
-    if (typeof step !== 'string') return null;
-    const m = step.match(/^([a-z][a-z0-9-]*): (.*)$/s);
+    const raw = isPicture(step) ? step.text : step; // a picture's caption can be spoken too ("sylvie: …")
+    if (typeof raw !== 'string') return null;
+    const m = raw.match(/^([a-z][a-z0-9-]*): (.*)$/s);
     const who = m && (m[1] === 'you' || content.npcs[m[1]]) ? m[1] : null;
-    const text = (who ? m![2] : step).replaceAll('{name}', myName);
+    const text = (who ? m![2] : raw).replaceAll('{name}', myName);
     if (who === 'you') return { name: myName, portrait: content.player.portrait, text, you: true };
     if (who) return { name: content.npcs[who].name, portrait: content.npcs[who].portrait, text, you: false };
     return { name: '', portrait: undefined, text, you: false };
@@ -53,7 +66,7 @@
     next();
   }
   function onkeydown(e: KeyboardEvent) {
-    if (!beat || typeof step !== 'string') return;
+    if (!beat || !clickable) return;
     if (e.key === ' ' || e.key === 'Enter') {
       e.preventDefault();
       next();
@@ -65,11 +78,19 @@
 
 {#if beat && step !== undefined}
   <div class="story" transition:fade={{ duration: 200 }}>
+    {#if image !== null}
+      <div class="scene" transition:fade={{ duration: 500 }}>
+        {#key image}
+          <img src={asset(image)} alt="" transition:fade={{ duration: 700 }} onerror={(e) => ((e.currentTarget as HTMLImageElement).style.visibility = 'hidden')} />
+        {/key}
+      </div>
+    {/if}
     <div class="bar top" transition:fly={{ y: -80, duration: 280 }}></div>
     <div class="bar bottom" transition:fly={{ y: 80, duration: 280 }}></div>
 
-    <button class="catch" onclick={() => typeof step === 'string' && next()} aria-label="Go on" tabindex="-1"></button>
+    <button class="catch" onclick={() => clickable && next()} aria-label="Go on" tabindex="-1"></button>
 
+    {#if !isPicture(step) || line}
     <div class="box px bevel t-panel" class:narration={line && !line.name} class:you={line?.you}>
       {#if line?.portrait}
         <div class="face"><img src={asset(line.portrait)} alt="" /></div>
@@ -96,6 +117,7 @@
         {/if}
       </div>
     </div>
+    {/if}
   </div>
 {/if}
 
@@ -104,6 +126,30 @@
     position: absolute;
     inset: 0;
     z-index: 30;
+  }
+  /* a picture step: fills the screen behind the box, drifting slowly closer. Until its file exists, the
+     dark ground shows instead */
+  .scene {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    background: radial-gradient(ellipse at 50% 40%, #1d2a3a, #07090d 75%);
+  }
+  .scene img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    animation: drift 14s ease-out both;
+  }
+  @keyframes drift {
+    from {
+      scale: 1;
+    }
+    to {
+      scale: 1.08;
+    }
   }
   .catch {
     position: absolute;
@@ -139,9 +185,10 @@
     gap: 18px;
     padding: 16px 20px 18px;
   }
+  /* the .px surface paints from --face/--fg, so narration sets those (a plain background never showed) */
   .box.narration {
-    background: color-mix(in srgb, #0b0907 82%, transparent);
-    color: #f1e6cf;
+    --face: color-mix(in srgb, #0b0907 86%, transparent);
+    --fg: #f1e6cf;
   }
   .face {
     flex: none;

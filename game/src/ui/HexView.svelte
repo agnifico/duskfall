@@ -2,7 +2,8 @@
   // One point: hex ground drawn in code; painted objects and character figures on top, sorted back to front
   // so a figure can pass behind a tree. The player's figure walks the route hex by hex, alternating its two
   // frames and facing the way it moves; people turn to face the player.
-  // Hovering a hex shows a chip over it: what's there and what walking there costs.
+  // Hovering a hex marks it as where you'd walk (walking is free, so no route or cost is drawn), with a chip naming
+  // what's there. An enemy's chip sits below it, clear of the damage numbers floating up.
   // Enemies stand on the field too (engine/combat.ts): a territorial one's notice range is tinted red, and what
   // each enemy will do next is shown one tick ahead (an arrow for a move, red hexes for an attack). Walking goes
   // one hex per step, each a tick; clicking an enemy next to you attacks it.
@@ -10,14 +11,15 @@
   import { untrack } from 'svelte';
   import { Tween } from 'svelte/motion';
   import { cubicOut } from 'svelte/easing';
-  import { DEV, G, act, short } from '../lib/game.svelte';
+  import { DEV, G, act } from '../lib/game.svelte';
   import { ED, PLAYER, beginStroke, endStroke, isFigure, paint, pickFrom, tunePropSet, tuneSelect, tuneSprite, tuneSpriteSet } from '../lib/editor.svelte';
   import { PLAYER_SHADOW, SHADOW, shadowOf, type Shadow } from './shadow';
   import { UI } from '../lib/ui.svelte';
-  import { fireAim, stopWalk, walk as walkRoute } from './commands';
+  import { attackFoe, fireAim, stopWalk, walk as walkRoute } from './commands';
   import { asset, content, sprites, type Sprite } from '../content';
   import * as E from '../engine/actions';
   import { grid, route } from '../engine/hex';
+  import { peopleOn } from '../engine/story';
   import * as K from '../engine/combat';
   import type { Cell, Figure, Foe, Fx, Prop } from '../engine/types';
   import Backdrop from './Backdrop.svelte';
@@ -28,7 +30,7 @@
 
   let { pointId }: { pointId: string } = $props();
 
-  const FIGURE_H = 1.25; // a figure's height, in hex widths, unless its content says otherwise
+  const FIGURE_H = 1.0; // a figure's height, in hex widths, unless its content says otherwise (1.25 hid the hexes behind)
   const STEP_MS = 170; // time to walk from one hex to the next
   const DASH_MS = 110; // a dash: one quick jump from where you were to where you land
   const SIDESTEP = 0.26; // standing on a hex with something on it, the player stands this far to its left (hex widths)
@@ -96,23 +98,91 @@
   });
 
   // ---------- zoom: the wheel (or a pinch) zooms in, toward the pointer ----------
-  const zoomMax = $derived(ED.on ? 4 : 1.6); // the map editor zooms further
+  // A point opens fully zoomed in on you. A story beat allows one step closer and frames you above the
+  // dialogue box; when it ends the view eases back out to the play zoom.
+  // the closest you can zoom: about 8 hexes across on any map (bigger maps zoom further), never under 2×;
+  // a story beat goes 40% closer still
+  const PLAY_ZOOM = $derived(Math.min(4, Math.max(2, base.w / (HEXW * 8))));
+  const STORY_ZOOM = $derived(Math.min(5, PLAY_ZOOM * 1.4));
+  const STORY_AT = 0.4; // in a story beat you sit this far down the view (0.5: the middle), clear of the box
+  const story = $derived(G.s.beats.length > 0);
+  const zoomMax = $derived(ED.on ? 4 : story ? STORY_ZOOM : PLAY_ZOOM); // the map editor zooms further
   let zoom = $state(1);
+  let gliding = false;
+  let glideRaf = 0;
   $effect(() => {
-    if (zoom > zoomMax) zoom = zoomMax;
+    if (!gliding && zoom > zoomMax) zoom = zoomMax;
   });
   let focus = $state<[number, number]>([0, 0]); // the view's middle, from the field's middle
   let svgEl = $state<SVGSVGElement>();
-  $effect(() => {
-    void pointId;
-    zoom = 1;
-    focus = [0, 0];
-  });
   /** Keep the zoomed view inside the whole field. */
   const clampFocus = ([fx, fy]: [number, number], z: number): [number, number] => {
     const mx = (base.w - base.w / z) / 2, my = (base.h - base.h / z) / 2;
     return [Math.max(-mx, Math.min(mx, fx)), Math.max(-my, Math.min(my, fy))];
   };
+  /** The focus that puts a hex `at` of the way down the view at zoom z. */
+  function focusOn(key: string | null, z: number, at = 0.5): [number, number] {
+    const hx = key ? L.hexes.get(key) : undefined;
+    if (!hx) return [0, 0];
+    return clampFocus([hx.cx - base.cx, hx.cy - base.cy + (0.5 - at) * (base.h / z)], z);
+  }
+  function stopGlide() {
+    cancelAnimationFrame(glideRaf);
+    gliding = false;
+  }
+  /** Ease the view to a zoom and focus. */
+  function glide(z2: number, f2: [number, number], ms = 650) {
+    stopGlide();
+    const z1 = zoom, f1 = clampFocus(focus, zoom), t0 = performance.now();
+    gliding = true;
+    const frame = (now: number) => {
+      const t = Math.min(1, (now - t0) / ms), e = cubicOut(t);
+      zoom = z1 + (z2 - z1) * e;
+      focus = [f1[0] + (f2[0] - f1[0]) * e, f1[1] + (f2[1] - f1[1]) * e];
+      if (t < 1) glideRaf = requestAnimationFrame(frame);
+      else gliding = false;
+    };
+    glideRaf = requestAnimationFrame(frame);
+  }
+  // a new point: fully zoomed in, on you
+  $effect(() => {
+    void pointId;
+    untrack(() => {
+      stopGlide();
+      zoom = ED.on ? 1 : zoomMax;
+      focus = ED.on ? [0, 0] : focusOn(G.s.pos, zoom, story ? STORY_AT : 0.5);
+    });
+  });
+  // a story beat starts or ends
+  $effect(() => {
+    const on = story;
+    untrack(() => {
+      if (ED.on) return;
+      if (on) glide(STORY_ZOOM, focusOn(G.s.pos, STORY_ZOOM, STORY_AT));
+      else if (zoom > PLAY_ZOOM) glide(PLAY_ZOOM, focusOn(G.s.pos, PLAY_ZOOM));
+    });
+  });
+  $effect(() => () => cancelAnimationFrame(glideRaf));
+  // follow you: when you walk near the edge of the view, it slides to keep you in its middle 60%
+  const FOLLOW = 0.3;
+  $effect(() => {
+    const p = player;
+    if (!p || ED.on) return;
+    const [px, py] = [p.x, p.y];
+    untrack(() => {
+      if (gliding || drag?.kind === 'pan') return;
+      const [fx, fy] = clampFocus(focus, zoom);
+      const w = base.w / zoom, h = base.h / zoom;
+      const dx = px - (base.cx + fx), dy = py - (base.cy + fy);
+      const sx = Math.abs(dx) > FOLLOW * w ? dx - Math.sign(dx) * FOLLOW * w : 0;
+      const sy = Math.abs(dy) > FOLLOW * h ? dy - Math.sign(dy) * FOLLOW * h : 0;
+      if (!sx && !sy) return;
+      const to = clampFocus([fx + sx, fy + sy], zoom);
+      // a long way off (you panned away, then walked): ease back; otherwise keep pace with the walk
+      if (Math.hypot(sx / w, sy / h) > 0.15) glide(zoom, to, 450);
+      else focus = to;
+    });
+  });
   const view = $derived.by(() => {
     const [fx, fy] = clampFocus(focus, zoom);
     const w = base.w / zoom, h = base.h / zoom;
@@ -123,6 +193,7 @@
     if (!el) return;
     const onwheel = (ev: WheelEvent) => {
       ev.preventDefault();
+      stopGlide();
       const z2 = Math.max(1, Math.min(zoomMax, zoom * Math.exp(-ev.deltaY * (ev.ctrlKey ? 0.01 : 0.002))));
       if (z2 === zoom) return;
       const m = el.getScreenCTM();
@@ -171,8 +242,9 @@
     return new Set(E.skillHexes(G.s, content, id, hover ?? undefined).map((x) => x.key));
   });
   const fighting = $derived(K.inFight(G.s));
-  const onPath = $derived(new Set(plan?.path.map((p) => p.key) ?? []));
-  const risky = $derived(!!plan?.path.some((p) => danger.has(p.key)));
+  // the 15-minute cycle: changes 4 times an hour, so reading it (not the clock) keeps the field from redrawing each second
+  const cycle = $derived(K.cycleOf(G.now));
+  const onPath = new Set<string>(); // the route isn't drawn: just where you'd end up
 
   const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
@@ -203,19 +275,19 @@
     }
     if (!E.isSeen(G.s, content, pointId, x)) return { hx, text: '?', bad: false };
     if (hoverFoe) {
-      const st = K.foeStats(content, hoverFoe.kind);
-      const name = cap(content.props[hoverFoe.kind]?.name ?? hoverFoe.kind);
+      const st = K.statsOf(content, hoverFoe);
+      const lv = hoverFoe.level ?? content.props[hoverFoe.kind]?.foe?.level;
+      const name = cap(content.props[hoverFoe.kind]?.name ?? hoverFoe.kind) + (lv ? ` · Lv ${lv}` : '');
       if (E.canHit(G.s, content, hoverFoe.id)) {
         const me = K.playerStats(G.s, content);
         const hit = Math.round((1 - K.dodgeChance(me, st)) * 100);
-        return { hx, text: `Attack · ${K.fmt(K.baseDamage(me.patk, st.pdef))} dmg · ${hit}%`, bad: false };
+        return { hx, text: `Attack · ${K.fmt(K.baseDamage(me.patk, st.pdef))} dmg · ${hit}%`, bad: false, below: true };
       }
-      return { hx, text: `${name} · ${Math.ceil(hoverFoe.hp)}/${st.hp}${plan ? ` · ${plan.cost}⚡` : ''}`, bad: !!plan && short(plan.cost) };
+      return { hx, text: `${name} · ${Math.ceil(hoverFoe.hp)}/${st.hp}`, bad: false, below: true };
     }
     const pr = E.visibleProp(G.s, content, x);
-    const name = pr ? `${cap(pr.name)} · ` : '';
-    if (!plan) return { hx, text: `${name}✕`, bad: true };
-    return { hx, text: `${risky ? '! ' : ''}${name}${plan.cost}⚡`, bad: short(plan.cost) || risky };
+    if (!plan) return { hx, text: pr ? `${cap(pr.name)} · ✕` : '✕', bad: true };
+    return pr ? { hx, text: cap(pr.name), bad: false } : null;
   });
 
   const colourOf = (key: string) => {
@@ -348,6 +420,14 @@
       const hx = L.hexes.get(f.pos);
       if (hx) out.push({ kind: 'foe', key: `@foe:${f.id}`, y: hx.cy, hx, foe: f });
     }
+    // people the story stands here (Sylvie on the beach): drawn like a person on that hex
+    if (!ED.on)
+      for (const [key, npc] of peopleOn(G.s, content, pointId)) {
+        const hx = L.hexes.get(key);
+        const cell = g.byKey.get(key);
+        const pr = Object.values(content.props).find((p) => p.npc === npc);
+        if (hx && cell && pr) out.push({ kind: 'prop', key: `@npc:${npc}`, y: hx.cy, hx, cell, pr });
+      }
     if (player) out.push({ kind: 'player', key: '@player', y: player.y + 0.5 });
     return out.sort((a, b) => a.y - b.y);
   });
@@ -370,7 +450,7 @@
    *  A node used up today shows its spent sprite (stump, rubble) if it has one, otherwise it fades. */
   function place(pr: Prop, key: string, cx: number, cy: number, spent = false): Placed | null {
     void ED.v; // the map editor's tuning
-    const used = spent || (pr.type === 'node' && !!G.s.depleted[key]);
+    const used = spent || (pr.type === 'node' && E.isDepletedIn(G.s, key, cycle));
     const id = used && pr.spent ? pr.spent : pr.sprite;
     const sp = id ? sprites[id] : undefined;
     if (!sp) return null;
@@ -417,10 +497,9 @@
     if (UI.aim) return fireAim(key);
     stopWalk();
     const f = K.foeAt(G.s, key);
-    if (f && E.canHit(G.s, content, f.id)) return act((s) => E.attack(s, content, f.id));
+    if (f) return attackFoe(f.id, key); // in reach: attack; else walk until it is, then attack
     const p = E.planRoute(G.s, content, key);
     if (!p || !p.path.length) return;
-    if (short(p.cost)) return act((s) => E.say(s, `Not enough energy: that walk needs ${p.cost}⚡ and you have ${s.energy}.`));
     walkRoute(p.path.map((x) => x.key));
   }
 
@@ -467,12 +546,15 @@
   });
 
   function onpointerdown(ev: PointerEvent) {
-    if (!ED.on) return;
-    if (ev.button === 1 || ev.button === 2 || (ev.button === 0 && space)) {
-      ev.preventDefault();
+    const panButton = ev.button === 1 || ev.button === 2 || (ev.button === 0 && space);
+    // playing: drag off the field (or with the right or middle button) to pan; clicks on hexes stay clicks
+    if (panButton || (!ED.on && ev.button === 0 && !keyAt(ev))) {
+      if (panButton) ev.preventDefault();
+      stopGlide();
       drag = { kind: 'pan', x: ev.clientX, y: ev.clientY, focus: clampFocus(focus, zoom) };
       return;
     }
+    if (!ED.on) return;
     if (ev.button !== 0 || ED.preview) return;
     const part = (ev.target as Element).closest('[data-tune]')?.getAttribute('data-tune');
     const p = svgPoint(ev);
@@ -581,6 +663,15 @@
     }),
   );
 
+  /** An arrow in flight, from the shooter's hex to the target's, at chest height. */
+  const shots = $derived(
+    shown.flatMap((f) => {
+      const a = (f.kind === 'shot' || f.kind === 'bolt') && f.from ? L.hexes.get(f.from) : undefined;
+      const b = L.hexes.get(f.key);
+      return a && b ? [{ ...f, x1: a.cx, y1: a.cy - 34, x2: b.cx, y2: b.cy - 26 }] : [];
+    }),
+  );
+
   const flashes = $derived(shown.flatMap((f) => (f.kind === 'flash' && L.hexes.get(f.key) ? [{ ...f, hx: L.hexes.get(f.key)! }] : [])));
 
   /** Attackers lunge a third of the way towards what they hit, by the cell they stand on. */
@@ -602,7 +693,7 @@
 <div class="wrap">
   <Backdrop kind={backdrop} />
   <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-  <svg bind:this={svgEl} viewBox={view} class:aiming={!!UI.aim} class:editing={ED.on} class:panning={space || drag?.kind === 'pan'} {onclick} {onpointerdown} {onpointermove} onpointerleave={() => (hover = null)} oncontextmenu={(e) => ED.on && e.preventDefault()}>
+  <svg bind:this={svgEl} viewBox={view} class:aiming={!!UI.aim} class:editing={ED.on} class:panning={space || drag?.kind === 'pan'} class:dragging={drag?.kind === 'pan'} {onclick} {onpointerdown} {onpointermove} onpointerleave={() => (hover = null)} oncontextmenu={(e) => e.preventDefault()}>
     <defs>
       <clipPath id="avatar"><circle r="18" /></clipPath>
       <filter id="soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.5" /></filter>
@@ -697,7 +788,7 @@
       {:else if d.kind === 'foe'}
         {@const f = d.foe}
         {@const pr = content.props[f.kind]}
-        {@const st = K.foeStats(content, f.kind)}
+        {@const st = K.statsOf(content, f)}
         <!-- placed like a prop, around (0, 0): the group moves from hex to hex -->
         {@const p = pr ? place(pr, '', 0, 0) : null}
         {@const gy = groundY(0)}
@@ -738,11 +829,11 @@
             {@const f = placeFigure(npc.figure, false, hx.cx, hx.cy)}
             {#if f}
               <ellipse cx={f.shadow.cx} cy={f.shadow.cy} rx={f.shadow.rx} ry={f.shadow.ry} fill="#000" opacity={f.shadow.o} filter="url(#soft)" />
-              <g transform={mirror(!!player && player.x < hx.cx - 1, f.gx)}>
+              <g class="fig" transform={mirror(!!player && player.x < hx.cx - 1, f.gx)}>
                 <image href={asset(f.sprite.file)} x={f.x} y={f.y} width={f.w} height={f.h} />
               </g>
             {:else}
-              <g transform="translate({hx.cx},{hx.cy - 18})">
+              <g class="fig" transform="translate({hx.cx},{hx.cy - 18})">
                 <ellipse cy="20" rx="14" ry="5" fill="#000" opacity="0.3" filter="url(#soft)" />
                 <image href={asset(npc.portrait)} x="-18" y="-18" width="36" height="36" clip-path="url(#avatar)" />
                 <circle r="18" fill="none" stroke="#fff" stroke-width="2.5" />
@@ -759,7 +850,7 @@
               <text x={hx.cx} y={hx.cy - 8} class="emoji">{pr.icon}</text>
             {/if}
           {/if}
-          {#if pr.type === 'node' && (pr.tier ?? 1) > 1 && !G.s.depleted[cell.key]}
+          {#if pr.type === 'node' && (pr.tier ?? 1) > 1 && !E.isDepletedIn(G.s, cell.key, cycle)}
             <rect x={hx.cx + 11} y={hx.cy + 1} width="15" height="15" fill={pr.tier === 2 ? '#3d8bff' : '#e0a83e'} stroke="#0a1210" stroke-width="2" />
             <text x={hx.cx + 18.5} y={hx.cy + 9} class="tier">{pr.tier}</text>
           {/if}
@@ -803,6 +894,14 @@
       </g>
     {/if}
 
+    {#each shots as f (f.id)}
+      {#if f.kind === 'bolt'}
+        <circle class="bolt" r="7" style="--x1:{f.x1}px;--y1:{f.y1}px;--x2:{f.x2}px;--y2:{f.y2}px;animation-delay:{f.delay}ms" />
+      {:else}
+        <line class="shot" x1={f.x1} y1={f.y1} x2={f.x2} y2={f.y2} pathLength="100" style:animation-delay="{f.delay}ms" />
+      {/if}
+    {/each}
+
     {#each slashes as f (f.id)}
       <g transform="translate({f.x},{f.y}) rotate({f.deg})">
         <path class="slash" d="M -6 -26 Q 24 0 -6 26" style:animation-delay="{f.delay}ms" />
@@ -815,7 +914,7 @@
 
     {#if chip}
       {@const w = chip.text.length * 9 + 22}
-      <g class="chip" transform="translate({chip.hx.cx},{chip.hx.cy - 40})">
+      <g class="chip" transform="translate({chip.hx.cx},{chip.hx.cy + ('below' in chip && chip.below ? 34 : -40)})">
         <rect class="chip-bg" x={-w / 2} y="-12" width={w} height="22" stroke-width="2" />
         <rect class="chip-hi" x={-w / 2 + 2} y="-10" width={w - 4} height="2" />
         <text y="0" class:bad={chip.bad}>{chip.text}</text>
@@ -851,6 +950,10 @@
   }
   .cell.pad {
     cursor: default;
+  }
+  /* people don't catch clicks: the hexes behind them stay clickable (their own hex still is) */
+  .fig {
+    pointer-events: none;
   }
   .me {
     pointer-events: none;
@@ -983,9 +1086,18 @@
     pointer-events: none;
     opacity: 0.6;
   }
+  /* playing, the ground around the field pans: an open hand says so */
+  svg:not(.editing),
+  svg:not(.editing) .cell.pad {
+    cursor: grab;
+  }
   svg.panning,
   svg.panning * {
     cursor: grab !important;
+  }
+  svg.dragging,
+  svg.dragging * {
+    cursor: grabbing !important;
   }
   .edit-hex.stage {
     stroke: #ffd65c;
@@ -1105,6 +1217,49 @@
     }
     100% {
       stroke-dashoffset: 0;
+      opacity: 0;
+    }
+  }
+  .shot {
+    stroke: #fff6dc;
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-dasharray: 16 200;
+    stroke-dashoffset: 16;
+    filter: drop-shadow(0 0 3px #ffe7a8);
+    animation: shot 0.22s linear both;
+  }
+  /* a spell: a glowing orb that flies and bursts, not a streak */
+  .bolt {
+    fill: #e9d4ff;
+    filter: drop-shadow(0 0 4px #b77bff) drop-shadow(0 0 8px #8a4dff);
+    animation: bolt 0.3s ease-in both;
+  }
+  @keyframes bolt {
+    0% {
+      transform: translate(var(--x1), var(--y1)) scale(0.6);
+      opacity: 1;
+    }
+    80% {
+      transform: translate(var(--x2), var(--y2)) scale(1);
+      opacity: 1;
+    }
+    100% {
+      transform: translate(var(--x2), var(--y2)) scale(2.2);
+      opacity: 0;
+    }
+  }
+  @keyframes shot {
+    0% {
+      stroke-dashoffset: 16;
+      opacity: 1;
+    }
+    90% {
+      stroke-dashoffset: -84;
+      opacity: 1;
+    }
+    100% {
+      stroke-dashoffset: -84;
       opacity: 0;
     }
   }

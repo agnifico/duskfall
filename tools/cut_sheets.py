@@ -57,6 +57,8 @@ GEAR = [f'{row}_{piece}' for row, extra in [('traveller', 'cloak'), ('padded', '
                                             ('silversteel', 'chainskirt')] for piece in ARMOUR + [extra]]
 ELEM1 = [f'{row}_{piece}' for row in ['fire', 'water', 'wind', 'earth'] for piece in ARMOUR + ['bow']]
 ELEM2 = [f'{row}_{piece}' for row in ['fire', 'water', 'air', 'earth'] for piece in ARMOUR + ['bow']]
+ITEMS2 = ['crab-shell', 'boar-hide', 'sea-glass', 'toxolotl-frill', 'bear-pelt', 'prowler-fang', 'dragon-scale', 'coin',
+          'seed-bread', 'mint-tea', 'smoked-claw', 'honey-cake', 'minor-health-potion', 'health-potion', 'spirit-tonic', 'energy-draught']
 TIERS = ['traveller', 'iron', 'silversteel', 'adamantine']
 WEAPONS = [f'{t}_{w}' for t in TIERS for w in ['sword', 'dagger', 'mace', 'axe', 'spear', 'staff']]
 OFFHAND = [f'{t}_{w}' for t in TIERS for w in ['bow', 'shield', 'quiver']]
@@ -71,6 +73,7 @@ SHEETS = [
     ('gemini_indo', 'sheets/props/Gemini_Generated_Image_fiealrfiealrfiea.png', 4, 2, INDO),
     ('grok_indo', 'sheets/props/pHpuW.jpg', 4, 2, INDO),
     ('grok_items', 'sheets/items/Tx2vt.jpg', 4, 4, ITEMS),
+    ('items2', 'sheets/items/items_2.png', 4, 4, ITEMS2),  # Gemini, hot pink ground, 2026-11-08
     ('grok_nodes', 'sheets/props/mlKS4.jpg', 4, 4, NODES),
     ('grok_wreck', 'sheets/props/kpSkq.jpg', 4, 4, WRECK),
     ('icons', 'sheets/icons/icons_grok_1.jpg', 6, 4, ICONS1),
@@ -103,6 +106,10 @@ SINGLES = [
                               'forest_prowler', 'mountain_basilisk', 'punching_tortoise', 'solis_sentinel', 'toxolotl',
                               'vanguard_siren', 'white_wyvern', 'wilhemina']),
 ]
+# Single images on flat magenta (Gemini's enemies): keyed like the gear sheets, then trimmed and measured.
+KEYED_SINGLES = [
+    ('gemini_foes', 'enemies/gemini', ['crab', 'boar', 'crab2', 'boar2']),  # crab2, boar2: evolved forms, for later
+]
 MAX_SIDE = 384
 DESPILL = {'grok_chars'}  # sheets with no magenta in them: remove any magenta cast entirely
 OVERFLOW = {'grok_chars': 0.15, 'gear': 0.2, 'elem1': 0.2, 'elem2': 0.2, 'relics': 0.2, 'weapons': 0.2}  # sheets whose objects spill past their cells: cut from a window this much larger
@@ -116,7 +123,7 @@ WATERMARK = set()  # sets whose sheet has Grok's mark in the bottom-right corner
 HIDE = {('gear', 'silversteel_chainskirt'): [(1566, 1696, 2335, 2526), (1612, 1696, 2290, 2335)]}  # Gemini + Grok marks
 # magenta sheets: pairs stay together; watermarks and stray flecks fall under min_part
 GEAR_CUT = dict(cards=False, reach=0.15, min_part=0.25, key=True)
-CUT = {'gear': GEAR_CUT, 'elem1': GEAR_CUT, 'elem2': GEAR_CUT, 'relics': GEAR_CUT, 'weapons': GEAR_CUT, 'icons': dict(cards=False, gap_tol=16, speck_tol=18), 'skills': dict(cards=False, gap_tol=0, speck_tol=0)}
+CUT = {'items2': GEAR_CUT, 'gear': GEAR_CUT, 'elem1': GEAR_CUT, 'elem2': GEAR_CUT, 'relics': GEAR_CUT, 'weapons': GEAR_CUT, 'icons': dict(cards=False, gap_tol=16, speck_tol=18), 'skills': dict(cards=False, gap_tol=0, speck_tol=0)}
 
 
 def flood_remove(img, allowed, seeds, colour, tol):
@@ -347,9 +354,20 @@ def cut_singles(manifest):
             im.save(os.path.join(PUBLIC, rel))
             manifest[f'{name}/{obj_name}'] = {'file': rel, 'w': im.width, 'h': im.height, 'bx': round(bx, 3), 'by': round(by, 3), 'fx': round(fx, 3)}
         print(f'  {name}: {len(names)} single images')
+    for name, folder, names in KEYED_SINGLES:
+        os.makedirs(os.path.join(PUBLIC, 'sprites', name), exist_ok=True)
+        for obj_name in names:
+            arr = np.asarray(Image.open(os.path.join(EXTRAS, folder, obj_name + '.png')).convert('RGB'), np.float32)
+            rgba = cut_cell(arr, **GEAR_CUT)
+            im = shrink(Image.fromarray(rgba))
+            bx, by, fx = base_point(np.asarray(im)[..., 3])
+            rel = f'sprites/{name}/{obj_name}.png'
+            im.save(os.path.join(PUBLIC, rel))
+            manifest[f'{name}/{obj_name}'] = {'file': rel, 'w': im.width, 'h': im.height, 'bx': round(bx, 3), 'by': round(by, 3), 'fx': round(fx, 3)}
+        print(f'  {name}: {len(names)} keyed single images')
 
 
-ICON_SETS = ['gear', 'weapons', 'relics', 'elem1', 'elem2', 'grok_items']
+ICON_SETS = ['gear', 'weapons', 'relics', 'elem1', 'elem2', 'grok_items', 'items2']
 ICON_SIDE = 128  # shown at 40-64 px, so this covers 2x screens
 
 

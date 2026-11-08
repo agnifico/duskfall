@@ -68,9 +68,14 @@
       {/if}
       {#if detail.use}
         {@const why = E.cantUse(G.s, content, picked)}
+        {@const onBar = G.s.hotbar?.includes(`item:${picked}`)}
+        {@const barFull = !onBar && !(G.s.hotbar ?? []).includes(null)}
         {#each useLines(detail.use) as l, i (i)}<div class="body" class:hint={i === useLines(detail.use).length - 1}>{l}</div>{/each}
         <button class="px btn bevel t-accent wear" disabled={!!why} title={why ?? useVerb(detail.use)} onclick={() => picked && act((s) => E.useItem(s, content, picked!, Date.now()))}>
           <span class="lbl m">{why ?? useVerb(detail.use)}</span>
+        </button>
+        <button class="px btn bevel t-inset wear" disabled={onBar || barFull} title="Put it in the first empty quick slot (keys 1–6). Right-click a slot to change it." onclick={() => picked && act((s) => E.setHotbar(s, `item:${picked}`))}>
+          <span class="lbl m">{onBar ? 'On your hotbar' : barFull ? 'Hotbar full' : 'To hotbar'}</span>
         </button>
       {/if}
       {#if detail.text}<p class="body">{detail.text}</p>{/if}

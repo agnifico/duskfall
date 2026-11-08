@@ -1,0 +1,680 @@
+{
+ "sylvie": [
+  {
+   "id": "sylvie.crabs",
+   "title": "Crab Patrol",
+   "ask": "The crab runts are back on the beach, nipping at anything that moves. Thin them out? Four should do.",
+   "thanks": "That's the beach quiet for a day or two.",
+   "kill": {
+    "kind": [
+     "crab",
+     "riled-crab"
+    ],
+    "n": 4,
+    "at": [
+     "arrival-beach"
+    ]
+   },
+   "reward": [
+    {
+     "xp": 50
+    },
+    {
+     "give": "coin",
+     "n": 10
+    }
+   ],
+   "opens": {
+    "quest": "thinning-the-wilds",
+    "state": "done"
+   }
+  },
+  {
+   "id": "sylvie.boars",
+   "title": "Tusks in the Woodpile",
+   "ask": "Two grunt runts have been rooting through my woodpile again. Chase them off. Properly.",
+   "thanks": "Good. Let them grumble somewhere else.",
+   "kill": {
+    "kind": "boar",
+    "n": 2
+   },
+   "reward": [
+    {
+     "xp": 60
+    },
+    {
+     "give": "coin",
+     "n": 12
+    },
+    {
+     "give": "seed-bread",
+     "n": 1
+    }
+   ],
+   "opens": {
+    "quest": "thinning-the-wilds",
+    "state": "done"
+   }
+  },
+  {
+   "id": "sylvie.wood",
+   "title": "Kindling",
+   "ask": "Fifteen wood, if you're passing a tree. The stove eats it faster than I can split it.",
+   "thanks": "Bless you. Here, for your trouble.",
+   "bring": {
+    "item": "wood",
+    "n": 15
+   },
+   "reward": [
+    {
+     "xp": 40
+    },
+    {
+     "give": "coin",
+     "n": 8
+    },
+    {
+     "give": "acorns",
+     "n": 2
+    }
+   ],
+   "opens": {
+    "quest": "thinning-the-wilds",
+    "state": "done"
+   }
+  },
+  {
+   "id": "sylvie.stone",
+   "title": "Stone for the Wall",
+   "ask": "The garden wall's coming down a stone at a time. Twelve stones would patch it.",
+   "thanks": "That'll hold. For now.",
+   "bring": {
+    "item": "stone",
+    "n": 12
+   },
+   "reward": [
+    {
+     "xp": 40
+    },
+    {
+     "give": "coin",
+     "n": 8
+    },
+    {
+     "give": "seed-bread",
+     "n": 1
+    }
+   ],
+   "opens": {
+    "quest": "thinning-the-wilds",
+    "state": "done"
+   }
+  },
+  {
+   "id": "sylvie.berries",
+   "title": "Jam Season",
+   "ask": "Ten handfuls of berries and I'll make jam. You'll get some. Probably.",
+   "thanks": "You'll get some. I promise.",
+   "bring": {
+    "item": "berries",
+    "n": 10
+   },
+   "reward": [
+    {
+     "xp": 40
+    },
+    {
+     "give": "coin",
+     "n": 8
+    },
+    {
+     "give": "honey-cake",
+     "n": 1
+    }
+   ],
+   "opens": {
+    "quest": "thinning-the-wilds",
+    "state": "done"
+   }
+  },
+  {
+   "id": "sylvie.mushrooms",
+   "title": "Something for Supper",
+   "ask": "Eight brown mushrooms. The plain ones. Not the red ones, whatever they tell you.",
+   "thanks": "Supper's sorted. Take this, just in case.",
+   "bring": {
+    "item": "brown-mushroom",
+    "n": 8
+   },
+   "reward": [
+    {
+     "xp": 40
+    },
+    {
+     "give": "coin",
+     "n": 8
+    },
+    {
+     "give": "minor-health-potion",
+     "n": 1
+    }
+   ],
+   "opens": {
+    "quest": "thinning-the-wilds",
+    "state": "done"
+   }
+  },
+  {
+   "id": "sylvie.prowlers",
+   "title": "Eyes in the Trees",
+   "ask": "Two prowlers have been watching my house from the plains' edge. I don't like being watched.",
+   "thanks": "Good. I can sleep with the shutters open again.",
+   "kill": {
+    "kind": "prowler",
+    "n": 2,
+    "at": [
+     "open-plains"
+    ]
+   },
+   "reward": [
+    {
+     "xp": 150
+    },
+    {
+     "give": "coin",
+     "n": 25
+    },
+    {
+     "give": "health-potion",
+     "n": 1
+    }
+   ],
+   "opens": {
+    "tag": "plains-open"
+   }
+  },
+  {
+   "id": "sylvie.shells",
+   "title": "Shells for the Roof",
+   "ask": "Ten shells. Crab or tortoise, I'm not fussy. They make better roof tiles than you'd think.",
+   "thanks": "That roof's going to outlast me.",
+   "bring": {
+    "item": "crab-shell",
+    "n": 10
+   },
+   "reward": [
+    {
+     "xp": 120
+    },
+    {
+     "give": "coin",
+     "n": 20
+    },
+    {
+     "give": "seed-bread",
+     "n": 2
+    }
+   ],
+   "opens": {
+    "tag": "plains-open"
+   }
+  }
+ ],
+ "heidi": [
+  {
+   "id": "heidi.bears",
+   "title": "Bears at the Berries",
+   "ask": "Two bears are guarding the berry patch like it's theirs. I can calm one. Not two. Would you?",
+   "thanks": "They'll sulk, but they'll live. Thank you.",
+   "kill": {
+    "kind": "bear",
+    "n": 2,
+    "at": [
+     "pine-grove"
+    ]
+   },
+   "reward": [
+    {
+     "xp": 110
+    },
+    {
+     "give": "coin",
+     "n": 20
+    },
+    {
+     "give": "minor-health-potion",
+     "n": 2
+    }
+   ],
+   "opens": {
+    "quest": "the-healer",
+    "state": "done"
+   }
+  },
+  {
+   "id": "heidi.patrol",
+   "title": "Grove Patrol",
+   "ask": "Something's got everything in the grove on edge. Walk it for me? Four of the angriest ones.",
+   "thanks": "Quieter already. I can hear the birds again.",
+   "kill": {
+    "kind": "*",
+    "n": 4,
+    "at": [
+     "pine-grove"
+    ]
+   },
+   "reward": [
+    {
+     "xp": 120
+    },
+    {
+     "give": "coin",
+     "n": 20
+    },
+    {
+     "give": "seed-bread",
+     "n": 2
+    }
+   ],
+   "opens": {
+    "quest": "the-healer",
+    "state": "done"
+   }
+  },
+  {
+   "id": "heidi.resin",
+   "title": "Pine Resin",
+   "ask": "Three lumps of pine resin. It seals a wound better than anything I can buy.",
+   "thanks": "Perfect. Still sticky.",
+   "bring": {
+    "item": "resin",
+    "n": 3
+   },
+   "reward": [
+    {
+     "xp": 80
+    },
+    {
+     "give": "coin",
+     "n": 15
+    },
+    {
+     "give": "minor-health-potion",
+     "n": 1
+    }
+   ],
+   "opens": {
+    "quest": "the-healer",
+    "state": "done"
+   }
+  },
+  {
+   "id": "heidi.herbs",
+   "title": "Herbs for the Remedy",
+   "ask": "Six bunches of wild herbs. They grow among the berry bushes, if you look.",
+   "thanks": "These are lovely. I'll make two batches.",
+   "bring": {
+    "item": "herbs",
+    "n": 6
+   },
+   "reward": [
+    {
+     "xp": 80
+    },
+    {
+     "give": "coin",
+     "n": 15
+    },
+    {
+     "give": "mint-tea",
+     "n": 2
+    }
+   ],
+   "opens": {
+    "quest": "the-healer",
+    "state": "done"
+   }
+  },
+  {
+   "id": "heidi.bark",
+   "title": "Bark for Bandages",
+   "ask": "Birch bark, three strips. Soft on the inside, and it keeps a dressing clean.",
+   "thanks": "Thank you. Someone will be glad of these.",
+   "bring": {
+    "item": "birch-bark",
+    "n": 3
+   },
+   "reward": [
+    {
+     "xp": 80
+    },
+    {
+     "give": "coin",
+     "n": 15
+    },
+    {
+     "give": "honey-cake",
+     "n": 1
+    }
+   ],
+   "opens": {
+    "quest": "the-healer",
+    "state": "done"
+   }
+  },
+  {
+   "id": "heidi.dragon",
+   "title": "Little Dragon, Big Temper",
+   "ask": "There's a dragonling on the rocks past the grove, and it's scorching anything that wanders close. Please be careful.",
+   "thanks": "You came back. Good. That's all I wanted.",
+   "kill": {
+    "kind": "dragonling",
+    "n": 1
+   },
+   "reward": [
+    {
+     "xp": 140
+    },
+    {
+     "give": "coin",
+     "n": 25
+    },
+    {
+     "give": "health-potion",
+     "n": 1
+    }
+   ],
+   "opens": {
+    "all": [
+     {
+      "quest": "the-healer",
+      "state": "done"
+     },
+     {
+      "level": 8
+     }
+    ]
+   }
+  }
+ ],
+ "marisol": [
+  {
+   "id": "marisol.meat",
+   "title": "Something for the Pot",
+   "ask": "Six crab meat. If the bay won't feed us, the crabs will.",
+   "thanks": "That's supper for three houses. Thank you.",
+   "bring": {
+    "item": "crab-meat",
+    "n": 6
+   },
+   "reward": [
+    {
+     "xp": 280
+    },
+    {
+     "give": "coin",
+     "n": 30
+    }
+   ],
+   "opens": {
+    "tag": "village-favours"
+   }
+  },
+  {
+   "id": "marisol.claws",
+   "title": "Off My Beach",
+   "ask": "Two crabscallions are sitting on my best mooring like they own it. Move them.",
+   "thanks": "Ha! Let them sulk in the deep.",
+   "kill": {
+    "kind": "crabscallion",
+    "n": 2,
+    "at": [
+     "the-drill"
+    ]
+   },
+   "reward": [
+    {
+     "xp": 320
+    },
+    {
+     "give": "coin",
+     "n": 35
+    },
+    {
+     "give": "grilled-crab",
+     "n": 2
+    }
+   ],
+   "opens": {
+    "tag": "village-favours"
+   }
+  },
+  {
+   "id": "marisol.glass",
+   "title": "Sea Glass",
+   "ask": "Three bits of sea glass. My daughter strings them. Don't tell her I asked.",
+   "thanks": "She'll think the sea brought them. Let her.",
+   "bring": {
+    "item": "sea-glass",
+    "n": 3
+   },
+   "reward": [
+    {
+     "xp": 260
+    },
+    {
+     "give": "coin",
+     "n": 25
+    }
+   ],
+   "opens": {
+    "tag": "village-favours"
+   }
+  }
+ ],
+ "brann": [
+  {
+   "id": "brann.ore",
+   "title": "Ore for the Forge",
+   "ask": "Ten iron ore. I pay for it either way, but this way you get a favour too.",
+   "thanks": "Good ore. Clean. I'll remember who brought it.",
+   "bring": {
+    "item": "iron-ore",
+    "n": 10
+   },
+   "reward": [
+    {
+     "xp": 300
+    },
+    {
+     "give": "coin",
+     "n": 45
+    }
+   ],
+   "opens": {
+    "tag": "village-favours"
+   }
+  },
+  {
+   "id": "brann.hide",
+   "title": "Leather for Grips",
+   "ask": "Six boar hides. Every hilt in Saltmere needs a new grip and the boar-men keep theirs.",
+   "thanks": "That'll do a dozen grips.",
+   "bring": {
+    "item": "boar-hide",
+    "n": 6
+   },
+   "reward": [
+    {
+     "xp": 280
+    },
+    {
+     "give": "coin",
+     "n": 35
+    }
+   ],
+   "opens": {
+    "tag": "village-favours"
+   }
+  },
+  {
+   "id": "brann.wood",
+   "title": "Charcoal Wood",
+   "ask": "Thirty wood for the charcoal pit. Boring, I know. Fire doesn't care.",
+   "thanks": "The pit thanks you. So do I.",
+   "bring": {
+    "item": "wood",
+    "n": 30
+   },
+   "reward": [
+    {
+     "xp": 240
+    },
+    {
+     "give": "coin",
+     "n": 30
+    },
+    {
+     "give": "seed-bread",
+     "n": 2
+    }
+   ],
+   "opens": {
+    "tag": "village-favours"
+   }
+  }
+ ],
+ "tova": [
+  {
+   "id": "tova.resin",
+   "title": "Tar for the Nets",
+   "ask": "Four lumps of pine resin. I boil it into tar for the nets. The old way.",
+   "thanks": "Smells like my grandmother's kitchen.",
+   "bring": {
+    "item": "resin",
+    "n": 4
+   },
+   "reward": [
+    {
+     "xp": 260
+    },
+    {
+     "give": "coin",
+     "n": 25
+    },
+    {
+     "give": "mint-tea",
+     "n": 2
+    }
+   ],
+   "opens": {
+    "tag": "village-favours"
+   }
+  },
+  {
+   "id": "tova.bark",
+   "title": "Birch for the Floats",
+   "ask": "Five strips of birch bark. Floats, child. Nets need floats.",
+   "thanks": "Just right. You've good hands.",
+   "bring": {
+    "item": "birch-bark",
+    "n": 5
+   },
+   "reward": [
+    {
+     "xp": 260
+    },
+    {
+     "give": "coin",
+     "n": 25
+    },
+    {
+     "give": "honey-cake",
+     "n": 1
+    }
+   ],
+   "opens": {
+    "tag": "village-favours"
+   }
+  },
+  {
+   "id": "tova.herbs",
+   "title": "My Knees",
+   "ask": "Eight bunches of wild herbs. For a poultice. My knees are older than the drill and twice as loud.",
+   "thanks": "Bless you. Now go, before I start telling stories.",
+   "bring": {
+    "item": "herbs",
+    "n": 8
+   },
+   "reward": [
+    {
+     "xp": 260
+    },
+    {
+     "give": "coin",
+     "n": 25
+    },
+    {
+     "give": "minor-health-potion",
+     "n": 2
+    }
+   ],
+   "opens": {
+    "tag": "village-favours"
+   }
+  }
+ ],
+ "aurelie": [
+  {
+   "id": "aurelie.mercs",
+   "title": "Frightened Children",
+   "ask": "The boar-men wander too close to the houses. Two of them, please. The children won't play outside.",
+   "thanks": "Thank you. I'll tell the children it's safe.",
+   "kill": {
+    "kind": "boaring-captain",
+    "n": 2,
+    "at": [
+     "the-drill"
+    ]
+   },
+   "reward": [
+    {
+     "xp": 340
+    },
+    {
+     "give": "coin",
+     "n": 35
+    },
+    {
+     "give": "health-potion",
+     "n": 1
+    }
+   ],
+   "opens": {
+    "tag": "village-favours"
+   }
+  },
+  {
+   "id": "aurelie.bread",
+   "title": "Bread for the Shrine",
+   "ask": "Five loaves of seed bread for the shrine's table. Anyone hungry may take one.",
+   "thanks": "Someone will eat well tonight because of you.",
+   "bring": {
+    "item": "seed-bread",
+    "n": 5
+   },
+   "reward": [
+    {
+     "xp": 260
+    },
+    {
+     "give": "coin",
+     "n": 30
+    }
+   ],
+   "opens": {
+    "tag": "village-favours"
+   }
+  }
+ ]
+}

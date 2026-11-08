@@ -7,7 +7,7 @@
 
   const item = $derived(content.items[id]);
   const sprite = $derived(item?.sprite ? sprites[item.sprite] : undefined);
-  const ICON_SETS = ['gear', 'weapons', 'relics', 'elem1', 'elem2', 'grok_items']; // keep in step with cut_sheets.py
+  const ICON_SETS = ['gear', 'weapons', 'relics', 'elem1', 'elem2', 'grok_items', 'items2']; // keep in step with cut_sheets.py
   const file = $derived(sprite && size <= 64 && ICON_SETS.includes(item!.sprite!.split('/')[0]) ? sprite.file.replace(/\.png$/, '.icon.webp') : sprite?.file);
 </script>
 

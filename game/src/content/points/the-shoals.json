@@ -1,0 +1,29 @@
+{
+  "id": "the-shoals",
+  "name": "The Shoals",
+  "zone": "north-shore",
+  "pin": [3760, 1340],
+  "opensWith": {"tag": "shoals-open"},
+  "closedText": "Not yet",
+  "kind": "gathering",
+  "levels": [20, 25],
+  "backdrop": "sea",
+  "fog": true,
+  "enemies": {"place": [{"kind": "vanguard-siren", "on": ["h"]}, {"kind": "vanguard-siren", "on": ["h"]}, {"kind": "aquamech-shark", "on": ["h"]}, {"kind": "aquamech-shark", "on": ["h"]}, {"kind": "coral-eyes", "on": ["s", "h"]}]},
+  "table": [],
+  "rows": [
+    "w            w            h            h            h            h            w            h            h            h            h            w            w            h            h            w",
+    "h            w            w            w            h            h            h            h            w            h            h            h            h            w            w            h",
+    "h            h            h            s.rowboat    w            w            h            h            s.searock    h            w            h            h            h            h            w",
+    "h            w            h            h            s            h            w            w            s.driftwood  h            h            h            s.reef       h            h            h",
+    "h            h            h            w            s.searock    h            h            h            w            w            h            s            h            h            w            h",
+    "w            h            h            h            h            s            h            h            h            h            s.figurehead w            h            h            h            h",
+    "s.start      h            h            h            h            h            s            s            h            h            h            h            w            w            h            h",
+    "h            h            h            w            w            h            h            h            s.mast       w            h            h            h            h            w            w",
+    "w            h            h            h            h            w            w            h            h            s            s.searock    w            h            h            h            h",
+    "h            h            w            h            h            s            h            w            w            h            h            s.reef       h            w            h            h",
+    "h            h            h            h            s.reef       h            h            h            h            w            w            h            h            h            h            w",
+    "w            w            h            h            h            h            w            h            h            h            h            w            w            h            h            w"
+  ],
+  "pad": 2
+}

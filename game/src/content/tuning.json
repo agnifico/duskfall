@@ -1,9 +1,27 @@
 {
+ "gemini_foes/boar": {
+  "bx": 0.503,
+  "by": 0.947,
+  "sx": -0.032,
+  "sy": -0.063,
+  "sw": 0.469
+ },
+ "gemini_foes/crab": {
+  "bx": 0.494,
+  "by": 0.956
+ },
  "gemini_nuv/fishinghut": {
   "sx": -0.019,
   "sy": -0.212,
   "so": 0.49,
   "sh": 0.219
+ },
+ "grok_nodes/berrybush": {
+  "sw": 0.523,
+  "sh": 0.209,
+  "sx": 0,
+  "sy": -0.121,
+  "so": 0.4
  },
  "grok_nodes/boulder": {
   "sx": 0.049,
@@ -28,9 +46,28 @@
   "by": 0.978,
   "so": 0.67
  },
+ "grok_nuv/cottage": {
+  "bx": 0.495,
+  "by": 0.916,
+  "sx": -0.002,
+  "sy": -0.109,
+  "sw": 0.507,
+  "sh": 0.243,
+  "so": 0.6
+ },
  "grok_nuv/driftwood": {
   "sx": 0.255,
   "so": 0.54,
   "sy": -0.165
+ },
+ "grok_nuv/pine": {
+  "sw": 0.538,
+  "sh": 0.209
+ },
+ "grok_wreck/rowboat": {
+  "sw": 0.482,
+  "sh": 0.639,
+  "sx": 0.428,
+  "sy": -0.373
  }
 }

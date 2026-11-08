@@ -1,0 +1,27 @@
+{
+  "id": "saltmere",
+  "name": "Saltmere",
+  "zone": "north-shore",
+  "pin": [3260, 1190],
+  "opensWith": {"tag":"drill-open"},
+  "closedText": "Not yet",
+  "kind": "people",
+  "backdrop": "sea",
+  "fog": false,
+  "table": ["tree", "berries", "stones"],
+  "rows": [
+    "_       w         w         w         w       w         w         w      w         w         w         w         w         w",
+    "w       w         w         w         w       w         w         w      w         w         w         w         w         w      w",
+    "s.palm  h         h         h         s.palm  h         h         h      s.palm    h         h         h         s.palm    h      h",
+    "s       s         s         s.rowboat s       s.net     s         s      s         s.net     s         s         s.barrel  s      s.crate",
+    "g       g         g.cottage g         g       g.hut     g         p      g.marisol g         g         g.hut     g         g      g",
+    "g       g         g         g         g.tova  g         g.aurelie p      g         g.cottage g         g         g.crate   g      g",
+    "p.start p         p         p         p       p         p         p.fire p         p         p         p         p         p      p",
+    "g       g         g         g.cottage g       g         g         p      g.brann   g         g         g         g.hut     g      g",
+    "g       g         g         g         g       g         g.barrel  p      g         g         g.cottage g         g         g.tree g",
+    "f       f         f.oak     f         f.birch f         g         p      g.tree    g         g         g.berries g         g      g",
+    "r       r.boulder r         r         f.pine  f         g         g      g         g.tree    g         g         g.berries g      g",
+    "m       m         m         m.stones  f       f.shrooms g         g      g         g         g         g         g         g"
+  ],
+  "pad": 2
+}

@@ -29,5 +29,183 @@
       "stand": "grok_chars/sylvie-stand",
       "walk": "grok_chars/sylvie-walk"
     }
+  },
+  "heidi": {
+    "name": "Heidi",
+    "title": "Healer of the Grove",
+    "text": "A healer who lives among the pines and walks into places most people run from. Defensive, patient, quietly stubborn. The animals have been wrong for weeks, but they still settle when she hums to them.",
+    "portrait": "characters/heidi/portrait.webp",
+    "art": [
+      "characters/heidi/full.webp",
+      "characters/heidi/h1.webp",
+      "characters/heidi/h2.webp",
+      "characters/heidi/h4.webp",
+      "characters/heidi/h5.webp",
+      "characters/heidi/h6.webp",
+      "characters/heidi/h7.webp",
+      "characters/heidi/h8.webp"
+    ],
+    "point": "pine-grove",
+    "lines": [
+      "Mind the bears. They're not cruel, just frightened.",
+      "If you're hurt, sit. I'll have a look.",
+      "Sylvie sends her best people. She doesn't say it, but she does."
+    ]
+  },
+  "aurelie": {
+    "name": "Sister Aurelie",
+    "title": "Priestess of Saltmere",
+    "text": "She came to Saltmere as a girl, an orphan the Solis Saints had taken in, and grew into the one the village turns to. The Saints helped her lead it through lean years into good ones. She believes in them the way you believe in someone who fed you.",
+    "portrait": "characters/aurelie/portrait.webp",
+    "art": [
+      "characters/aurelie/full.webp"
+    ],
+    "point": "saltmere",
+    "lines": [
+      "Peace be with you. Saltmere welcomes anyone who comes in good faith.",
+      "The Saints have been kind to us. Kinder than the sea, some years.",
+      "Not everyone agrees with me. I'd rather they said so than stayed silent."
+    ]
+  },
+  "claudia": {
+    "name": "Claudia",
+    "title": "Whisper of the Tundra",
+    "text": "A Solis Saints commander. Aristocratic warmth wrapped around a tactical brain that never stops calibrating. Greets you like a friend she's been waiting for, and listens like she's already filing it away.",
+    "portrait": "characters/claudia/portrait.webp",
+    "art": [
+      "characters/claudia/full.webp",
+      "characters/claudia/a1.webp",
+      "characters/claudia/a2.webp"
+    ],
+    "point": "the-drill",
+    "lines": [
+      "Ah, there you are. Sit, if you like. The readings won't take themselves, but they'll wait.",
+      "The village doesn't love us yet. That's fair. Love is earned.",
+      "Cygwin thinks I talk too much. Cygwin is right, and I still win at cards."
+    ]
+  },
+  "cygwin": {
+    "name": "Cygwin",
+    "title": "War Cry of the Savannah",
+    "text": "A Solis Saints commander from the south. She made herself into what her people needed, and gave herself to the Saints as the finest thing her tribe had to offer. She has not stopped.",
+    "portrait": "characters/cygwin/portrait.webp",
+    "art": [
+      "characters/cygwin/full.webp",
+      "characters/cygwin/a1.webp",
+      "characters/cygwin/a2.webp"
+    ],
+    "point": "the-drill",
+    "lines": [
+      "You fight well. Don't let it go to your head.",
+      "The machine is loud. The work is honest.",
+      "Claudia talks. I listen. Between us, we hear everything."
+    ]
+  },
+  "marisol": {
+    "name": "Marisol",
+    "title": "Fisherwoman",
+    "text": "Third generation on the Saltmere boats, and the loudest voice against the drill. The fish have thinned since it came, and she can't prove why.",
+    "portrait": "characters/marisol/portrait.webp",
+    "point": "saltmere",
+    "lines": [
+      "Nets come up half empty. Every week, a little emptier.",
+      "The Sister means well. Meaning well doesn't fill a boat.",
+      "If you're with the Saints, say so. I like to know who I'm talking to."
+    ],
+    "art": [
+      "characters/marisol/full.webp"
+    ]
+  },
+  "brann": {
+    "name": "Brann",
+    "title": "Smith and Trader",
+    "text": "Saltmere's smith, and the only shop on this side of the island. He likes the Saints' coin and doesn't pretend otherwise.",
+    "portrait": "characters/brann/portrait.webp",
+    "point": "saltmere",
+    "lines": [
+      "Iron, bread, potions. Coin first, questions never.",
+      "The drill folk pay on time. That's more than I can say for the sea.",
+      "Bring me ore and I'll pay for it. Bring me a lot and I'll pay well."
+    ],
+    "shop": [
+      {
+        "item": "seed-bread",
+        "price": 15
+      },
+      {
+        "item": "grilled-crab",
+        "price": 20
+      },
+      {
+        "item": "minor-health-potion",
+        "price": 25
+      },
+      {
+        "item": "health-potion",
+        "price": 60
+      },
+      {
+        "item": "spirit-tonic",
+        "price": 40
+      },
+      {
+        "item": "energy-draught",
+        "price": 50
+      },
+      {
+        "item": "acorns",
+        "price": 10
+      },
+      {
+        "item": "traveller-sword",
+        "price": 40
+      },
+      {
+        "item": "traveller-bow",
+        "price": 40
+      },
+      {
+        "item": "traveller-staff",
+        "price": 40
+      }
+    ],
+    "art": [
+      "characters/brann/full.webp"
+    ]
+  },
+  "tova": {
+    "name": "Old Tova",
+    "title": "Net-Mender",
+    "text": "She has mended Saltmere's nets for longer than anyone can remember, and remembers things nobody else does.",
+    "portrait": "characters/tova/portrait.webp",
+    "point": "saltmere",
+    "lines": [
+      "Sit, child. My hands are busy, my ears aren't.",
+      "The water's colder at the bottom of the bay than it ever was. Nobody asks me why.",
+      "My grandmother said this island has a warm heart. I believed her. I still do."
+    ],
+    "art": [
+      "characters/tova/full.webp"
+    ]
+  },
+  "verona": {
+    "name": "Verona",
+    "title": "Crown of Wandering Leaves",
+    "text": "A traveller who walks from land to land looking for new challenges, drawn to places where the ground remembers something. Disciplined, quick-tempered, irritable in troubled places, but she means well and warms up fast once she knows you. She carries Xochi, a sword she found somewhere on the road and kept because it feels like part of her arm.",
+    "portrait": "characters/verona/portrait.webp",
+    "art": [
+      "characters/verona/full.webp",
+      "characters/verona/v4.webp",
+      "characters/verona/v6.webp",
+      "characters/verona/v7.webp",
+      "characters/verona/v9.webp",
+      "characters/verona/v1.webp"
+    ],
+    "point": "lily-ponds",
+    "lines": [
+      "You again. Good. I was getting bored of frogs.",
+      "The ground here is healing faster than it should. Something under it wants to live.",
+      "Come back when you can last longer than a minute."
+    ]
   }
 }

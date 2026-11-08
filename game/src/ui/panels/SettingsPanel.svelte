@@ -112,14 +112,6 @@
         </div>
       </div>
 
-      <div class="row">
-        <span class="lbl m">Tool tier</span>
-        <div class="seg">
-          {#each [1, 2, 3] as t (t)}
-            <button class="px btn t-inset pick" class:on={G.s.toolTier === t} onclick={() => act((s) => (s.toolTier = t))}><span class="lbl m">{t}</span></button>
-          {/each}
-        </div>
-      </div>
 
       <div class="row">
         <span class="lbl m">Day {G.s.day}</span>

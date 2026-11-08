@@ -1,8 +1,18 @@
 // The numbers. Tune here.
 
-export const MAX_ENERGY = 30;
-export const ENERGY_NOTCH = 3; // the energy bar marks every this much
-export const REGEN_MS = 30_000; // one energy every 30 s: empty to full in 15 minutes
+// Energy pays for making things: gathering, crafting, cooking. Walking, talking and fighting are free (design/ENERGY.md).
+export const MAX_ENERGY = 60;
+/** The quick slots on the left bar (keys 1–6), and what a new game puts in them. */
+export const HOTBAR_SLOTS = 6;
+export const HOTBAR_START = ['skill:dash', 'skill:whirl', 'item:seed-bread', 'item:minor-health-potion', null, null];
+/** A campfire: warming up fills HP, free, any time. Stoking it costs this much wood for FIRE_ENERGY ⚡, once per
+ *  FIRE_MS per fire, so a fire is an anchor to grind around without becoming endless energy. */
+export const FIRE_ENERGY = 15;
+export const FIRE_WOOD = 1;
+export const FIRE_MS = 900_000;
+export const ENERGY_NOTCH = 6; // the energy bar marks every this much
+export const REGEN_MS = 20_000; // one energy every 20 s: empty to full in 20 minutes, ~180 an hour
+export const CRAFT_ENERGY = 1; // each thing crafted or cooked
 export const COST = { gather: 3, search: 2 } as const;
 export const SEARCH_RADIUS = 2;
 export const LOG_LENGTH = 12;
@@ -13,16 +23,32 @@ export const PLAYER_STATS = { hp: 100, patk: 10, eatk: 10, pdef: 10, edef: 10, s
 export const FOE_DEFAULTS = { patk: 5, pdef: 5, spd: 20, eva: 0, prc: 0, crit: 0, critDmg: 1.25 } as const;
 export const HP_REGEN_MS = 9_000; // one HP every 9 s outside a fight: empty to full in 15 minutes
 export const CYCLE_MS = 900_000; // enemies roll fresh every 15 minutes (a full energy bar)
+export const START_CLEAR = 4; // enemies roll at least this many hexes from a point's start marker
 export const FREE_REROLLS = 2; // per point per cycle
 export const KO_HP = 0.5; // knocked out, you wake with this share of your HP
 export const BASIC_ATTACK = { shape: 'arc', width: 1 } as const;
+/** Basic attack reach (hexes) by weapon kind; a weapon's own `range` wins. Anything else is melee: 1. */
+export const WEAPON_RANGE: Record<string, number> = { bow: 3, staff: 2 };
+/** A ranged basic attack hits for this share of a melee one: you can shoot without being hit, so it pays for that. */
+export const RANGED_POWER = 0.8; // 0.65 at first: a level-3 boar keeps pace with you, so the bow lost every trade
+/** Infusion (Heidi's gift): each basic attack that lands adds an elemental hit of this power. */
+export const INFUSION_POWER = 0.3;
 export const MAX_SPIRIT = 100;
 export const SPIRIT_PER_BASIC = 15; // Spirit each basic attack builds, hit or miss
 
 // ---------- levels (engine/progress.ts) ----------
-/** Life skills: total XP to reach each level, from level 1. Its length is the level cap (5 for now). */
-export const SKILL_XP = [0, 60, 160, 320, 560];
-export const XP_PER_ENERGY = 10; // a gather's skill XP, per ⚡ it costs, unless the node says otherwise
+/** Life skills: total XP to reach each level, from level 1. Its length is the level cap (10 for now). */
+export const SKILL_XP = [0, 60, 160, 320, 560, 920, 1460, 2260, 3460, 5260];
+/** A node by its size (its ⚡ cost): XP per gather, the last level it gives full XP at, the level it needs.
+ *  Past `full` it gives NODE_FALLOFF less per level, never below NODE_FLOOR: you outgrow small trees. */
+export const NODE_XP: Record<number, { xp: number; full: number; need: number }> = {
+  1: { xp: 4, full: 3, need: 1 }, // small tree, palm, pine, driftwood, small stones, berries, mushrooms
+  2: { xp: 10, full: 5, need: 1 }, // birch, boulder
+  3: { xp: 20, full: 7, need: 5 }, // oak, boulder cluster
+  4: { xp: 40, full: 12, need: 10 }, // etherwood, ore
+};
+export const NODE_FALLOFF = 0.75;
+export const NODE_FLOOR = 0.1;
 export const YIELD_PER_LEVEL = 0.1; // each skill level above 1 adds this share to a ranged yield (fixed yields stay)
 /** The XP curve (design/ROADMAP.md §4.1). Two knobs make it: what one kill is worth at each enemy level, and
  *  how many kills a level takes. Levels 1–5 are quick; from 5 on every level is ~8 kills (about one energy bar),

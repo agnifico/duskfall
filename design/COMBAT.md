@@ -24,6 +24,18 @@ Today, enemies are props (`crab`, `boar` in `content/props.json`) that you beat 
 | **Territorial** | 1 hex per tick toward you | within its notice range: 1 ring for most, 2 for a few, set per enemy in the data | its range shows as a faint red tint; the route preview warns when a path crosses it; it gives up when you're 2 hexes past its range |
 | **Legendary** | 2 hexes per tick | anywhere in the point | always catches you; see below |
 
+**Riled (2026-11-08, Agni):** anything you hit, still or territorial, chases you anywhere on the point and never gives up, until a knockout resets the point. With a bow you have to reposition.
+
+**Three paths (Agni, 2026-11-08):** Sylvie offers a sword, a bow or a staff (warrior, ranger, mage). Basic attacks are always physical. The bow keeps its distance (range 3, 80% damage; 65% lost every trade with a boar, which keeps pace with you). The staff's basic attack reaches 2. The staff is a catalyst: its basic attack is a weak physical bonk, and it grants **Spark** (10 Spirit, elemental, an enemy up to 3 hexes away, power 1.3, gives back 15 Spirit when it lands). You open with plain blows to build 10 Spirit, then Spark keeps itself going. Mage gear will trade defence for damage (1–2 shot kills). Gear can grant skills (`grants` in gear.json); a granted skill goes on the hotbar when you wear it. Spark reaches 2 hexes.
+
+**Hybrid: infusion (built 2026-11-08).** Heidi's optional quest *Heidi's Gift* (level 6, after The Healer in the Grove: 6 wild herbs, 3 toxolotl frills) sets `infused`: every basic attack that lands adds an elemental hit at 30% (`INFUSION_POWER`). Lets a ranger or warrior play part mage.
+
+**Kiting (playtest note, Agni 2026-11-08):** it works, but you can't step back and shoot in one turn, so kiting means moving two hexes and then shooting. Harder for a new player to see; fine for now, worth teaching later.
+
+**Reaching (2026-11-08):** clicking an enemy out of reach (or aiming Spark at one) walks you until it's in range, then attacks or casts. The walk stops early if an attack is aimed at your hex. Spells fly as a glowing orb, arrows as a streak. Enemies roll at least 4 hexes from a point's start (`START_CLEAR`). The grunt runt is now level 2 with 80% attack: new players were dying to it too often.
+
+**Getting away (2026-11-08):** leaving the point is always allowed, even mid-fight; the enemies there calm down, heal and go home.
+
 ### Legendaries
 - **Chance:** 4% per roll, plus 2% after each roll without one; **guaranteed by the 12th roll** (4 cycles using both rerolls). The count resets when one appears.
 - **Forced, with one way out:** it's visible when you arrive, so you can still turn back from the way-out hex. Once you step in, the fight is forced.
@@ -65,6 +77,7 @@ Every enemy shows what it's about to do, so you react instead of guessing:
 ### Attacks
 - **Shapes on hexes:** **arc** (1 hex in a direction, or the 3 in front), **line** (straight, along one of the six directions), **area** (rings around a hex). djv2's other shapes, built from circles, capsules and wedges, can carry over later: a hex counts as hit if its centre falls inside.
 - **Basic attacks:** specific to each character, melee or ranged, small damage, short range, free.
+- **Reach (2026-11-08):** melee hits the hex next to you; a bow reaches any enemy you can see within 3 hexes (`WEAPON_RANGE` in rules.ts; a weapon can set its own `range`). No line-of-sight blocking yet. A ranged basic attack hits for **65%** of a melee one (`RANGED_POWER`): Agni's bow playtest took no hits at all. No ammo for basic shots; special arrows (piercing, over obstacles) are an idea for later, Skyrim/RuneScape style.
 - **Skills:** cost Spirit. Sources *(not committed)*: weapons, team members, and buying them (expensive) through quests or a shop.
 
 ### Team
@@ -181,8 +194,8 @@ Enemies get their stats from their level, tuned against a reference player of th
 | Enemy | Level | HP | Attack | Defence | Hits to beat it: unarmed / Traveller's sword | Its hit: no armour / Traveller's |
 |---|---|---|---|---|---|---|
 | toxolotl | 1 | 72 | 9 | 4 | 7.2 / 3.6 | 8.6% / 5.4% |
-| pinchwarden | 1 | 72 | 11 | 8 | 7.3 / 3.7 | 10.5% / 6.6% |
-| grumbletusk | 3 | 93 | 18 | 7 | 7.8 / 4.3 | 15.4% / 10.1% |
+| crab runt | 1 | 72 | 11 | 8 | 7.3 / 3.7 | 10.5% / 6.6% |
+| grunt runt | 3 | 93 | 18 | 7 | 7.8 / 4.3 | 15.4% / 10.1% |
 | bear | 5 | 149 | 23 | 13 | 11.1 / 6.5 | 17.9% / 12.0% |
 | forest prowler | 6 | 84 | 22 | 12 | 5.8 / 3.5 | 16.4% / 11.1% |
 | dragonling | 8 | 137 | 30 | 14 | 8.4 / 5.3 | 20.5% / 14.2% |
@@ -193,10 +206,16 @@ Each line of an enemy's table rolls on its own (`foe.drops`; `combat.ts` › `ro
 | Enemy | Always | Sometimes |
 |---|---|---|
 | toxolotl | toxolotl frill | spirit tonic 4% |
-| pinchwarden | 1–2 crab shells | smoked crab claw 6%, Traveller's boots 4% |
-| grumbletusk | 1–2 boar hides | a Traveller's head, body, hands or legs piece 5% |
+| crab runt | 1–2 crab shells | smoked crab claw 6%, Traveller's boots 4% |
+| grunt runt | 1–2 boar hides | a Traveller's head, body, hands or legs piece 5% |
 | bear | 1–2 bear pelts | a Padded piece (level 10) 6% |
 | forest prowler | prowler fang | Padded gloves or boots 5% |
 | dragonling | dragon scale 60%, red crystal 25% | a Padded piece 8% |
 
 Materials feed the recipes: frill goes into spirit tonics; hide, shell and bark into Traveller's; bear pelt, hide and fang into Padded.
+
+## Elements and stats (settled 2026-11-09)
+- **Stats and numbers come from the archetype:** the weapon kind (sword, bow, staff, axe…) and the armour's leaning (heavy, light, arcane): the gear formula. **Elements are not tied to stats.** (Tying them made the combinations explode: six elements × weapon kinds × tiers, and an Earth player couldn't hit hard.)
+- **An element is a tag** on a weapon or piece. Every weapon kind and leaning exists in every element. The element sets matchups (Dawn's Journey's 2× / 0.5× chart, `dawns-journey/overview/elemental_effectiveness_matrix.csv`, and World Resonance), which skills a weapon can carry, and its look.
+- **Each element is a play style, through its skills,** like the schools of a JRPG class system (Agni's reference: Dragon Oath, where pyromancy is all offence with little utility, while the Lotus Order and the Beggars' Alliance, ice, water or thunder, trade low but quick hits for lots of utility). Fire: offence, little utility. Water: healing and sustain. Wind: moves you around a lot. Earth: defence turned into attack (Dawn's Journey's arena has 2–3 of these, strong in combination). Light and Dark: precision and crits, to be shaped. Skill visuals follow the element.
+- **A full five-piece elemental set gives a proper bonus:** the reward for committing to one element.

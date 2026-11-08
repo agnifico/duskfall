@@ -6,12 +6,12 @@
 
 import type { Cell, Content, DamageKind, Drop, Foe, FoeData, Fx, GameState, Intent, Stats } from './types';
 import { grid, hexDistance, route, shapeCells, type Grid } from './hex';
-import { CYCLE_MS, DEV_RULES, FOE_DEF, FOE_DEFAULTS, FOE_HITS, FOE_HIT_SHARE, FREE_REROLLS, LEVEL_STATS, PLAYER_STATS, REF_GEAR, killXp } from './rules';
+import { START_CLEAR, CYCLE_MS, DEV_RULES, FOE_DEF, FOE_DEFAULTS, FOE_HITS, FOE_HIT_SHARE, FREE_REROLLS, LEVEL_STATS, PLAYER_STATS, REF_GEAR, killXp } from './rules';
 import { hash, mulberry32 } from './rng';
 import { say } from './log';
 import { track } from './telemetry';
-import { addCombatXp, playerStats } from './progress';
-import { onKill } from './story';
+import { addCombatXp, combatLevel, playerStats } from './progress';
+import { onKill, peopleOn } from './story';
 export { playerStats };
 
 // ---------- the maths (design/COMBAT.md, section 3) ----------
@@ -68,16 +68,29 @@ export function curveStats(level: number): Stats {
 
 /** An enemy's stats: its level's curve scaled by its type's `mult`, then its own `stats` on top. Enemies with
  *  no level use their `stats` alone. */
-export function foeStats(c: Content, kind: string): Stats {
+export function foeStats(c: Content, kind: string, level?: number): Stats {
   const d = foeData(c, kind);
   if (d?.level == null) {
     const st = { ...FOE_DEFAULTS, hp: 1, ...(d?.stats ?? {}) };
     return { ...st, eatk: st.eatk ?? st.patk, edef: st.edef ?? st.pdef };
   }
-  const st = curveStats(d.level);
+  const st = curveStats(level ?? d.level);
   for (const [k, m] of Object.entries(d.mult ?? {}) as [keyof Stats, number][]) st[k] *= m;
   for (const k of ['hp', 'patk', 'eatk', 'pdef', 'edef'] as const) st[k] = Math.round(st[k]);
   return { ...st, ...(d.stats ?? {}) };
+}
+
+/** One enemy on the field's stats, at the level it rolled. */
+export const statsOf = (c: Content, f: Foe) => foeStats(c, f.kind, f.level);
+
+/** The level an enemy of this kind rolls at on a point: inside the point's range, near yours (engine/types.ts › Point.levels). */
+export function foeLevelAt(s: GameState, c: Content, pointId: string, kind: string): number | undefined {
+  const d = foeData(c, kind);
+  const band = c.points[pointId]?.levels;
+  if (d?.level == null || !band) return d?.level;
+  const [lo, hi] = band;
+  const lead = Math.max(0, d.level - lo); // how much harder than the area's easiest it is
+  return Math.max(d.level, Math.min(hi, combatLevel(s) + lead));
 }
 
 /** What a beaten enemy leaves: each line of its drop table rolled on its own. */
@@ -122,13 +135,16 @@ export function rollFoes(s: GameState, c: Content, g: Grid, pointId: string, cyc
   s.foes[pointId] = (s.foes[pointId] ?? []).filter((f) => f.id.startsWith('story.')); // story spawns stay until beaten
   if (!spec?.table?.length && !spec?.place?.length) return;
   const rng = mulberry32(hash(pointId) + cycle * 7919 + rerolls * 104729);
-  const exit = g.cells.find((x) => x.p === '>');
+  // where you arrive stays clear for a few hexes (a new player isn't jumped on arrival); the way out, for one
+  const start = g.cells.filter((x) => x.p === 'start');
+  const exits = g.cells.filter((x) => x.p === '>');
   const me = s.point === pointId && s.pos ? g.byKey.get(s.pos) : undefined;
   const taken = new Set<string>(s.foes[pointId].map((f) => f.pos));
   const free = (x: Cell) =>
     c.terrain[x.t]?.cost != null &&
     !taken.has(x.key) &&
-    (!exit || hexDistance(x, exit) > 1) &&
+    start.every((d) => hexDistance(x, d) > START_CLEAR) &&
+    exits.every((d) => hexDistance(x, d) > 1) &&
     (!me || hexDistance(x, me) > 1);
   const pick = (list: Cell[]) => list[Math.floor(rng() * list.length)];
   const kinds: { kind: string; on?: string[] }[] = [...(spec.place ?? [])];
@@ -146,7 +162,8 @@ export function rollFoes(s: GameState, c: Content, g: Grid, pointId: string, cyc
     const at = d.behaviour === 'still' && onNode.length && rng() < 0.7 ? pick(onNode) : pick(empty.length ? empty : onNode);
     if (!at) return;
     taken.add(at.key);
-    s.foes[pointId].push({ id: `${cycle}.${rerolls}.${i}`, kind, pos: at.key, home: at.key, hp: foeStats(c, kind).hp, charge: 0, engaged: false, intent: null });
+    const level = foeLevelAt(s, c, pointId, kind);
+    s.foes[pointId].push({ id: `${cycle}.${rerolls}.${i}`, kind, level, pos: at.key, home: at.key, hp: foeStats(c, kind, level).hp, charge: 0, engaged: false, intent: null });
   });
 }
 
@@ -157,7 +174,7 @@ export function spawnAround(s: GameState, c: Content, list: { kind: string; n: n
   const me = g.byKey.get(s.pos);
   if (!me) return;
   s.foes[s.point] ??= [];
-  const taken = new Set(s.foes[s.point].map((f) => f.pos));
+  const taken = new Set([...s.foes[s.point].map((f) => f.pos), ...peopleOn(s, c, s.point).keys()]);
   const ring = (d: number) => g.cells.filter((x) => c.terrain[x.t]?.cost != null && !x.p && !taken.has(x.key) && hexDistance(x, me) === d);
   let i = 0;
   for (const { kind, n } of list)
@@ -221,11 +238,12 @@ const walkable = (c: Content, x: Cell) => c.terrain[x.t]?.cost != null;
 function stepToward(s: GameState, c: Content, g: Grid, f: Foe, goal: Cell): Cell | null {
   const at = g.byKey.get(f.pos);
   if (!at || at === goal) return null;
+  const people = peopleOn(s, c, s.point);
   const r = route(
     g,
     at,
     goal,
-    (x) => walkable(c, x) && (x === goal || (!foeAt(s, x.key) && x.key !== s.pos)),
+    (x) => walkable(c, x) && !people.has(x.key) && (x === goal || (!foeAt(s, x.key) && x.key !== s.pos)),
     (x) => c.terrain[x.t].cost ?? 1,
   );
   const next = r?.path[0];
@@ -242,7 +260,7 @@ function decide(s: GameState, c: Content, g: Grid, f: Foe): Intent | null {
   if (f.engaged) {
     const hexes = shapeCells(g, at, me, d.attack);
     if (hexes.includes(me)) return { kind: 'attack', hexes: hexes.map((x) => x.key) };
-    if (d.behaviour !== 'territorial') return null;
+    if (d.behaviour !== 'territorial' && !f.riled) return null;
     const next = stepToward(s, c, g, f, me);
     return next ? { kind: 'move', to: next.key } : null;
   }
@@ -266,7 +284,7 @@ function foeAct(s: GameState, c: Content, g: Grid, f: Foe, shown: Intent | null)
       fx(s, it.hexes[0], 'miss', 'miss', 1); // you stepped out of it
       return true;
     }
-    const h = rollHit(foeStats(c, f.kind), playerStats(s, c));
+    const h = rollHit(statsOf(c, f), playerStats(s, c));
     track('hit', { by: f.kind, to: 'you', dmg: h.dodged ? 0 : h.dmg, crit: h.crit, miss: h.dodged, hp: s.hp });
     if (h.dodged) fx(s, s.pos, 'dodge', 'miss', 1);
     else {
@@ -282,25 +300,30 @@ function foeAct(s: GameState, c: Content, g: Grid, f: Foe, shown: Intent | null)
 
 /** Combat XP for beating an enemy: its own number, its level's on the curve (its type's mult doesn't change
  *  it: a level is a level), or half its HP plus its attack and defence. */
-export function foeXp(c: Content, kind: string): number {
+export function foeXp(c: Content, kind: string, level?: number): number {
   const d = foeData(c, kind);
   if (d?.xp != null) return d.xp;
-  if (d?.level != null) return killXp(d.level);
+  if (d?.level != null) return killXp(level ?? d.level);
   const st = foeStats(c, kind);
   return Math.round(st.hp / 2 + st.patk + st.pdef);
 }
 
-/** The player hits an enemy, at `power` × damage. Beaten, it's gone until the next cycle and drops its item. */
-export function playerHits(s: GameState, c: Content, f: Foe, power = 1, kind: DamageKind = 'physical'): void {
+/** The player hits an enemy, at `power` × damage. Beaten, it's gone until the next cycle and drops its item.
+ *  Returns whether it landed (not dodged). */
+export function playerHits(s: GameState, c: Content, f: Foe, power = 1, kind: DamageKind = 'physical'): boolean {
   const pr = c.props[f.kind];
-  f.engaged = true; // even a still enemy fights back once hit
-  const h = rollHit(playerStats(s, c), foeStats(c, f.kind), kind);
+  f.engaged = true;
+  f.riled = true; // hit, anything comes after you: even a still enemy, and it won't give up
+  const h = rollHit(playerStats(s, c), statsOf(c, f), kind);
   track('hit', { kind, by: 'you', to: f.kind, dmg: h.dodged ? 0 : h.dmg * power, crit: h.crit, miss: h.dodged, power, foeHp: f.hp });
-  if (h.dodged) return fx(s, f.pos, 'miss', 'miss');
+  if (h.dodged) {
+    fx(s, f.pos, 'miss', 'miss');
+    return false;
+  }
   h.dmg *= power;
   f.hp -= h.dmg;
   fx(s, f.pos, fmt(h.dmg), h.crit ? 'crit' : 'hit');
-  if (f.hp > 0) return;
+  if (f.hp > 0) return true;
   s.foes[s.point!] = foesHere(s).filter((x) => x !== f); // gone until the next cycle
   for (const [item, n] of Object.entries(rollDrops(c, f.kind))) {
     s.bag[item] = (s.bag[item] ?? 0) + n;
@@ -309,16 +332,17 @@ export function playerHits(s: GameState, c: Content, f: Foe, power = 1, kind: Da
   track('kill', { foe: f.kind, point: s.point, hp: s.hp });
   onKill(s, c, f.kind, s.point);
   say(s, `You beat the ${pr?.name ?? f.kind}.`);
-  const xp = foeXp(c, f.kind);
+  const xp = foeXp(c, f.kind, f.level);
   fx(s, s.pos!, `+${xp} xp`, 'xp');
   addCombatXp(s, xp);
+  return true;
 }
 
 /** Everything that happens after one player action. Returns true if it knocked you out. */
 export function tick(s: GameState, c: Content, g: Grid): boolean {
   const pspd = playerStats(s, c).spd;
   for (const f of [...foesHere(s)]) {
-    const spd = foeStats(c, f.kind).spd;
+    const spd = statsOf(c, f).spd;
     if (!f.engaged && !f.intent && f.pos === f.home) {
       f.charge = 0; // idle enemies don't bank actions
       continue;
@@ -354,7 +378,7 @@ export function tick(s: GameState, c: Content, g: Grid): boolean {
     if (!f.engaged && dist <= n) {
       f.engaged = true;
       say(s, `The ${name} comes at you.`);
-    } else if (f.engaged && dist > n + 2) {
+    } else if (f.engaged && !f.riled && dist > n + 2) {
       f.engaged = false;
       say(s, `The ${name} gives up.`);
     }
@@ -362,7 +386,7 @@ export function tick(s: GameState, c: Content, g: Grid): boolean {
 
   // show what each enemy will do on its next action, if it acts next tick
   for (const f of foesHere(s)) {
-    const spd = foeStats(c, f.kind).spd;
+    const spd = statsOf(c, f).spd;
     const idle = !f.engaged && f.pos === f.home;
     f.intent = !idle && f.charge + spd >= pspd ? decide(s, c, g, f) : null;
   }
@@ -373,8 +397,9 @@ export function tick(s: GameState, c: Content, g: Grid): boolean {
 export function resetFoes(s: GameState, c: Content, pointId: string): void {
   for (const f of s.foes[pointId] ?? []) {
     f.pos = f.home;
-    f.hp = foeStats(c, f.kind).hp;
+    f.hp = statsOf(c, f).hp;
     f.engaged = false;
+    f.riled = false;
     f.intent = null;
     f.charge = 0;
   }

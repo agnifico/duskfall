@@ -29,13 +29,13 @@ Polish art and UI one area at a time, and only once that area plays well. Past p
 
 | Location | Levels | Enemies | Leave with |
 |---|---|---|---|
-| Arrival Beach + Sylvie's home | 1–5 | the two common enemies, pinchwarden (crab) and grumbletusk (boar), Gemini art to come, toxolotl near water | Traveller's set, Sylvie's two quests, a first weapon |
+| Arrival Beach + Sylvie's home | 1–5 | the two common enemies, crab runt (crab) and grunt runt (boar), Gemini art to come, toxolotl near water | Traveller's set, Sylvie's two quests, a first weapon |
 | Open Plains, Pine Grove | 5–15 | bear (main enemy until ~7–10), then the dragonling (7–10 on) | Padded, Iron |
 | The Drill and its village (arc 2) | 15–20/25 | to plan | Silversteel or one specialised set; basic crafting |
 | Bog (side area, Verona) | to set | to plan | |
-| Mountains, cave with Varys (arc 3) | 25+ | candidates: mountain basilisk, punching tortoise, white wyvern | |
+| Mountains, cave with Veres (arc 3) | 25+ | candidates: mountain basilisk, punching tortoise, white wyvern | |
 
-- **Enemy roster (Agni, 2026-11-08):** common and easy: toxolotl (near water) plus 1–2 small land enemies (crab and boar exist as emoji only and need art). Then the bear, the main enemy until about level 7–10. Then the dragonling (level 7–10 on), slightly stronger than the bear. The forest prowler's place is still open.
+- **Enemy roster (Agni, 2026-11-08):** common and easy: toxolotl (near water) plus 1–2 small land enemies (the crab runt and the grunt runt; art in 2026-11-08). **Evolved forms, named 2026-11-08, for the next area (the Drill, 15+); levels set when it's planned:** the **Crabscallion** (crab) and the **Boaring Captain** (boar), art cut as `gemini_foes/crab2` and `boar2`. Then the bear, the main enemy until about level 7–10. Then the dragonling (level 7–10 on), slightly stronger than the bear. The forest prowler's place is still open.
 - **Levels 1–5:** Sylvie's quest plus the beach and home enemies take you to level 5. Two enemy types for five levels gets repetitive, so a tougher variant makes level 5 feel earned.
 - **Pine Grove before the Drill:** the bear and prowler belong mid-slice, and the Drill works as the level 15 capstone.
 - **Later enemies:** 15 of Dawn's Journey's enemies are already cut (`sprites/djv2/`). Candidates for the rows past level 15: siren and shark for the coast, sentinel for the Drill, wyvern for the hills.
@@ -63,7 +63,7 @@ Polish art and UI one area at a time, and only once that area plays well. Past p
    - Traveller's is collected piece by piece over levels 1–5/6, and is strong enough to carry the player to level 10.
    - Where gear falls short, potions, food and skills fill the gap. That is where the player has to think.
 4. ~~**Gear sources.**~~ Decided 2026-11-08: not one set per enemy.
-   - Common enemies (toxolotl, pinchwarden, grumbletusk) drop materials, and rarely the item those materials make.
+   - Common enemies (toxolotl, crab runt, grunt runt) drop materials, and rarely the item those materials make.
    - Stronger enemies (bear, dragonling) drop gear above your level, which pushes you to level up.
    - Crafting runs alongside.
 5. ~~**What food is for.**~~ Decided 2026-11-08: food restores HP, ⚡ or Spirit, or gives a flat combat buff (strong early, weak later).
@@ -84,6 +84,47 @@ Polish art and UI one area at a time, and only once that area plays well. Past p
 - ~~**Skill XP**~~ Done 2026-11-08: woodcutting, mining and foraging to level 5; level adds 10% to ranged yields.
 - **Icon redo:** an **Inventory** menu icon (it borrows the bag icon). The Profile button has left the menu, so its hooded icon is only used by the profile panel now. Also an **Inventory** menu icon (it borrows the bag icon for now).
 
+- ~~**Customisable hotkey bar**~~ Built 2026-11-08: six quick slots (keys 1–6) holding skills or food and potions. Right-click a slot (or click an empty one) to pick; the bag's *To hotbar* fills the first empty slot. A new game starts with Dash, Whirl, seed bread and the minor health potion.
+- **No energy friction before the Pine Grove** (Agni, 2026-11-08): about three bars in the first 30–60 minutes. Built: Sylvie gives 5 acorns (five breads) and a full energy refill at her house (end of Washed Ashore; new `energy` effect). Firewood still gives 3 seed bread.
+- **Start and way out are separate** (2026-11-08): a `start` marker (invisible in play, paint it in the editor under People & exits) is where you arrive; `>` stays the way out. Arrival Beach now has a start and no way out. **The way out (`>`) is invisible in play and has no card** (M opens the map anywhere); on fog maps it shows as a beacon, revealed from the moment you arrive, to find your way back by. The editor always shows it. Placeholder sprite: the wreck lantern; a lighthouse is on the next art list.
+- ~~**Campfire as a restore point**~~ Built 2026-11-08: *Warm up* fills HP, free, any time; *Stoke the fire* costs 1 wood for +10⚡, once per 15 minutes per fire (`FIRE_*` in rules.ts). A fire is the anchor for grinding one area of a point.
+- ~~**Energy food ratio**~~ Built 2026-11-08: basic trees drop acorns 20% of the time; seed bread is 1 acorn + 1 wood for +10⚡. HP food: crab runts drop crab meat (60%; riled ones always), grilled crab (1 crab meat + 1 wood) gives +25 HP. Crab meat and grilled crab need icons.
+
+- ~~**Energy rework**~~ Built 2026-11-08 (`design/ENERGY.md`): walking free; energy for gathering, crafting and cooking; bar 60, full in 20 min; XP per node by size, falling off once outgrown; nodes regrow every 15 minutes; skills to level 10; oaks need Woodcutting 5 (tool tiers no longer gate). Two grunt runts in Sylvie's forest.
+- **Tool tier** still shows on the Profile and in dev Settings but no longer does anything.
+
+- **Pine Grove arc, first pass** (2026-11-08, draft writing, Agni to revise): Heidi stands in the grove (portrait from her art; no figure yet). *The Healer in the Grove* (after Firewood: meet Heidi, drive back 3 bears; gives a Traveller's coat) and *Smoke on the Rocks* (level 8: beat the dragonling; Heidi sends you back to Sylvie, tag `drill-hint`). The grove has 2 bears and a dragonling on the rocks. Wild herbs now come from berry bushes (30%); nothing gave them before.
+- **Daily quests** built (`design/QUESTS.md`), with pools for Sylvie and Heidi.
+- **Hover:** only the destination hex is marked; no route line or step count. Enemy chips sit below the enemy, clear of damage numbers. "Free" tags removed. Tool tiers removed from the UI.
+- **Not built: Heidi's infusion quest.** Open question on how infusion works (see below).
+
+- **Staff path, Open Plains, levels 9–15** (2026-11-08): Sylvie's choice is sword, bow or staff (see COMBAT.md). Open Plains laid out as a first pass (about 300 hexes: sea and rocky coast west, grass middle, forest east, rough ground south toward the bog; fog with a beacon) with biceons (9), prowlers (11), a punching tortoise (12) and a mountain basilisk (14); drops reuse existing items. *The West Fields* (after Smoke on the Rocks) opens the plains, then at level 15 opens the Drill. Two plains daily quests for Sylvie. Dev mode can travel to locked maps.
+
+- **Rock layers:** high rock `m` (height 4) and crag `k` (height 5) for the climb to the mountains; walkable.
+- **Lag fix:** the field re-rendered every second (two clock reads for regrowth); it now redraws when the 15-minute cycle turns.
+
+- **HUD:** HP and Spirit bars ported from the combat lab's HPBar (dark rounded label chip, black-edged track, inset shading, value on the bar), with the main-hand and off-hand weapons either side (click to open the inventory). Figures are 20% smaller and don't catch clicks, so hexes behind people stay clickable.
+
+- **The structure for building areas** (2026-11-08):
+  - **Level ranges:** a point's `levels: [lo, hi]`; its enemies roll at your level plus their lead over the area's easiest, never below their own level or above the top. Beach and Sylvie's 1–10, Pine Grove 5–10, Open Plains 9–15. Enemy cards and hover show the level.
+  - **Gear formula** (`engine/gearFormula.ts`): any piece with no numbers gets them from its level, slot and its set's profile (heavy, light, arcane), split from REF_GEAR, the curve enemies are tuned against. Hand-set Traveller's and Padded already sit on it. Sets with no bonus get one from the same curve. Iron, Silversteel, Adamantine and the elemental sets now have numbers.
+  - **Content checker:** `python3 tools/check_content.py` (broken links between files, things nothing gives, tags nothing sets). First run found blue mushrooms had no source (spirit tonic couldn't be made); now from mushroom rings.
+  - **Playtest summary:** `python3 tools/playtest_summary.py [--last N | --since DATE]`: levels by active time, fights (kills, knockouts, hits per kill), energy spent and regained, gathering, quests, time by place.
+  - **Area brief template:** `design/AREA_BRIEF.md`.
+
+- **Drill arc, phase 1** (2026-11-09, brief in `design/areas/the-drill.md`): Saltmere (village hub, no fighting, Brann's shop) and the Drill (17–22: neutral Solis sentinels, crabscallions, boaring captains, prowlers, iron veins). Six people with portraits (Claudia, Cygwin and Aurelie cut from Agni's images; Marisol, Brann and Tova lettered placeholders). Three main quests, 11 village daily quests. Shops: buy from a list, sell anything with a `value`. Iron ore, the iron vein (Mining 5) and 11 Iron recipes. **Phase 2 built the same day:** the Lily Ponds (18–22, burnt woods healing, crater ponds; Verona as a normal level-24 enemy you duel in *The Girl at the Ponds*; her real boss fight comes with the combat lab's AI) and the Shoals (20–25, by Saltmere's boat; Marjane's vanguard sirens and aquamech sharks, wild coral eyes; *What Lies Beneath* sets `marjane-hint`). Villager portraits from Agni's Gemini images.
+
+### Ideas for later (Agni, 2026-11-08)
+- **Gear ladder to fill:** a heavy tier above Adamantine (level 60, later 80); a light set around level 40 (rangers are skill-led); arcane sets are hard to get and simple to use (big damage at range), and there are enough of them. **Every non-elemental tier is smithed from ore** (an iron vein first, then silver, malachite for Adamantine); pieces also turn up rarely in the world. Elemental gear drops, and becomes craftable later. That leaves enemies free to drop relics, weapons and resources.
+- **Swimming / deep water:** not tied to gear. Ask why a player would go in: to shoot from the water and skirt land enemies, or for a bonus while there. Unlocked once, for good (like Dawn's Journey's exploration abilities), from the story rather than from wearing something. A boat for crossing to other regions.
+- **From the combat lab, later (styling pass):** its CSS ability effects (bows, arrows, area attacks and the rest), adapted to hexes, and its button style (shape and shadow).
+- **Smarter enemies** (the combat lab's AI): 3–5 enemies that target you together, so the three paths play differently and a knockout teaches you to play better.
+- **Full restore from a fire, once a day**, unlocked at a higher level or as a special effect, like Sylvie's bed.
+- **Other restore sources:** split fires by kind: a shrine, a spirit well for Spirit, and so on.
+- **Cooking at the fire:** the fire as the cooking station.
+- **Tutorial hint:** the first time your energy runs out, highlight the bread on the hotbar.
+- **Special arrows:** ammo only for special shots (piercing, over obstacles), Skyrim/RuneScape style; basic shots stay free.
+
 ## 5b. Done 2026-11-08 (the editor and systems session)
 - **Map editor** (dev mode, E): paint, tune props' foot points and shadows, save. Arrival Beach enlarged and laid out with it.
 - **Combat level** from kills: +5 HP and +1 to all four attacks and defences per level. **Stats split** into physical and elemental attack and defence; basic attacks are always physical (`design/COMBAT.md`).
@@ -99,7 +140,7 @@ Polish art and UI one area at a time, and only once that area plays well. Past p
 3. ~~**Crafting interface.**~~ Built 2026-11-08: the Crafting screen (K), with Cooking, Alchemy and Smithing tabs, a recipe list (makeable first) and a detail panel with have/need, quantity and Craft. 16 placeholder recipes in `content/recipes.json` (food, the 4 potions, Traveller's armour, shield, spear, bow); `engine/craft.ts`. Free and instant: no energy, stations or skill levels yet.
 4. Then the slice decisions in section 4, starting with level pacing.
 5. ~~**Enemy stats, curve and drops.**~~ Built 2026-11-08: stats from level against a reference player, drop tables, new materials (frill, bear pelt, prowler fang, dragon scale), Padded recipes, and Traveller's and Padded numbers. See `design/COMBAT.md` › 7.
-6. **Arrival Beach enemies** (Agni, 2026-11-08): two toxolotls in the shallows, a pinchwarden on the sand, two grumbletusks in the forest (territorial, they only come at you if you step next to them). Points can now place enemies by terrain (`enemies.place`).
+6. **Arrival Beach enemies** (Agni, 2026-11-08): two toxolotls in the shallows, a crab runt on the sand, two grunt runts in the forest (territorial, they only come at you if you step next to them). Points can now place enemies by terrain (`enemies.place`).
    - **Keep the Open Plains away from a new player.** It's the first high-level training area: prowlers kill a fresh player in a hit or two. It gets locked when the world is set up along the story (after quests and dialogue).
 6. **Quests and dialogue: slice 1 built 2026-11-08** (`design/QUESTS.md`): the engine, story mode (dialogue with cinematic bars), quest banner, tracker and log, areas that open with the story, and the opening chain (Washed Ashore with the ambush, then Thinning the Wilds with the sword/bow choice, then Firewood, which opens the Pine Grove). Next slices: level bands, NPCs placed by the story, the red tint for riled enemies, Heidi's quests, image-driven scenes. Decided 2026-11-08:
    - **Level bands per area:** enemies spawn at about your level, held inside the area's band.
@@ -109,6 +150,15 @@ Polish art and UI one area at a time, and only once that area plays well. Past p
    - **Story mode:** dialogue hides the HUD and shows cinematic black bars, and quest starts and ends are announced.
    - **Image-driven scenes** (pictures changing under the dialogue, as in nsfw_project) get their own session, built in a dev sandbox.
    - **Choices** are recorded and steer the story (the first: sword or staff).
+
+## 5d. Done 2026-11-08 (evening)
+- **Crab and boar art** (Gemini, magenta): `extras/enemies/gemini/`, cut by `KEYED_SINGLES` in `tools/cut_sheets.py` into `sprites/gemini_foes/`. `crab2` (lobster brute) and `boar2` (boar warrior) are cut for later evolved forms.
+- **Opening pictures:** picture steps in dialogue; the storm plays as four pictures before Arrival Beach. Art prompts in `prompts/items_and_opening.md`, with the 16 missing item icons.
+- **Camera:** a point opens fully zoomed in on you; story beats zoom one step closer; drag off the field (or right/middle drag) to pan.
+- **Arrival Beach start** moved to the sand at the water's edge.
+- **Bows reach 3 hexes** (`WEAPON_RANGE` in rules.ts; a weapon's own `range` wins). **Anything you hit is riled:** it chases you anywhere on the point and never gives up, until a knockout.
+- **Fixed:** narration lines were cream on cream (the first line of the opening looked empty).
+- **Later the same evening:** the five opening pictures are in; the 16 item icons are in (`sprites/items2/`); Sylvie stands beside you on the beach (points' `people`); the camera follows you near the view's edge; bows hit for 65%; leaving a point mid-fight is allowed and calms the enemies; crab and boar renamed **crab runt** and **grunt runt**.
 
 ## 6. Art at hand
 

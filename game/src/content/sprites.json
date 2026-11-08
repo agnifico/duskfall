@@ -511,6 +511,134 @@
   "by": 0.993,
   "fx": 0.528
  },
+ "items2/crab-shell": {
+  "file": "sprites/items2/crab-shell.png",
+  "w": 384,
+  "h": 247,
+  "bx": 0.429,
+  "by": 0.996,
+  "fx": 0.451
+ },
+ "items2/boar-hide": {
+  "file": "sprites/items2/boar-hide.png",
+  "w": 384,
+  "h": 292,
+  "bx": 0.306,
+  "by": 0.993,
+  "fx": 0.376
+ },
+ "items2/sea-glass": {
+  "file": "sprites/items2/sea-glass.png",
+  "w": 384,
+  "h": 224,
+  "bx": 0.41,
+  "by": 0.996,
+  "fx": 0.536
+ },
+ "items2/toxolotl-frill": {
+  "file": "sprites/items2/toxolotl-frill.png",
+  "w": 384,
+  "h": 347,
+  "bx": 0.494,
+  "by": 0.988,
+  "fx": 0.488
+ },
+ "items2/bear-pelt": {
+  "file": "sprites/items2/bear-pelt.png",
+  "w": 384,
+  "h": 281,
+  "bx": 0.55,
+  "by": 0.996,
+  "fx": 0.482
+ },
+ "items2/prowler-fang": {
+  "file": "sprites/items2/prowler-fang.png",
+  "w": 384,
+  "h": 308,
+  "bx": 0.238,
+  "by": 0.997,
+  "fx": 0.404
+ },
+ "items2/dragon-scale": {
+  "file": "sprites/items2/dragon-scale.png",
+  "w": 329,
+  "h": 358,
+  "bx": 0.11,
+  "by": 1.0,
+  "fx": 0.381
+ },
+ "items2/coin": {
+  "file": "sprites/items2/coin.png",
+  "w": 384,
+  "h": 237,
+  "bx": 0.607,
+  "by": 0.996,
+  "fx": 0.553
+ },
+ "items2/seed-bread": {
+  "file": "sprites/items2/seed-bread.png",
+  "w": 384,
+  "h": 295,
+  "bx": 0.49,
+  "by": 1.0,
+  "fx": 0.492
+ },
+ "items2/mint-tea": {
+  "file": "sprites/items2/mint-tea.png",
+  "w": 384,
+  "h": 341,
+  "bx": 0.4,
+  "by": 0.997,
+  "fx": 0.417
+ },
+ "items2/smoked-claw": {
+  "file": "sprites/items2/smoked-claw.png",
+  "w": 384,
+  "h": 202,
+  "bx": 0.462,
+  "by": 0.995,
+  "fx": 0.527
+ },
+ "items2/honey-cake": {
+  "file": "sprites/items2/honey-cake.png",
+  "w": 364,
+  "h": 348,
+  "bx": 0.674,
+  "by": 0.997,
+  "fx": 0.534
+ },
+ "items2/minor-health-potion": {
+  "file": "sprites/items2/minor-health-potion.png",
+  "w": 249,
+  "h": 340,
+  "bx": 0.468,
+  "by": 0.997,
+  "fx": 0.465
+ },
+ "items2/health-potion": {
+  "file": "sprites/items2/health-potion.png",
+  "w": 270,
+  "h": 367,
+  "bx": 0.504,
+  "by": 0.997,
+  "fx": 0.503
+ },
+ "items2/spirit-tonic": {
+  "file": "sprites/items2/spirit-tonic.png",
+  "w": 146,
+  "h": 374,
+  "bx": 0.503,
+  "by": 0.995,
+  "fx": 0.497
+ },
+ "items2/energy-draught": {
+  "file": "sprites/items2/energy-draught.png",
+  "w": 254,
+  "h": 364,
+  "bx": 0.499,
+  "by": 0.995,
+  "fx": 0.498
+ },
  "grok_nodes/tree": {
   "file": "sprites/grok_nodes/tree.png",
   "w": 179,
@@ -2470,5 +2598,37 @@
   "bx": 0.53,
   "by": 1.0,
   "fx": 0.503
+ },
+ "gemini_foes/crab": {
+  "file": "sprites/gemini_foes/crab.png",
+  "w": 326,
+  "h": 384,
+  "bx": 0.623,
+  "by": 1.0,
+  "fx": 0.531
+ },
+ "gemini_foes/boar": {
+  "file": "sprites/gemini_foes/boar.png",
+  "w": 384,
+  "h": 357,
+  "bx": 0.412,
+  "by": 1.0,
+  "fx": 0.493
+ },
+ "gemini_foes/crab2": {
+  "file": "sprites/gemini_foes/crab2.png",
+  "w": 384,
+  "h": 339,
+  "bx": 0.46,
+  "by": 1.0,
+  "fx": 0.497
+ },
+ "gemini_foes/boar2": {
+  "file": "sprites/gemini_foes/boar2.png",
+  "w": 337,
+  "h": 384,
+  "bx": 0.478,
+  "by": 0.997,
+  "fx": 0.504
  }
 }

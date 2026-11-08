@@ -149,17 +149,6 @@
     <GearTab />
   {:else if tab === 'skills'}
     <div class="page">
-      <section class="card tools px flat t-inset">
-        <div class="lbl section">Tools</div>
-        <div class="tool">
-          <img src={icon('tools')} alt="" />
-          <div class="grow">
-            <div class="body strong">Axe and pick</div>
-            <div class="lbl dim">Better tools open richer nodes: tier 2 and 3 trees, rocks and veins.</div>
-          </div>
-          <span class="badge px flat t-panel"><span class="lbl m">Tier {G.s.toolTier}</span></span>
-        </div>
-      </section>
       <section>
         <div class="lbl section">Gathering</div>
         {#each GATHERING as [id, sk] (id)}

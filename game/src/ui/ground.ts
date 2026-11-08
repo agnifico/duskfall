@@ -22,7 +22,10 @@ const WALLS: Record<string, Wall> = {
   p: { colour: '#8a6743', lip: 3 },
   f: { colour: '#6b4f35', lip: 5 },
   r: { colour: '#7a7268', strata: true },
+  m: { colour: '#6f6a63', strata: true },
+  k: { colour: '#64605b', strata: true },
 };
+const ROCK = new Set(['r', 'm', 'k']); // the rock layers: no wet band at the water, stones and cracks on top
 
 const WATER = new Set(['w', 'h']);
 export const FOG_H = 2; // fog is one flat cloud surface at this height, whatever is under it
@@ -214,7 +217,7 @@ export function groundHex(
       const a2 = lerp(a, c, 0.22), b2 = lerp(b, c, 0.22);
       out.decos.push({ tag: 'path', d: `M${pt(lerp(a2, b2, 0.15))} L${pt(lerp(a2, b2, 0.85))}`, stroke: '#fff', width: 1.1, opacity: 0.4, cls: 'foam', delay: hash(key + k) * 3 });
     }
-    if (n && !WATER.has(kind) && kind !== 'fog' && kind !== 'r' && WATER.has(n.kind)) seg.wet += line; // land darkened where the water laps it
+    if (n && !WATER.has(kind) && kind !== 'fog' && !ROCK.has(kind) && WATER.has(n.kind)) seg.wet += line; // land darkened where the water laps it
   }
   if (seg.shadow) {
     out.bands.push({ d: seg.shadow, stroke: '#000', width: 22, opacity: 0.08 });
@@ -353,6 +356,8 @@ function details(out: GroundHex, key: string, kind: string, colour: string, corn
       for (let i = 0; i < 3; i++) pebble(spot(0.2, 0.75), 1.6);
       break;
     case 'r':
+    case 'm':
+    case 'k':
       for (let i = 0, n = 1 + Math.floor(rand() * 3); i < n; i++) stone(spot(0.35, 0.8), 2.2 + rand() * 1.6);
       if (rand() < 0.5) crack(spot(0.2, 0.5));
       break;
