@@ -2,7 +2,7 @@
 // Armour: head, body, hands, legs, feet. Main and off hand (a two-handed main hand keeps the off hand empty).
 // Relics: RELIC_SLOTS of them. Gear asks for a combat level. Sets (sets.json) add a bonus at so many pieces.
 
-import type { Content, GameState, Item, Stats, WornSlot } from './types';
+import type { Content, GameState, Item, Stats, Worn, WornSlot } from './types';
 import { RELIC_SLOTS } from './rules';
 import { say } from './log';
 import { track } from './telemetry';
@@ -57,29 +57,40 @@ const toBag = (s: GameState, id: string | null) => {
   if (id) s.bag[id] = (s.bag[id] ?? 0) + 1;
 };
 
+/** What you'd be wearing after putting it on, and what goes back to the bag. Pure: for wear() and for previews.
+ *  A relic goes in the first free relic slot (or `index`; the first slot when all are full). */
+export function wornAfter(w: Worn, c: Content, id: string, index?: number): { worn: Worn; back: string[] } {
+  const worn: Worn = { ...w, relics: [...w.relics] };
+  const back: string[] = [];
+  const out = (x: string | null) => x && back.push(x);
+  const it = c.items[id];
+  if (it.slot === 'relic') {
+    const i = index ?? Math.max(0, worn.relics.indexOf(null));
+    out(worn.relics[i] ?? null);
+    worn.relics[i] = id;
+  } else {
+    const slot = it.slot as WornSlot;
+    out(worn[slot]);
+    worn[slot] = id;
+    const offKind = worn.off ? c.items[worn.off]?.kind : undefined;
+    if (slot === 'main' && it.twoHanded && !it.offhand?.includes(offKind ?? '')) {
+      out(worn.off);
+      worn.off = null;
+    }
+  }
+  return { worn, back };
+}
+
 /** Put it on, taking off whatever was there. A relic goes in the first free relic slot (or `index`). */
 export function wear(s: GameState, c: Content, id: string, index?: number): void {
   const why = cantWear(s, c, id);
   if (why) return say(s, `${c.items[id]?.name ?? id}: ${why.toLowerCase()}.`);
-  s.worn ??= noneWorn();
-  const it = c.items[id];
   s.bag[id] -= 1;
   if (s.bag[id] <= 0) delete s.bag[id];
-  if (it.slot === 'relic') {
-    const i = index ?? Math.max(0, s.worn.relics.indexOf(null));
-    toBag(s, s.worn.relics[i] ?? null);
-    s.worn.relics[i] = id;
-  } else {
-    const slot = it.slot as WornSlot;
-    toBag(s, s.worn[slot]);
-    s.worn[slot] = id;
-    const offKind = s.worn.off ? c.items[s.worn.off]?.kind : undefined;
-    if (slot === 'main' && it.twoHanded && !it.offhand?.includes(offKind ?? '')) {
-      toBag(s, s.worn.off);
-      s.worn.off = null;
-    }
-  }
-  track('wear', { item: id, slot: it.slot });
+  const { worn, back } = wornAfter(s.worn ?? noneWorn(), c, id, index);
+  s.worn = worn;
+  for (const x of back) toBag(s, x);
+  track('wear', { item: id, slot: c.items[id].slot });
 }
 
 /** Take it off, back into the bag. */

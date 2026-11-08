@@ -63,12 +63,25 @@ export type Shape =
   | { shape: 'area'; rings: number }; // every hex within `rings` of the attacker
 
 export interface FoeData {
-  stats: Partial<Stats> & { hp: number };
+  /** Explicit stats. With a `level`, these override the curve (speed, evasion, precision usually); without
+   *  one, they're the whole stat block (hp required). */
+  stats?: Partial<Stats>;
+  mult?: Partial<Stats>; // its type's character: scales the curve's stats (bear: hp 1.4; prowler: hp 0.75)
+  drops?: Drop[]; // rolled one by one when it's beaten; the prop's `item` (always dropped) if missing
   res?: number; // World Resonance it asks for (not used yet)
-  xp?: number; // combat XP for beating it; worked out from its stats if missing (engine/progress.ts)
+  level?: number; // its place on the XP curve: beating it gives killXp(level) (rules.ts)
+  xp?: number; // combat XP for beating it, overriding its level's; worked out from its stats if neither
   behaviour: 'still' | 'territorial'; // still: never moves or notices; territorial: chases within its notice range
   notice?: number; // territorial: rings it notices you within (default 1)
   attack: Shape;
+}
+
+/** One line of a drop table: `chance` (0–1) of `n` of `item`, or of one item picked from `oneOf`. */
+export interface Drop {
+  item?: string;
+  oneOf?: string[];
+  chance: number;
+  n?: number | [number, number];
 }
 
 /** What an enemy will do on its next action, shown one tick ahead. */
@@ -131,6 +144,26 @@ export interface Item {
   offhand?: string[]; // …except for these off-hand kinds (a bow allows a quiver)
   kind?: string; // weapon type: sword, axe, bow, shield…
   placeholder?: boolean; // its numbers aren't set yet
+
+  // food and potions: used from the bag (engine/actions.ts › useItem)
+  use?: ItemUse;
+}
+
+/** What using an item does. Food can't be eaten in a fight; a potion can, and drinking it takes your turn.
+ *  A buff lasts `minutes` of real time; one food buff at a time, and eating another replaces it. */
+export interface ItemUse {
+  kind: 'food' | 'potion';
+  hp?: number;
+  energy?: number;
+  spirit?: number;
+  buff?: { stats: Partial<Stats>; minutes: number };
+}
+
+/** A buff running on you, from food. */
+export interface Buff {
+  item: string;
+  stats: Partial<Stats>;
+  until: number; // ms timestamp
 }
 
 /** Where gear is worn. Relics have several slots (RELIC_SLOTS). */
@@ -184,6 +217,75 @@ export interface Land {
   patches?: Patch[];
 }
 
+// ---------- quests and story (engine/story.ts, content/quests.json, design/QUESTS.md) ----------
+
+/** A condition. Kills and talks count from when the stage began. */
+export type Cond =
+  | { talk: string } // you talked to this person (the stage plays when you do)
+  | { enter: string } // you're in this point
+  | { kill: string | string[]; n: number; at?: string[] } // beat n of these enemy kinds ('*' any), optionally only in these points
+  | { have: string; n: number } // in your bag (not taken)
+  | { level: number } // your combat level at least
+  | { tag: string } // a story flag is set
+  | { notTag: string }
+  | { quest: string; state: QuestState }
+  | { all: Cond[] }
+  | { any: Cond[] }
+  | { not: Cond };
+
+/** What happens: after a stage's dialogue, or when a choice is picked. */
+export type Effect =
+  | { give: string; n?: number; wear?: boolean } // into the bag (and put on)
+  | { take: string; n: number } // out of the bag
+  | { xp: number }
+  | { tag: string }
+  | { untag: string }
+  | { goto: string; at?: string } // move to this point (a scene jump)
+  | { spawn: { kind: string; n: number }[] } // enemies appear around you, already after you
+  | { notify: string };
+
+/** One step of dialogue. A string is a line: "sylvie: …", "you: …", or narration. {name} becomes your name. */
+export type Line = string | { name: true } | { choose: { text: string; then: Effect[] }[] };
+
+export type QuestState = 'active' | 'done';
+
+export interface QuestStage {
+  objective: string; // for the tracker and the log
+  need: Cond;
+  /** Plays by itself the moment `need` is met (a story beat). Otherwise it plays when you talk to `who`. */
+  auto?: boolean;
+  who?: string; // the person this stage is with (talk stages; the tracker names them)
+  say?: Line[]; // played when the stage completes
+  remind?: Line[]; // played when you talk to `who` before `need` is met
+  then?: Effect[]; // after `say`
+}
+
+export interface Quest {
+  title: string;
+  text: string; // for the log
+  giver?: string;
+  start: Cond; // starts by itself when met
+  stages: QuestStage[];
+  main?: boolean; // the main story (gold in the log)
+}
+
+/** Your place in one quest. */
+export interface QuestProgress {
+  state: QuestState;
+  stage: number;
+  count: number; // kills toward the current stage
+  talked?: string[]; // people talked to during the current stage
+}
+
+/** A beat waiting to be shown: a stage's dialogue, whose effects apply when it ends. */
+export interface Beat {
+  quest: string;
+  stage: number;
+  lines: Line[];
+  then: Effect[];
+  finish: boolean; // completes the stage (false for a reminder)
+}
+
 export interface LandPin {
   id: string;
   name: string;
@@ -202,9 +304,13 @@ export interface Point {
   fog: boolean;
   backdrop?: 'sky' | 'sea'; // what's around the hex field: clouds drifting below, or open water (default sky)
   table: string[]; // prop codes a "*" slot can roll, re-rolled each day
-  enemies?: { count: [number, number]; table: string[] }; // rolled each 15-minute cycle onto free hexes; repeat a code to weight it
+  /** Rolled each 15-minute cycle. `place`: these always appear, each on a free hex of the given terrains (a set
+   *  layout that still moves around). `table`/`count`: random ones on any free hex; repeat a code to weight it. */
+  enemies?: { place?: { kind: string; on: string[] }[]; count?: [number, number]; table?: string[] };
   rows: string[]; // hex rows: terrain letter, then optionally "." and a prop code; "_" for no hex
   pad?: number; // rings of drawn-only padding around the field (default 2; 0 for none)
+  opensWith?: Cond; // closed (on the map, and to travel) until this holds; the story opens it
+  closedText?: string; // shown while closed ("Not yet")
 }
 
 /** A character's figure on the hex field: painted facing right, mirrored to face left. */
@@ -227,6 +333,7 @@ export interface Npc {
 }
 
 export interface Player {
+  names?: string[]; // the names you can choose from, all meaning dawn or morning; the first is the default
   skills?: string[]; // ids in skills.json, in hotbar order
   portrait?: string;
   art?: string[];
@@ -251,6 +358,16 @@ export interface Content {
   skills: Record<string, Skill>; // fighting skills
   lifeskills: Record<string, LifeSkill>;
   sets: Record<string, GearSet>;
+  recipes: Record<string, Recipe>;
+  quests: Record<string, Quest>;
+}
+
+/** Something to make (content/recipes.json): uses up `needs`, gives `n` of `makes`. Free and instant for now. */
+export interface Recipe {
+  craft: 'cooking' | 'alchemy' | 'smithing';
+  makes: string;
+  n?: number; // made per craft, 1 if missing
+  needs: Record<string, number>;
 }
 
 /** A gathering or making skill: woodcutting, mining… Levels come from XP (engine/progress.ts). */
@@ -299,6 +416,10 @@ export interface GameState {
   xp: number; // combat XP; your level comes from it (engine/progress.ts)
   skills: Record<string, number>; // life skill -> XP
   worn: Worn;
+  buffs: Buff[];
+  quests: Record<string, QuestProgress>; // quests started (absent: not yet)
+  tags: Record<string, true>; // story flags: choices made, beats seen
+  beats: Beat[]; // story beats waiting to play (kept in the save, so a reload replays them)
   fxSeq: number;
 }
 

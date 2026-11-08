@@ -9,6 +9,16 @@
   import { toggleEditor, travelTo } from '../commands';
 
   /** Dev: one of every gear piece into the bag, to try them on. */
+  function giveMaterials() {
+    act((s) => {
+      for (const [id, it] of Object.entries(content.items)) if (!it.slot && !it.use && !it.currency) s.bag[id] = (s.bag[id] ?? 0) + 10;
+    });
+  }
+  function giveSupplies() {
+    act((s) => {
+      for (const [id, it] of Object.entries(content.items)) if (it.use) s.bag[id] = (s.bag[id] ?? 0) + 5;
+    });
+  }
   function giveGear() {
     act((s) => {
       for (const [id, it] of Object.entries(content.items)) if (it.slot) s.bag[id] = (s.bag[id] ?? 0) + 1;
@@ -78,6 +88,14 @@
       <div class="row">
         <span class="lbl m">Gear</span>
         <button class="px btn bevel t-panel wide" onclick={giveGear}><span class="lbl m">Give one of each</span></button>
+      </div>
+      <div class="row">
+        <span class="lbl m">Food and potions</span>
+        <button class="px btn bevel t-panel wide" onclick={giveSupplies}><span class="lbl m">Give five of each</span></button>
+      </div>
+      <div class="row">
+        <span class="lbl m">Materials</span>
+        <button class="px btn bevel t-panel wide" onclick={giveMaterials}><span class="lbl m">Give ten of each</span></button>
       </div>
 
       <div class="row">

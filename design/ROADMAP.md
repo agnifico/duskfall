@@ -1,6 +1,6 @@
 # Roadmap: from surface area to a playable slice
 
-Written 2026-11-08, at the end of the tiles, HUD and art session. Lines marked *(proposal)* are suggestions not yet confirmed. Section 4 lists what has to be decided before the slice can be built.
+Written 2026-11-08, at the end of the tiles, HUD and art session. Lines marked *(proposal)* are suggestions not yet confirmed. Section 4 lists what has to be decided before the slice can be built. **Story and arcs: `design/STORY.md`** (2026-11-08: the Drill is now 15–20/25, the Mountains 25+).
 
 ---
 
@@ -29,13 +29,13 @@ Polish art and UI one area at a time, and only once that area plays well. Past p
 
 | Location | Levels | Enemies | Leave with |
 |---|---|---|---|
-| Arrival Beach + Sylvie's home | 1–5 | crab, boar, and a tougher crab or boar at L4–5 as the gate check | Traveller's set, Sylvie's quest, a first weapon |
-| Open Plains (unlocks at 5) | 5–9 | toxolotl, a plains enemy, boar variants | Padded leather |
-| Pine Grove | 9–13 | forest prowler, bear | Iron |
-| The Drill (capstone) | 13–15 | dragonling, a boss | Silversteel, or the first elemental pieces |
-| Mountains, swamp edge | 15–20 | candidates: mountain basilisk, punching tortoise, white wyvern | |
-| Eastern Hills, mountain cave (an NPC appears) | 20+ | | |
+| Arrival Beach + Sylvie's home | 1–5 | the two common enemies, pinchwarden (crab) and grumbletusk (boar), Gemini art to come, toxolotl near water | Traveller's set, Sylvie's two quests, a first weapon |
+| Open Plains, Pine Grove | 5–15 | bear (main enemy until ~7–10), then the dragonling (7–10 on) | Padded, Iron |
+| The Drill and its village (arc 2) | 15–20/25 | to plan | Silversteel or one specialised set; basic crafting |
+| Bog (side area, Verona) | to set | to plan | |
+| Mountains, cave with Varys (arc 3) | 25+ | candidates: mountain basilisk, punching tortoise, white wyvern | |
 
+- **Enemy roster (Agni, 2026-11-08):** common and easy: toxolotl (near water) plus 1–2 small land enemies (crab and boar exist as emoji only and need art). Then the bear, the main enemy until about level 7–10. Then the dragonling (level 7–10 on), slightly stronger than the bear. The forest prowler's place is still open.
 - **Levels 1–5:** Sylvie's quest plus the beach and home enemies take you to level 5. Two enemy types for five levels gets repetitive, so a tougher variant makes level 5 feel earned.
 - **Pine Grove before the Drill:** the bear and prowler belong mid-slice, and the Drill works as the level 15 capstone.
 - **Later enemies:** 15 of Dawn's Journey's enemies are already cut (`sprites/djv2/`). Candidates for the rows past level 15: siren and shark for the coast, sentinel for the Drill, wyvern for the hills.
@@ -43,36 +43,46 @@ Polish art and UI one area at a time, and only once that area plays well. Past p
 
 ### Gear by level
 - **The conflict:** the agreed armour ladder (Traveller 1, Padded 10, Iron 20, Silversteel 30…) gives the 1–15 slice only two sets.
-- **Proposal:** compress the early ladder to Traveller 1, Padded 5, Iron 10, Silversteel 15, so the first hours bring regular upgrades. The table above assumes that.
-- **How gear is obtained** *(proposal)*: each enemy drops pieces of one set, at about 25%. Drops favour pieces you don't own yet, and the material drop (shell, hide) stays as well. Players learn where each set comes from and farm it deliberately before a harder area.
+- **Decided 2026-11-08: keep 1/10/20/30** (see §4.3). Traveller's carries levels 1–10; potions and skills cover the gap.
+- **How gear is obtained:** decided 2026-11-08, see §4.4 (commons drop materials and rarely the item; strong enemies drop gear above your level; crafting alongside).
 - **Weapons** come from quests. The player starts with one Traveller's weapon so the main hand isn't empty.
 - **Relics** stay rare: from bosses and secrets.
 - **Later:** crafting from mined ore, which suits the ore tiers (silver ore for Silversteel, malachite for Adamantine).
 
 ## 4. Decisions to make, roughly in order
 
-1. **Level pacing:** how long one level takes, in kills, quests and minutes. Most other numbers follow from this.
-2. **How locations unlock:** level, quest, or an exploration stat like Dawn's Journey's World Resonance.
-3. **Armour ladder:** compress the early tiers (section 3) or keep 1/10/20/30.
-4. **Gear sources:** one set per enemy (proposal), shared loot tables, or crafting. Possibly drops now and crafting later.
+1. ~~**Level pacing.**~~ Shape decided 2026-11-08 (Agni):
+   - 1→2: the first fight, two enemies that ambush you at Sylvie's house.
+   - 2→4: Sylvie's two quests (one combat, one gathering), plus kills along the way.
+   - 4→5: a little fighting by choice. All of 1–5 within 2–3 full energy bars.
+   - 5→10 is harder than 1–5. From 10 to 20–25 each level costs about the same as at 5–10, never much harder or easier.
+   - Quests give a lot of XP, and this stretch is where players learn that quests beat grinding.
+   - **Built 2026-11-08 as a curve** (`rules.ts`): a kill is worth `25 × 1.12^(enemy level − 1)`; a level takes 2, 4, 5, 6 kills for levels 1–4, then 8 (about one energy bar) up to the cap of 25. Enemies carry a `level` and get their XP from the curve. Quests will give XP counted in kills at their level. Still to do: enemy **stats** from the same level.
+2. ~~**How locations unlock.**~~ Decided 2026-11-08: a mix of level, quest and World Resonance, place by place. Never by combat strength (stats).
+3. ~~**Armour ladder.**~~ Decided 2026-11-08: **keep 1/10/20/30.** Compressing it means too much churn for a new player.
+   - Traveller's is collected piece by piece over levels 1–5/6, and is strong enough to carry the player to level 10.
+   - Where gear falls short, potions, food and skills fill the gap. That is where the player has to think.
+4. ~~**Gear sources.**~~ Decided 2026-11-08: not one set per enemy.
+   - Common enemies (toxolotl, pinchwarden, grumbletusk) drop materials, and rarely the item those materials make.
+   - Stronger enemies (bear, dragonling) drop gear above your level, which pushes you to level up.
+   - Crafting runs alongside.
 5. ~~**What food is for.**~~ Decided 2026-11-08: food restores HP, ⚡ or Spirit, or gives a flat combat buff (strong early, weak later).
-6. **Story skeleton:**
-   - why she washed ashore
-   - what she wants by level 15
-   - Sylvie's part in it
-
-   One paragraph each.
-7. **Which quests give which weapons.**
+6. **Story skeleton:** started 2026-11-08 in `design/STORY.md`: the opening, Sylvie's part, the Hela secret, names. Still open: what she wants by level 15; why Hela and the heroine are separate; the final name list.
+7. **Which quests give which weapons.** Started 2026-11-08: **Sylvie's first quest gives the first weapon.** You start unarmed (new games only).
+   - **Feel target:** unarmed, a toxolotl takes 7–10 hits. Tedious but safe, and it teaches the combat.
+   - With the first weapon, about 4 hits.
+   - This target goes into the enemy stat formula.
 
 ## 5. Queued tasks (small, already agreed)
 
 - **Fog of war:** when an enemy attacks you, clear the fog around it. Enemies attacking from inside fog feels unfair.
 - **Gear data:**
   - ~~add `gear.json` entries for the 36 weapons~~ Done 2026-11-08 (Traveller's numbers working, the rest placeholders). Shields and quivers are off-hand; bow and staff take both hands, and a bow allows a quiver. **Daggers are main-hand for now**: an off-hand dagger (dual wield, or with a special bow) is still to do.
+  - **Relics that are really clothing** (Hela's corset, sky bracers, fire dress, crown, helmet…) move to armour slots (Agni, 2026-11-08). Sets mix any slots: mechanically a set is just a tag on items, armour or relic alike (already true in `gear.json`/`sets.json`); which pieces go where is a design choice, not a code rule.
   - replace each enemy's single `item` with a drop table
   - give the player a starting weapon
 - ~~**Skill XP**~~ Done 2026-11-08: woodcutting, mining and foraging to level 5; level adds 10% to ranged yields.
-- **Icon redo:** the Profile menu icon. The dark hood reads too shady; fix it with the next painted batch.
+- **Icon redo:** an **Inventory** menu icon (it borrows the bag icon). The Profile button has left the menu, so its hooded icon is only used by the profile panel now. Also an **Inventory** menu icon (it borrows the bag icon for now).
 
 ## 5b. Done 2026-11-08 (the editor and systems session)
 - **Map editor** (dev mode, E): paint, tune props' foot points and shadows, save. Arrival Beach enlarged and laid out with it.
@@ -81,10 +91,24 @@ Polish art and UI one area at a time, and only once that area plays well. Past p
 - **Playtest log:** in dev, everything you spend, earn, fight and level goes to `game/playtest/<session>.jsonl`, to read after a playtest.
 
 ## 5c. Next, in order (Agni, 2026-11-08)
-1. **The full Inventory page** (Dawn's Journey style), with gear comparison. Agni's notes: `design/UI_PASS.md` › Inventory and gear.
-2. **Using items:** food and potions (a couple of each).
-3. **Crafting interface**, surface level.
+1. **The full Inventory page** (Dawn's Journey style), with gear comparison. Agni's notes: `design/UI_PASS.md` › Inventory and gear. *Built 2026-11-08 (layout B: paper doll + stat sheet left, bag + detail right; I key), waiting for Agni's look.* `ui/panels/InventoryPage.svelte`, shared `ui/StatSheet.svelte` (also Profile › Stats).
+2. ~~**Using items.**~~ Built 2026-11-08 (`useItem` in `engine/actions.ts`, items in `items.json` with `use`):
+   - **Food:** berries +8 HP, brown mushroom +5 HP, seed bread +5 ⚡, mint tea +25 Spirit, smoked crab claw +3 Physical Attack for 10 min, honey cake +2/+2 defence for 10 min. No eating in a fight; one food buff at a time.
+   - **Potions:** minor health +40, health +90, spirit tonic +50, energy draught +10 ⚡. Usable in a fight, but drinking takes your turn.
+   - Numbers untested. Sources still to decide (shops, drops, cooking); dev Settings › Give five of each. Emoji icons until a Grok sheet.
+3. ~~**Crafting interface.**~~ Built 2026-11-08: the Crafting screen (K), with Cooking, Alchemy and Smithing tabs, a recipe list (makeable first) and a detail panel with have/need, quantity and Craft. 16 placeholder recipes in `content/recipes.json` (food, the 4 potions, Traveller's armour, shield, spear, bow); `engine/craft.ts`. Free and instant: no energy, stations or skill levels yet.
 4. Then the slice decisions in section 4, starting with level pacing.
+5. ~~**Enemy stats, curve and drops.**~~ Built 2026-11-08: stats from level against a reference player, drop tables, new materials (frill, bear pelt, prowler fang, dragon scale), Padded recipes, and Traveller's and Padded numbers. See `design/COMBAT.md` › 7.
+6. **Arrival Beach enemies** (Agni, 2026-11-08): two toxolotls in the shallows, a pinchwarden on the sand, two grumbletusks in the forest (territorial, they only come at you if you step next to them). Points can now place enemies by terrain (`enemies.place`).
+   - **Keep the Open Plains away from a new player.** It's the first high-level training area: prowlers kill a fresh player in a hit or two. It gets locked when the world is set up along the story (after quests and dialogue).
+6. **Quests and dialogue: slice 1 built 2026-11-08** (`design/QUESTS.md`): the engine, story mode (dialogue with cinematic bars), quest banner, tracker and log, areas that open with the story, and the opening chain (Washed Ashore with the ambush, then Thinning the Wilds with the sword/bow choice, then Firewood, which opens the Pine Grove). Next slices: level bands, NPCs placed by the story, the red tint for riled enemies, Heidi's quests, image-driven scenes. Decided 2026-11-08:
+   - **Level bands per area:** enemies spawn at about your level, held inside the area's band.
+   - **Riled ambush enemies** for the opening.
+   - **Agni redesigns Sylvie's Home and the Pine Grove** in the editor; Claude places the enemies after.
+   - **Heidi** is the Pine Grove quest-giver for levels 5–10.
+   - **Story mode:** dialogue hides the HUD and shows cinematic black bars, and quest starts and ends are announced.
+   - **Image-driven scenes** (pictures changing under the dialogue, as in nsfw_project) get their own session, built in a dev sandbox.
+   - **Choices** are recorded and steer the story (the first: sword or staff).
 
 ## 6. Art at hand
 

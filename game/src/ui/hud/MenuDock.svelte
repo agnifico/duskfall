@@ -2,7 +2,7 @@
   // The main menu, bottom-right: one Menu button. Clicking it keeps the row of buttons expanded (remembered)
   // or collapses it again; while collapsed, the row still opens on hover, or on tap.
   import { UI, type PanelId } from '../../lib/ui.svelte';
-  import { toggleMap, toggleMenu, togglePanel } from '../commands';
+  import { toggleMap, toggleMenu, togglePanel, toggleScreen } from '../commands';
   import { asset } from '../../content';
 
   let open = $state(false); // peeking: hovered or tapped while collapsed
@@ -11,8 +11,9 @@
 
   const ITEMS: { key: string; label: string; icon: string; panel?: PanelId; run: () => void }[] = [
     { key: 'B', label: 'Bag', icon: 'bag', panel: 'bag', run: () => togglePanel('bag') },
+    { key: 'I', label: 'Inventory', icon: 'bag', run: () => toggleScreen('inventory') },
+    { key: 'K', label: 'Crafting', icon: 'crafting', run: () => toggleScreen('crafting') },
     { key: 'Q', label: 'Quests', icon: 'quests', panel: 'quests', run: () => togglePanel('quests') },
-    { key: 'C', label: 'Profile', icon: 'character', panel: 'character', run: () => togglePanel('character') },
     { key: 'M', label: 'Map', icon: 'map', run: toggleMap },
     { key: 'S', label: 'Settings', icon: 'settings', panel: 'settings', run: () => togglePanel('settings') },
   ];

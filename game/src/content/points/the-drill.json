@@ -3,6 +3,8 @@
   "name": "The Drill",
   "zone": "north-shore",
   "pin": [3586, 1177],
+  "opensWith": {"tag": "drill-open"},
+  "closedText": "Later",
   "kind": "secrets",
   "backdrop": "sea",
   "fog": true,

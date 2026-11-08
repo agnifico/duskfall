@@ -1,16 +1,30 @@
 <script lang="ts">
   // Bottom centre, kept narrow: HP and Spirit, the things a fight changes. Energy is in the top bar
-  // (EnergyStrip), always shown.
+  // (EnergyStrip), always shown. A food buff that's running sits on top, with its time left.
   import { G } from '../../lib/game.svelte';
   import { content } from '../../content';
   import { MAX_SPIRIT } from '../../engine/rules';
   import { maxHp } from '../../engine/progress';
+  import { statLines } from '../statText';
+  import ItemIcon from '../ItemIcon.svelte';
 
   const max = $derived(maxHp(G.s, content));
   const hp = $derived(G.s.hp / max);
+  const buffs = $derived((G.s.buffs ?? []).filter((b) => b.until > G.now));
+  const left = (until: number) => {
+    const sec = Math.max(0, Math.round((until - G.now) / 1000));
+    return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
+  };
 </script>
 
 <div class="vitals px flat t-panel">
+  {#each buffs as b (b.item)}
+    <div class="buff" title="{content.items[b.item]?.name}: {statLines(b.stats).join(', ')}">
+      <ItemIcon id={b.item} size={18} />
+      <span class="lbl">{statLines(b.stats).join(', ')}</span>
+      <span class="lbl dim">{left(b.until)}</span>
+    </div>
+  {/each}
   <div class="row" class:low={hp < 0.3} title="Health: comes back 1 every 9 s outside a fight, or all at once with a rest">
     <span class="lbl name hp">HP</span>
     <span class="track"><b class="fill hp" style:width="{hp * 100}%"></b></span>
@@ -40,6 +54,20 @@
     grid-template-columns: 40px 1fr 50px;
     align-items: center;
     gap: 8px;
+  }
+  .buff {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding-bottom: 4px;
+    border-bottom: 2px solid color-mix(in srgb, var(--ink) 15%, transparent);
+  }
+  .buff .lbl:nth-of-type(1) {
+    flex: 1;
+    color: color-mix(in oklab, #8fd16a 70%, var(--fg));
+  }
+  .dim {
+    color: var(--dim);
   }
   .name.hp {
     color: #ff8a8d;

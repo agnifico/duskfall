@@ -6,12 +6,18 @@
   import LandView from './ui/LandView.svelte';
   import HexView from './ui/HexView.svelte';
   import Hud from './ui/hud/Hud.svelte';
+  import InventoryPage from './ui/panels/InventoryPage.svelte';
+  import CraftingPage from './ui/panels/CraftingPage.svelte';
+  import Dialogue from './ui/Dialogue.svelte';
+  import QuestBanner from './ui/QuestBanner.svelte';
   import { onKey } from './ui/commands';
 </script>
 
 <svelte:window onkeydown={onKey} />
 
 <div class="screen">
+  <!-- the field and map stay mounted under a screen, just hidden, so coming back is instant -->
+  <div class="world" class:away={!!UI.screen}>
   {#if G.s.point}
     {#key G.s.point}<HexView pointId={G.s.point} />{/key}
   {/if}
@@ -28,7 +34,12 @@
     </div>
   {/if}
 
-  {#if !inIntro()}<Hud />{/if}
+  {#if G.s.beats?.length && !UI.map}<Dialogue />{:else if !inIntro()}<Hud />{/if}
+  </div>
+
+  {#if UI.screen === 'inventory'}<InventoryPage />{/if}
+  {#if UI.screen === 'crafting'}<CraftingPage />{/if}
+  <QuestBanner />
 </div>
 
 <style>
@@ -37,6 +48,13 @@
     inset: 0;
     overflow: hidden;
     background: linear-gradient(to bottom, var(--sky-1), var(--sky-2));
+  }
+  .world {
+    position: absolute;
+    inset: 0;
+  }
+  .world.away {
+    visibility: hidden; /* no painting while a screen is up */
   }
   .map-layer {
     position: absolute;

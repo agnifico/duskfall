@@ -8,7 +8,9 @@
   import ItemIcon from '../ItemIcon.svelte';
   import { act } from '../../lib/game.svelte';
   import { SLOT_NAME, cantWear, wear } from '../../engine/gear';
-  import { statRows } from '../statText';
+  import { statRows, useLines, useVerb } from '../statText';
+  import * as E from '../../engine/actions';
+  import { openScreen } from '../commands';
 
   const COLS = 5;
   const MIN_ROWS = 3;
@@ -26,6 +28,7 @@
   <header>
     <h2 class="disp">Bag</h2>
     <span class="lbl m count">{all.length} kinds</span>
+    <button class="px btn t-inset full" onclick={() => openScreen('inventory')} title="The full inventory page, with gear comparison (I)"><span class="lbl">Full page · I</span></button>
     <button class="px btn t-inset x" onclick={() => (UI.panel = null)} title="Close (B or Esc)" aria-label="Close"><span class="lbl l">×</span></button>
   </header>
 
@@ -61,6 +64,13 @@
         {#if detail.placeholder}<div class="body placeholder">Numbers to come.</div>{/if}
         <button class="px btn bevel t-accent wear" disabled={!!why} title={why ?? 'Wear it'} onclick={() => picked && act((s) => wear(s, content, picked!))}>
           <span class="lbl m">{why ?? 'Wear'}</span>
+        </button>
+      {/if}
+      {#if detail.use}
+        {@const why = E.cantUse(G.s, content, picked)}
+        {#each useLines(detail.use) as l, i (i)}<div class="body" class:hint={i === useLines(detail.use).length - 1}>{l}</div>{/each}
+        <button class="px btn bevel t-accent wear" disabled={!!why} title={why ?? useVerb(detail.use)} onclick={() => picked && act((s) => E.useItem(s, content, picked!, Date.now()))}>
+          <span class="lbl m">{why ?? useVerb(detail.use)}</span>
         </button>
       {/if}
       {#if detail.text}<p class="body">{detail.text}</p>{/if}
@@ -106,6 +116,10 @@
   .count {
     flex: 1;
     color: var(--dim);
+  }
+  .full {
+    height: 28px;
+    padding: 0 8px 3px;
   }
   .x {
     width: 28px;

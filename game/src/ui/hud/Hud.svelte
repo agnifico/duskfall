@@ -9,6 +9,7 @@
   import EventCard from './EventCard.svelte';
   import FieldTools from './FieldTools.svelte';
   import FoeCards from './FoeCards.svelte';
+  import QuestTracker from './QuestTracker.svelte';
   import Gains from './Gains.svelte';
   import GatherPrompt from './GatherPrompt.svelte';
   import Hotbar from './Hotbar.svelte';
@@ -37,6 +38,7 @@
     {#if onField && ED.on}
       <EditorBar />
     {:else if onField}
+      <QuestTracker />
       <FoeCards />
       <EventCard />
       <GatherPrompt />

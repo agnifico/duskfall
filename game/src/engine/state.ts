@@ -5,7 +5,7 @@ import type { Worn } from './types';
 export const noneWorn = (): Worn => ({ head: null, body: null, hands: null, legs: null, feet: null, main: null, off: null, relics: Array(RELIC_SLOTS).fill(null) });
 
 /** Bump when the save shape changes in a way old saves can't be read as. Upgrades live in lib/save.ts. */
-export const SAVE_VERSION = 4;
+export const SAVE_VERSION = 5;
 
 export function newGame(now = Date.now()): GameState {
   return {
@@ -37,6 +37,10 @@ export function newGame(now = Date.now()): GameState {
     fxSeq: 0,
     xp: 0,
     skills: {},
-    worn: noneWorn(),
+    worn: noneWorn(), // no weapon at first: Sylvie's first quest gives one (design/ROADMAP.md §3)
+    buffs: [],
+    quests: {},
+    tags: {},
+    beats: [],
   };
 }

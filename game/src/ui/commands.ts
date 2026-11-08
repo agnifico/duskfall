@@ -2,10 +2,11 @@
 
 import { DEV, G, act, setDev } from '../lib/game.svelte';
 import { ED, closeEditor, dirty, openEditor } from '../lib/editor.svelte';
-import { UI, inIntro, notify, savePref, type PanelId } from '../lib/ui.svelte';
+import { SCREEN_KEYS, UI, inIntro, notify, savePref, screenFromHash, type PanelId, type ScreenId } from '../lib/ui.svelte';
 import { content } from '../content';
 import * as E from '../engine/actions';
 import { inFight } from '../engine/combat';
+import { pointClosed } from '../engine/story';
 import { nextTheme, themeOf } from './themes';
 
 // ---------- walking, step by step ----------
@@ -75,6 +76,39 @@ export function togglePanel(p: PanelId): void {
   UI.panel = UI.panel === p ? null : p;
   UI.people = false;
 }
+
+// ---------- screens ----------
+let pushed = false; // we put the screen in the history ourselves, so leaving it can go Back
+
+/** Open a full-page screen. Not during a fight: no re-gearing between blows. */
+export function openScreen(id: ScreenId): void {
+  if (inFight(G.s)) {
+    UI.invFocus = null;
+    return notify('Not during a fight.');
+  }
+  UI.panel = null;
+  UI.people = false;
+  if (UI.screen === id) return;
+  if (UI.screen && pushed) location.replace(`#/${id}`); // screen to screen: one history entry, so Back still reaches the field
+  else {
+    location.hash = `#/${id}`; // hashchange sets UI.screen
+    pushed = true;
+  }
+}
+export function closeScreen(): void {
+  if (!UI.screen) return;
+  if (pushed) history.back();
+  else {
+    history.replaceState(null, '', location.pathname + location.search);
+    UI.screen = null;
+  }
+  pushed = false;
+}
+export const toggleScreen = (id: ScreenId) => (UI.screen === id ? closeScreen() : openScreen(id));
+window.addEventListener('hashchange', () => {
+  UI.screen = screenFromHash();
+  if (!UI.screen) pushed = false;
+});
 
 /** Show or hide the whole UI. Hiding also closes any open panel. */
 export function toggleUi(): void {
@@ -167,6 +201,8 @@ export function enterLand(): void {
 export function travelTo(pointId: string): void {
   if (pointId === G.s.point) return closeMap();
   if (blockedByFight()) return;
+  const closed = pointClosed(G.s, content, pointId);
+  if (closed) return notify(`${content.points[pointId]?.name}: ${closed.toLowerCase()}.`);
   UI.panel = null;
   act((s) => E.enterPoint(s, content, pointId));
   UI.map = null;
@@ -209,6 +245,8 @@ const EDITOR_KEYS = new Set(['e', 'h', '[', ']', 'm']);
 
 const KEYS: Record<string, () => void> = {
   b: () => togglePanel('bag'),
+  i: () => toggleScreen('inventory'),
+  k: () => toggleScreen('crafting'),
   q: () => togglePanel('quests'),
   c: () => togglePanel('character'),
   p: togglePeople,
@@ -235,6 +273,18 @@ export function onKey(e: KeyboardEvent): void {
     // Esc goes back where you were; any other key enters the land
     if (k === 'escape') closeMap();
     else enterLand();
+    e.preventDefault();
+    return;
+  }
+  // a story beat has the screen: its own keys (Dialogue.svelte), nothing else
+  if (G.s.beats?.length && !UI.map && !UI.screen) return;
+  // on a screen: Esc or its own key goes back, another screen's key switches, T cycles the theme
+  if (UI.screen) {
+    const other = (Object.entries(SCREEN_KEYS) as [ScreenId, string][]).find(([, key]) => key === k)?.[0];
+    if (k === 'escape' || other === UI.screen) closeScreen();
+    else if (other) openScreen(other);
+    else if (k === 't') cycleTheme();
+    else return;
     e.preventDefault();
     return;
   }

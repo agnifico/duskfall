@@ -6,6 +6,7 @@ import { dirTo, grid, hexDistance, route, shapeCells, stepDir, type Grid } from 
 import { say } from './log';
 import { track } from './telemetry';
 import { addSkillXp, levelledYield, maxHp, skillLevel } from './progress';
+import { talkTo } from './story';
 import { ensureFoesAt, foeAt, foesHere, fx, inFight, playerHits, rerollFoes, resetFoes, tick } from './combat';
 
 export { say };
@@ -311,6 +312,49 @@ export function useSkill(s: GameState, c: Content, skillId: string, targetKey: s
   afterAction(s, c, g);
 }
 
+// ---------- food and potions ----------
+
+/** Why you can't use it right now, or null. */
+export function cantUse(s: GameState, c: Content, id: string): string | null {
+  const u = c.items[id]?.use;
+  if (!u) return "That isn't something to use";
+  if (!(s.bag[id] > 0)) return 'Not in your bag';
+  if (u.kind === 'food' && inFight(s)) return 'No eating in a fight';
+  const full = (!u.hp || s.hp >= maxHp(s, c)) && (!u.energy || s.energy >= MAX_ENERGY) && (!u.spirit || s.spirit >= MAX_SPIRIT);
+  if (full && !u.buff) return u.hp ? 'Your health is full' : u.energy ? 'Your energy is full' : 'Your spirit is full';
+  return null;
+}
+
+/** Eat or drink it. A potion drunk in a fight takes your turn. */
+export function useItem(s: GameState, c: Content, id: string, now: number): void {
+  const why = cantUse(s, c, id);
+  const it = c.items[id];
+  if (why) return say(s, `${it?.name ?? id}: ${why.toLowerCase()}.`);
+  const u = it.use!;
+  s.bag[id] -= 1;
+  if (s.bag[id] <= 0) delete s.bag[id];
+  if (u.hp) s.hp = Math.min(maxHp(s, c), s.hp + u.hp);
+  if (u.spirit) s.spirit = Math.min(MAX_SPIRIT, (s.spirit ?? 0) + u.spirit);
+  if (u.energy) {
+    s.energy = Math.min(MAX_ENERGY, s.energy + u.energy);
+    if (s.energy >= MAX_ENERGY) s.lastRegen = now;
+  }
+  if (u.buff) {
+    s.buffs = (s.buffs ?? []).filter((b) => b.until > now && c.items[b.item]?.use?.kind !== 'food');
+    s.buffs.push({ item: id, stats: u.buff.stats, until: now + u.buff.minutes * 60_000 });
+  }
+  if (u.hp && s.pos) fx(s, s.pos, `+${u.hp} HP`, 'xp');
+  track('use', { item: id });
+  say(s, `${u.kind === 'food' ? 'You eat' : 'You drink'} the ${it.name.toLowerCase()}.`);
+  const g = hereGrid(s, c);
+  if (u.kind === 'potion' && g && inFight(s)) afterAction(s, c, g);
+}
+
+/** Buffs that ran out leave. */
+export function expireBuffs(s: GameState, now: number): void {
+  if (s.buffs?.some((b) => b.until <= now)) s.buffs = s.buffs.filter((b) => b.until > now);
+}
+
 /** The enemies' turn. Returns true if it knocked you out. */
 function afterAction(s: GameState, c: Content, g: Grid): boolean {
   if (!tick(s, c, g)) return false;
@@ -402,7 +446,7 @@ export function actionsHere(s: GameState, c: Content): Action[] {
       label: `Talk to ${c.npcs[npcId].name}`,
       cost: 0,
       run: () => {
-        s.talk[npcId] = (s.talk[npcId] ?? 0) + 1;
+        if (!talkTo(s, c, npcId)) s.talk[npcId] = (s.talk[npcId] ?? 0) + 1; // a quest stage with them, or their own lines
       },
     });
   } else if (pr?.type === 'rest') {

@@ -2,13 +2,15 @@
 """Cut AI sprite sheets into trimmed, transparent PNGs for the game.
 
 Writes game/public/sprites/<set>/<name>.png and game/src/content/sprites.json.
-Needs Pillow, numpy and scipy. The nsfw_project venv has them. From this project's root:
-  ../nsfw_project/.venv/bin/python -I tools/cut_sheets.py
+Needs Pillow, numpy and scipy (installed for the system python3, 2026-11-08). From this project's root:
+  python3 tools/cut_sheets.py
 
 To add a sheet: put it in extras/sheets/<kind>/ and add a line to SHEETS below (paths are relative to extras/).
 Sheets replaced by newer ones live in extras/superseded/; nothing reads them.
 Single images that already have a transparent background (djv2's enemies) go in SINGLES: they are only
 trimmed, shrunk and measured. `--singles` processes just those and keeps the rest of the manifest.
+Item sets (ICON_SETS) also get a small <name>.icon.webp for grids and slots, where a hundred full-size PNGs
+would load at once (ui/ItemIcon.svelte uses it). `--icons` writes just those, from the PNGs already cut.
 
 How a cell is cut:
   0. Sheets in OVERFLOW are cut from a window larger than the cell, because their objects (figures) spill
@@ -347,7 +349,30 @@ def cut_singles(manifest):
         print(f'  {name}: {len(names)} single images')
 
 
+ICON_SETS = ['gear', 'weapons', 'relics', 'elem1', 'elem2', 'grok_items']
+ICON_SIDE = 128  # shown at 40-64 px, so this covers 2x screens
+
+
+def write_icons():
+    n = 0
+    for name in ICON_SETS:
+        folder = os.path.join(PUBLIC, 'sprites', name)
+        for f in sorted(os.listdir(folder)):
+            if not f.endswith('.png'):
+                continue
+            im = Image.open(os.path.join(folder, f)).convert('RGBA')
+            scale = min(1.0, ICON_SIDE / max(im.size))
+            if scale < 1:
+                im = im.convert('RGBa').resize((max(1, round(im.width * scale)), max(1, round(im.height * scale))), Image.LANCZOS).convert('RGBA')
+            im.save(os.path.join(folder, f[:-4] + '.icon.webp'), 'WEBP', quality=90, method=6)
+            n += 1
+    print(f'  icons: {n} small versions')
+
+
 def main():
+    if '--icons' in sys.argv:
+        write_icons()
+        return
     if '--singles' in sys.argv:
         with open(MANIFEST) as f:
             manifest = json.load(f)
@@ -395,6 +420,7 @@ def main():
     with open(MANIFEST, 'w') as f:
         json.dump(manifest, f, indent=1)
     print(f'wrote {len(manifest)} sprites to the manifest')
+    write_icons()
 
 
 if __name__ == '__main__':

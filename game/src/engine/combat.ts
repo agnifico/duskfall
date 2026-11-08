@@ -4,13 +4,14 @@
 // attack lands only on the hexes it showed, so stepping out of them makes it miss.
 // The UI never calls this directly: player actions in actions.ts call tick().
 
-import type { Cell, Content, DamageKind, Foe, FoeData, Fx, GameState, Intent, Stats } from './types';
-import { hexDistance, route, shapeCells, type Grid } from './hex';
-import { CYCLE_MS, DEV_RULES, FOE_DEFAULTS, FREE_REROLLS } from './rules';
+import type { Cell, Content, DamageKind, Drop, Foe, FoeData, Fx, GameState, Intent, Stats } from './types';
+import { grid, hexDistance, route, shapeCells, type Grid } from './hex';
+import { CYCLE_MS, DEV_RULES, FOE_DEF, FOE_DEFAULTS, FOE_HITS, FOE_HIT_SHARE, FREE_REROLLS, LEVEL_STATS, PLAYER_STATS, REF_GEAR, killXp } from './rules';
 import { hash, mulberry32 } from './rng';
 import { say } from './log';
 import { track } from './telemetry';
 import { addCombatXp, playerStats } from './progress';
+import { onKill } from './story';
 export { playerStats };
 
 // ---------- the maths (design/COMBAT.md, section 3) ----------
@@ -51,9 +52,47 @@ export function foeData(c: Content, kind: string): FoeData | undefined {
   return c.props[kind]?.foe;
 }
 
+/** A standard enemy of this level, from the reference player (rules.ts › FOE_HITS, REF_GEAR). */
+export function curveStats(level: number): Stats {
+  const l = Math.max(1, level);
+  const cut = (def: number) => 1 - def / (def + 200); // Dawn's Journey's defence: what gets through
+  const def = FOE_DEF(l);
+  const critAvg = 1 + PLAYER_STATS.crit * (PLAYER_STATS.critDmg - 1);
+  const yourAtk = PLAYER_STATS.patk + LEVEL_STATS.patk * (l - 1) + REF_GEAR.patk(l);
+  const yourHp = PLAYER_STATS.hp + LEVEL_STATS.hp * (l - 1) + REF_GEAR.hp(l);
+  const yourDef = PLAYER_STATS.pdef + LEVEL_STATS.pdef * (l - 1) + REF_GEAR.pdef(l);
+  const hp = FOE_HITS * yourAtk * cut(def) * critAvg;
+  const atk = (FOE_HIT_SHARE * yourHp) / cut(yourDef);
+  return { ...FOE_DEFAULTS, hp, patk: atk, eatk: atk, pdef: def, edef: def };
+}
+
+/** An enemy's stats: its level's curve scaled by its type's `mult`, then its own `stats` on top. Enemies with
+ *  no level use their `stats` alone. */
 export function foeStats(c: Content, kind: string): Stats {
-  const st = { ...FOE_DEFAULTS, ...(foeData(c, kind)?.stats ?? { hp: 1 }) };
-  return { ...st, eatk: st.eatk ?? st.patk, edef: st.edef ?? st.pdef };
+  const d = foeData(c, kind);
+  if (d?.level == null) {
+    const st = { ...FOE_DEFAULTS, hp: 1, ...(d?.stats ?? {}) };
+    return { ...st, eatk: st.eatk ?? st.patk, edef: st.edef ?? st.pdef };
+  }
+  const st = curveStats(d.level);
+  for (const [k, m] of Object.entries(d.mult ?? {}) as [keyof Stats, number][]) st[k] *= m;
+  for (const k of ['hp', 'patk', 'eatk', 'pdef', 'edef'] as const) st[k] = Math.round(st[k]);
+  return { ...st, ...(d.stats ?? {}) };
+}
+
+/** What a beaten enemy leaves: each line of its drop table rolled on its own. */
+export function rollDrops(c: Content, kind: string, rnd = Math.random): Record<string, number> {
+  const d = foeData(c, kind);
+  const table: Drop[] = d?.drops ?? (c.props[kind]?.item ? [{ item: c.props[kind].item!, chance: 1 }] : []);
+  const out: Record<string, number> = {};
+  for (const line of table) {
+    if (rnd() >= line.chance) continue;
+    const id = line.oneOf ? line.oneOf[Math.floor(rnd() * line.oneOf.length)] : line.item;
+    if (!id) continue;
+    const n = Array.isArray(line.n) ? line.n[0] + Math.floor(rnd() * (line.n[1] - line.n[0] + 1)) : (line.n ?? 1);
+    out[id] = (out[id] ?? 0) + n;
+  }
+  return out;
 }
 
 /** The enemies on the point you're in. */
@@ -80,31 +119,55 @@ export const msToNextCycle = (now: number) => CYCLE_MS - (now % CYCLE_MS);
 export function rollFoes(s: GameState, c: Content, g: Grid, pointId: string, cycle: number, rerolls: number): void {
   const spec = c.points[pointId]?.enemies;
   s.foeRolls[pointId] = { cycle, rerolls };
-  s.foes[pointId] = [];
-  if (!spec?.table.length) return;
+  s.foes[pointId] = (s.foes[pointId] ?? []).filter((f) => f.id.startsWith('story.')); // story spawns stay until beaten
+  if (!spec?.table?.length && !spec?.place?.length) return;
   const rng = mulberry32(hash(pointId) + cycle * 7919 + rerolls * 104729);
   const exit = g.cells.find((x) => x.p === '>');
   const me = s.point === pointId && s.pos ? g.byKey.get(s.pos) : undefined;
-  const taken = new Set<string>();
+  const taken = new Set<string>(s.foes[pointId].map((f) => f.pos));
   const free = (x: Cell) =>
     c.terrain[x.t]?.cost != null &&
     !taken.has(x.key) &&
     (!exit || hexDistance(x, exit) > 1) &&
     (!me || hexDistance(x, me) > 1);
   const pick = (list: Cell[]) => list[Math.floor(rng() * list.length)];
-  const [lo, hi] = spec.count;
-  const n = lo + Math.floor(rng() * (hi - lo + 1));
-  for (let i = 0; i < n; i++) {
-    const kind = spec.table[Math.floor(rng() * spec.table.length)];
+  const kinds: { kind: string; on?: string[] }[] = [...(spec.place ?? [])];
+  if (spec.table?.length) {
+    const [lo, hi] = spec.count ?? [1, 1];
+    const n = lo + Math.floor(rng() * (hi - lo + 1));
+    for (let i = 0; i < n; i++) kinds.push({ kind: spec.table[Math.floor(rng() * spec.table.length)] });
+  }
+  kinds.forEach(({ kind, on }, i) => {
     const d = foeData(c, kind);
-    if (!d) continue;
-    const onNode = g.cells.filter((x) => free(x) && x.p && c.props[x.p]?.type === 'node');
-    const empty = g.cells.filter((x) => free(x) && !x.p);
+    if (!d) return;
+    const ok = (x: Cell) => free(x) && (!on || on.includes(x.t));
+    const onNode = g.cells.filter((x) => ok(x) && x.p && c.props[x.p]?.type === 'node');
+    const empty = g.cells.filter((x) => ok(x) && !x.p);
     const at = d.behaviour === 'still' && onNode.length && rng() < 0.7 ? pick(onNode) : pick(empty.length ? empty : onNode);
-    if (!at) break;
+    if (!at) return;
     taken.add(at.key);
     s.foes[pointId].push({ id: `${cycle}.${rerolls}.${i}`, kind, pos: at.key, home: at.key, hp: foeStats(c, kind).hp, charge: 0, engaged: false, intent: null });
-  }
+  });
+}
+
+/** A story spawn: enemies appear 2–3 hexes from you, already after you (the opening ambush). */
+export function spawnAround(s: GameState, c: Content, list: { kind: string; n: number }[]): void {
+  if (!s.point || !s.pos) return;
+  const g = grid(c, s.point, s.day);
+  const me = g.byKey.get(s.pos);
+  if (!me) return;
+  s.foes[s.point] ??= [];
+  const taken = new Set(s.foes[s.point].map((f) => f.pos));
+  const ring = (d: number) => g.cells.filter((x) => c.terrain[x.t]?.cost != null && !x.p && !taken.has(x.key) && hexDistance(x, me) === d);
+  let i = 0;
+  for (const { kind, n } of list)
+    for (let k = 0; k < n; k++) {
+      const spots = ring(2).length ? ring(2) : ring(3);
+      const at = spots[Math.floor(Math.random() * spots.length)];
+      if (!at) return;
+      taken.add(at.key);
+      s.foes[s.point].push({ id: `story.${Date.now()}.${i++}`, kind, pos: at.key, home: at.key, hp: foeStats(c, kind).hp, charge: 0, engaged: true, intent: null });
+    }
 }
 
 /** A point's enemies for the current cycle: rolled the first time you're there in it, kept until it ends.
@@ -217,10 +280,12 @@ function foeAct(s: GameState, c: Content, g: Grid, f: Foe, shown: Intent | null)
   return false;
 }
 
-/** Combat XP for beating an enemy: its own number, or half its HP plus its attack and defence. */
+/** Combat XP for beating an enemy: its own number, its level's on the curve (its type's mult doesn't change
+ *  it: a level is a level), or half its HP plus its attack and defence. */
 export function foeXp(c: Content, kind: string): number {
   const d = foeData(c, kind);
   if (d?.xp != null) return d.xp;
+  if (d?.level != null) return killXp(d.level);
   const st = foeStats(c, kind);
   return Math.round(st.hp / 2 + st.patk + st.pdef);
 }
@@ -237,9 +302,12 @@ export function playerHits(s: GameState, c: Content, f: Foe, power = 1, kind: Da
   fx(s, f.pos, fmt(h.dmg), h.crit ? 'crit' : 'hit');
   if (f.hp > 0) return;
   s.foes[s.point!] = foesHere(s).filter((x) => x !== f); // gone until the next cycle
-  if (pr?.item) s.bag[pr.item] = (s.bag[pr.item] ?? 0) + 1;
-  if (pr?.item) track('gain', { item: pr.item, n: 1, why: `drop:${f.kind}`, point: s.point });
+  for (const [item, n] of Object.entries(rollDrops(c, f.kind))) {
+    s.bag[item] = (s.bag[item] ?? 0) + n;
+    track('gain', { item, n, why: `drop:${f.kind}`, point: s.point });
+  }
   track('kill', { foe: f.kind, point: s.point, hp: s.hp });
+  onKill(s, c, f.kind, s.point);
   say(s, `You beat the ${pr?.name ?? f.kind}.`);
   const xp = foeXp(c, f.kind);
   fx(s, s.pos!, `+${xp} xp`, 'xp');

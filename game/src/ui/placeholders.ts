@@ -13,4 +13,8 @@ export const TIME_OF_DAY = 'Morning';
 export const WORLD_RESONANCE = 0;
 
 /** Until the player names themselves (GameState.name). Levels are real now: engine/progress.ts. */
-export const PLAYER = { name: 'Washed ashore', monogram: '?' };
+export const PLAYER = { name: 'Dawn', monogram: '?' };
+
+/** Your title: what the world calls you. It changes as the story goes (Emerging Adventurer, Chosen by Hell…).
+ *  Until titles are a system, this one. */
+export const TITLE = { name: 'Washed Ashore', text: 'Pulled from the sea onto Nuvatra’s north shore, with nothing but what you wore.' };

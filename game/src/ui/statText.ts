@@ -53,5 +53,18 @@ export function statRows(st: Partial<Stats> | undefined): StatLine[] {
     .map(([k, v]) => ({ key: k, name: STAT_NAME[k] ?? k, value: statValue(k, v), icon: statIcon(k), bad: v < 0 }));
 }
 
+/** What eating or drinking it does: "Restores 40 HP", "+3 Physical Attack for 10 min". */
+export function useLines(u: import('../engine/types').ItemUse | undefined): string[] {
+  if (!u) return [];
+  const out: string[] = [];
+  if (u.hp) out.push(`Restores ${u.hp} HP`);
+  if (u.energy) out.push(`Restores ${u.energy} energy`);
+  if (u.spirit) out.push(`Restores ${u.spirit} Spirit`);
+  if (u.buff) out.push(`${statRows(u.buff.stats).map((r) => `${r.value} ${r.name}`).join(', ')} for ${u.buff.minutes} min`);
+  out.push(u.kind === 'food' ? 'Food: not in a fight. One food buff at a time.' : 'Potion: works in a fight, but takes your turn.');
+  return out;
+}
+export const useVerb = (u: import('../engine/types').ItemUse) => (u.kind === 'food' ? 'Eat' : 'Drink');
+
 /** "+3 Physical Defence": for places with no room for icons. */
 export const statLines = (st: Partial<Stats> | undefined): string[] => statRows(st).map((r) => `${r.value} ${r.name}`);

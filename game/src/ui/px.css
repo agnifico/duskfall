@@ -327,6 +327,14 @@ button.px {
 
 /* ---------- map pins: names written on the painted maps, the same in every theme ---------- */
 
+.map-pin.closed {
+  filter: grayscale(1);
+  opacity: 0.55 !important;
+  cursor: not-allowed;
+}
+.map-pin small {
+  opacity: 0.8;
+}
 .map-pin {
   position: absolute;
   transform: translate(-50%, -26px); /* the shield's tip sits on the point */

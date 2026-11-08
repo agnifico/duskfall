@@ -1,24 +1,41 @@
 <script lang="ts">
   // Your gear: the armour down the left, hands and relics on the right, then the sets you're wearing.
-  // Click a worn piece to take it off; wearing is from the bag. Gear art has no shadow of its own (ItemIcon adds one).
-  import { G, act } from '../../lib/game.svelte';
+  // Hovering a piece shows its details (handy mid-fight, when the Inventory screen can't open); clicking it
+  // (or the button) opens the Inventory screen on it, to compare and swap there.
+  // Gear art has no shadow of its own (ItemIcon adds one).
+  import { G } from '../../lib/game.svelte';
   import { content } from '../../content';
-  import { ARMOUR, SLOT_NAME, activeSets, gearStats, takeOff } from '../../engine/gear';
+  import { ARMOUR, SLOT_NAME, activeSets, gearStats } from '../../engine/gear';
   import type { WornSlot } from '../../engine/types';
   import ItemIcon from '../ItemIcon.svelte';
-  import { statLines } from '../statText';
+  import ItemCard from '../ItemCard.svelte';
+  import { statLines, statRows } from '../statText';
   import { UI } from '../../lib/ui.svelte';
+  import { openScreen } from '../commands';
 
   const worn = $derived(G.s.worn);
   const sets = $derived(activeSets(G.s, content));
-  const total = $derived(statLines(gearStats(G.s, content)));
-  const off = (slot: WornSlot | 'relic', i = 0) => act((s) => takeOff(s, slot, i));
+  const total = $derived(statRows(gearStats(G.s, content)));
+  const off = (slot: WornSlot | 'relic', i = 0) => {
+    UI.invFocus = { slot, i };
+    openScreen('inventory');
+  };
+  let hover = $state<{ id: string; at: DOMRect } | null>(null);
   const twoHanded = $derived(!!worn.main && !!content.items[worn.main]?.twoHanded && !content.items[worn.main]?.offhand?.length);
 </script>
 
 {#snippet slot(id: string | null, label: string, onclick: () => void, locked = false)}
   {@const it = id ? content.items[id] : undefined}
-  <button class="gslot" class:empty={!id} class:locked disabled={!id} {onclick} title={it ? `${it.name}: click to take off` : locked ? 'Both hands are on your main weapon' : `${label}: wear something from the bag`}>
+  <button
+    class="gslot"
+    class:empty={!id}
+    class:locked
+    disabled={!id}
+    {onclick}
+    onmouseenter={(e) => id && (hover = { id, at: e.currentTarget.getBoundingClientRect() })}
+    onmouseleave={() => (hover = null)}
+    title={it ? undefined : locked ? 'Both hands are on your main weapon' : `${label}: wear something from the bag`}
+  >
     {#if id}<ItemIcon {id} size={44} />{:else}<span class="lbl dim">{locked ? '—' : label}</span>{/if}
   </button>
 {/snippet}
@@ -53,7 +70,7 @@
     <section class="card px flat t-inset">
       <div class="lbl section">From gear</div>
       {#if total.length}
-        {#each total as l (l)}<div class="lbl m">{l}</div>{/each}
+        {#each total as r (r.key)}<div class="srow"><img src={r.icon} alt="" /><span class="body">{r.name}</span><span class="lbl m sval" class:bad={r.bad}>{r.value}</span></div>{/each}
       {:else}
         <p class="lbl dim">Nothing yet. Wear something from the bag.</p>
       {/if}
@@ -72,8 +89,9 @@
       {/each}
     </section>
   </div>
-  <button class="px btn bevel t-panel open-bag" onclick={() => (UI.panel = 'bag')}><span class="lbl m">Open the bag to wear things (B)</span></button>
+  <button class="px btn bevel t-panel open-bag" onclick={() => openScreen('inventory')}><span class="lbl m">Open the inventory to wear and compare (I)</span></button>
 </div>
+{#if hover}<ItemCard id={hover.id} anchor={hover.at} />{/if}
 
 <style>
   .gear {
@@ -119,7 +137,7 @@
       inset 0 -2px 0 rgb(255 255 255 / 0.12);
   }
   .gslot:hover:not(:disabled) {
-    background: color-mix(in srgb, var(--well) 80%, #e5484d);
+    background: color-mix(in srgb, var(--well) 85%, #fff);
   }
   .gslot.empty {
     cursor: default;
@@ -148,6 +166,25 @@
     display: flex;
     flex-direction: column;
     gap: 3px;
+  }
+  .srow {
+    display: grid;
+    grid-template-columns: 22px 1fr auto;
+    align-items: center;
+    gap: 8px;
+    min-height: 26px;
+  }
+  .srow img {
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+  }
+  .sval {
+    font-weight: 700;
+    color: color-mix(in oklab, #2f9e44 65%, var(--fg));
+  }
+  .sval.bad {
+    color: color-mix(in oklab, #d64545 70%, var(--fg));
   }
   .open-bag {
     align-self: flex-start;

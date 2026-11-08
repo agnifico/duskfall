@@ -1,6 +1,6 @@
 <script lang="ts">
   // A character's page, in tabs. Yours: Overview (who you are, level, World Resonance, vitals, what you're
-  // doing), Stats (Dawn's Journey style: icon, coloured name, value), Skills (tools on top, then the gathering
+  // doing), Stats (StatSheet: icon, coloured name, value, in pairs), Skills (tools on top, then the gathering
   // skills; each will open its own progression page), Fighting (your skills), Images. Other people's: Overview
   // (with a free trip to them), Stats if they fight, Images. Icons are the painted set cut from extras/icons_grok_*.jpg (public/sprites/icons).
   import { G, act } from '../../lib/game.svelte';
@@ -12,7 +12,9 @@
   import { goToPerson } from '../commands';
   import Panel from './Panel.svelte';
   import GearTab from './GearTab.svelte';
-  import { ACTIVE_QUEST, PLAYER, WORLD_RESONANCE } from '../placeholders';
+  import StatSheet from '../StatSheet.svelte';
+  import { PLAYER, TITLE, WORLD_RESONANCE } from '../placeholders';
+  import { focusQuest } from '../../engine/story';
 
   let { who }: { who: string } = $props(); // 'player', or a person's id
 
@@ -48,49 +50,14 @@
     return zone ? `${p.name} · ${zone.name}` : p.name;
   }
 
-  // ---------- your name, editable ----------
-  const myName = $derived(G.s.name || PLAYER.name);
-  let editing = $state(false);
-  let draft = $state('');
-  function startEdit() {
-    draft = myName;
-    editing = true;
-  }
-  function commit() {
-    const n = draft.trim();
-    if (n) act((s) => (s.name = n.slice(0, 24)));
-    editing = false;
-  }
-  function onNameKey(e: KeyboardEvent) {
-    if (e.key === 'Enter') commit();
-    if (e.key === 'Escape') {
-      e.stopPropagation();
-      editing = false;
-    }
-  }
-  const focusIn = (el: HTMLInputElement) => {
-    el.focus();
-    el.select();
+  // ---------- your name: chosen from a set list (all mean dawn or morning), never typed ----------
+  const NAMES = content.player.names ?? [PLAYER.name];
+  const myName = $derived(G.s.name || NAMES[0]);
+  let choosing = $state(false);
+  const choose = (n: string) => {
+    act((s) => (s.name = n));
+    choosing = false;
   };
-
-  /** The stat sheet. Speed feeds a quarter of itself into evasion and precision, and the sheet shows the split. */
-  const rows = $derived.by(() => {
-    if (!stats) return [];
-    const q = stats.spd / 4;
-    return [
-      { icon: 'health', name: 'Health', colour: '#2f9a5a', value: isPlayer ? `${Math.ceil(G.s.hp)} / ${stats.hp}` : `${stats.hp}`, text: 'Comes back slowly outside a fight, or all at once with a rest.' },
-      ...(isPlayer ? [{ icon: 'spirit', name: 'Spirit', colour: '#3a7fc0', value: `${G.s.spirit} / ${MAX_SPIRIT}`, text: 'Built by basic attacks, spent by skills.' }] : []),
-      { icon: 'attack', name: 'Physical Attack', colour: '#4c6f99', value: `${stats.patk}`, text: 'Damage of basic attacks and physical skills.' },
-      { icon: 'attack', name: 'Elemental Attack', colour: '#7a5bb8', value: `${stats.eatk}`, text: 'Damage of spells and elemental skills.' },
-      { icon: 'defence', name: 'Physical Defence', colour: '#4c6f99', value: `${stats.pdef}`, text: 'Takes damage off physical hits.' },
-      { icon: 'defence', name: 'Elemental Defence', colour: '#7a5bb8', value: `${stats.edef}`, text: 'Takes damage off elemental hits.' },
-      { icon: 'speed', name: 'Speed', colour: '#7d6a4f', value: `${stats.spd}`, text: 'A quarter of it adds to evasion and precision.' },
-      { icon: 'evasion', name: 'Evasion', colour: '#b8457a', value: `${stats.eva + q}`, note: `${stats.eva} + ${q} from speed`, text: 'Chance to dodge a hit.' },
-      { icon: 'precision', name: 'Precision', colour: '#b8457a', value: `${stats.prc + q}`, note: `${stats.prc} + ${q} from speed`, text: 'Cuts into the other side’s evasion.' },
-      { icon: 'crit', name: 'Crit Rate', colour: '#5b8a4f', value: `${Math.round(stats.crit * 100)}%`, text: 'Chance a hit is critical.' },
-      { icon: 'critdmg', name: 'Crit Damage', colour: '#5b8a4f', value: `${stats.critDmg}×`, text: 'How much harder a critical hit lands.' },
-    ];
-  });
 
   function onkeydown(e: KeyboardEvent) {
     if (tab !== 'images' || !art.length) return;
@@ -121,12 +88,18 @@
         <div class="id">
           {#if isPlayer}
             <div class="lbl eyebrow">You</div>
-            {#if editing}
-              <input class="disp name edit" bind:value={draft} onblur={commit} onkeydown={onNameKey} maxlength="24" use:focusIn aria-label="Your name" />
-            {:else}
-              <button class="disp name rename" onclick={startEdit} title="Rename">{myName}<span class="pen" aria-hidden="true">✎</span></button>
+            <button class="disp name rename" disabled={!G.s.tags?.named} onclick={() => (choosing = !choosing)} title={G.s.tags?.named ? 'Choose your name' : 'Someone will ask your name soon'}>{myName}<span class="pen" aria-hidden="true">✎</span></button>
+            {#if choosing}
+              <div class="names" role="listbox" aria-label="Choose your name">
+                {#each NAMES as n (n)}
+                  <button class="px btn t-inset nm" class:on={n === myName} role="option" aria-selected={n === myName} onclick={() => choose(n)}><span class="lbl m">{n}</span></button>
+                {/each}
+              </div>
             {/if}
             <div class="badges">
+              <span class="badge ttl px flat t-inset" title="Your title: what the world calls you. It changes as your story does. {TITLE.text}">
+                <span class="lbl dim">Title</span><span class="lbl m">{TITLE.name}</span>
+              </span>
               <span class="badge px flat t-inset" title="Your combat level: XP from beating enemies raises it, and with it health, attack and defence">
                 <img src={icon('level')} alt="" /><span class="lbl m">Level {lv.level}</span>
               </span>
@@ -163,23 +136,15 @@
           </section>
           <section class="card px flat t-inset">
             <div class="lbl section">Now</div>
-            <div class="body strong">{ACTIVE_QUEST.title}</div>
-            <p class="body dim">{ACTIVE_QUEST.objective}</p>
+            <div class="body strong">{focusQuest(G.s, content)?.title ?? 'No quest'}</div>
+            <p class="body dim">{focusQuest(G.s, content)?.objective ?? 'Explore.'}</p>
             {#if placeName(G.s.point)}<div class="lbl dim at">At {placeName(G.s.point)} · Day {G.s.day}</div>{/if}
           </section>
         </div>
       {/if}
     </div>
   {:else if tab === 'stats'}
-    <div class="list">
-      {#each rows as r (r.name)}
-        <div class="stat" title={r.text}>
-          <img src={icon(r.icon)} alt="" />
-          <span class="body sname" style:color={r.colour}>{r.name}</span>
-          <span class="lbl m val">{r.value}{#if r.note}<span class="dim"> ({r.note})</span>{/if}</span>
-        </div>
-      {/each}
-    </div>
+    <StatSheet stats={stats!} hp={isPlayer ? G.s.hp : undefined} spirit={isPlayer ? { now: G.s.spirit, max: MAX_SPIRIT } : undefined} />
   {:else if tab === 'gear'}
     <GearTab />
   {:else if tab === 'skills'}
@@ -308,7 +273,7 @@
     border: 0;
     background: none;
     color: inherit;
-    cursor: text;
+    cursor: pointer;
     text-align: left;
   }
   .pen {
@@ -321,14 +286,14 @@
   .rename:focus-visible .pen {
     opacity: 1;
   }
-  .edit {
-    width: 100%;
-    max-width: 420px;
-    padding: 2px 6px;
-    border: 0;
-    background: var(--well);
-    color: var(--well-fg);
-    box-shadow: 0 0 0 2px var(--ink);
+  .names {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 2px 0 6px;
+  }
+  .nm {
+    padding: 4px 10px 7px;
   }
   .badges {
     display: flex;
@@ -343,7 +308,6 @@
     padding: 0 12px 0 8px;
   }
   .badge img,
-  .stat img,
   .skill img,
   .tool img {
     object-fit: contain;
@@ -351,6 +315,9 @@
   .badge img {
     width: 20px;
     height: 20px;
+  }
+  .ttl {
+    padding-left: 12px;
   }
   .wr b {
     padding: 1px 8px;
@@ -434,24 +401,6 @@
   .list {
     display: flex;
     flex-direction: column;
-  }
-  .stat {
-    display: grid;
-    grid-template-columns: 28px 1fr auto;
-    align-items: center;
-    gap: 12px;
-    padding: 8px 2px;
-    border-bottom: 2px solid color-mix(in srgb, var(--fg) 12%, transparent);
-  }
-  .stat img {
-    width: 28px;
-    height: 28px;
-  }
-  .sname {
-    font-weight: 600;
-  }
-  .val {
-    text-align: right;
   }
   .tool,
   .skill {

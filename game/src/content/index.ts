@@ -1,6 +1,6 @@
 // Loads the content files. Adding a point = adding a JSON file to points/ whose zone is in a land.
 
-import type { Content, Figure, GearSet, Item, Land, LifeSkill, Npc, Player, Point, Prop, Skill, Terrain, World } from '../engine/types';
+import type { Content, Figure, GearSet, Item, Land, LifeSkill, Npc, Player, Point, Prop, Quest, Recipe, Skill, Terrain, World } from '../engine/types';
 import world from './world.json';
 import terrain from './terrain.json';
 import propsRaw from './props.json';
@@ -11,6 +11,8 @@ import skills from './skills.json';
 import lifeskills from './lifeskills.json';
 import gear from './gear.json';
 import sets from './sets.json';
+import recipes from './recipes.json';
+import quests from './quests.json';
 import spritesRaw from './sprites.json';
 import tuningRaw from './tuning.json';
 
@@ -38,6 +40,8 @@ export const content: Content = {
   skills: skills as unknown as Record<string, Skill>,
   lifeskills: lifeskills as Record<string, LifeSkill>,
   sets: sets as Record<string, GearSet>,
+  recipes: recipes as Record<string, Recipe>,
+  quests: quests as unknown as Record<string, Quest>,
 };
 
 /** The points in each zone, in file order. */
@@ -112,3 +116,5 @@ const figures: [string, Figure | undefined][] = [['player', content.player.figur
 for (const [who, f] of figures)
   for (const s of [f?.stand, f?.walk]) if (s && !sprites[s]) console.warn(`${who}'s figure: no sprite "${s}"`);
 for (const [id, it] of Object.entries(content.items)) if (it.set && !content.sets[it.set]) console.warn(`item ${id}: unknown set "${it.set}"`);
+for (const [id, r] of Object.entries(content.recipes))
+  for (const x of [r.makes, ...Object.keys(r.needs)]) if (!content.items[x]) console.warn(`recipe ${id}: unknown item "${x}"`);

@@ -2,6 +2,7 @@
 
 import type { GameState } from '../engine/types';
 import { newGame, SAVE_VERSION } from '../engine/state';
+import { STARTING_WEAPON } from '../engine/rules';
 
 const KEY = 'nuvatra.save';
 
@@ -45,6 +46,11 @@ function migrate(data: any): any {
     delete data.view;
     delete data.lastPoint;
     data.version = 4;
+  }
+  if (data.version === 4) {
+    // v5: you start with a weapon in hand; older saves with an empty main hand get it
+    if (data.worn && !data.worn.main) data.worn.main = STARTING_WEAPON;
+    data.version = 5;
   }
   return data;
 }

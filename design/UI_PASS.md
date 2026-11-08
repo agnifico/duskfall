@@ -27,5 +27,17 @@ The component checklist is `UI_COMPONENTS.md`; this is the list of changes asked
 - **Stats always with their icon** wherever there's room: there are ten, and the icons are how players learn them. Names in title case (Elemental Attack).
 - **Profile › Stats, redesigned:** Health as a strip across both columns, then Spirit across both; then pairs: Physical Attack | Physical Defence, Elemental Attack | Elemental Defence, Crit Rate | Crit Damage, Evasion | Precision; Speed last, alone in one column. The profile's Gear tab gets the same care.
 
+## For the next large UI pass (Agni, 2026-11-08)
+- **Profile › Gear** should take the Inventory's form and structure: the same doll, stat sheet and set layout. For now it shows item details on hover (useful mid-fight, when the Inventory can't open) and a click opens the Inventory.
+- **Drag and drop on touch** (mobile pass): dragging from the bag grid fights the grid's scrolling on phones.
+
+## Menu (Agni, 2026-11-08)
+- The bottom-right menu holds Bag and Inventory (plus Crafting, Quests, Map, Settings). **Profile has left it.** The portrait (top left) and C still open the profile panel.
+- **Profile, later:** one extended, detailed page with everything about you (stats, gear, skills, and more), built once its pieces exist. It would be a screen.
+
+## Screens and overlays (decided 2026-11-08)
+- **Overlays** are quick looks over the field: the bag (B), the profile, people's profiles, Settings.
+- **Screens** are full pages for deep work, in place of the field: the Inventory (I) now; crafting, homestead and skill pages later. The URL follows (`#/inventory`), Esc goes back, and screens can't be opened during a fight. The field stays mounted underneath, hidden, so coming back is instant (`UI.screen`, `openScreen` in `ui/commands.ts`).
+
 ## Mobile pass
 - Readable on a phone; the hotbar may go vertical. Deferred, "very detailed".

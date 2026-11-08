@@ -27,12 +27,14 @@ export const combatLevel = (s: GameState) => combatProgress(s).level;
 export const skillProgress = (s: GameState, id: string) => progressOn(SKILL_XP, s.skills?.[id] ?? 0);
 export const skillLevel = (s: GameState, id: string) => skillProgress(s, id).level;
 
-/** Your stats: the base ones, plus what your level adds, plus your gear. */
+/** Your stats: the base ones, plus what your level adds, plus your gear, plus any food buff still running. */
 export function playerStats(s: GameState, c: Content): Stats {
   const up = combatLevel(s) - 1;
   const out: Stats = { ...PLAYER_STATS };
   for (const [k, v] of Object.entries(LEVEL_STATS) as [keyof typeof LEVEL_STATS, number][]) out[k] += up * v;
   for (const [k, v] of Object.entries(gearStats(s, c)) as [keyof Stats, number][]) out[k] += v;
+  const now = Date.now();
+  for (const b of s.buffs ?? []) if (b.until > now) for (const [k, v] of Object.entries(b.stats) as [keyof Stats, number][]) out[k] += v;
   return out;
 }
 export const maxHp = (s: GameState, c: Content) => playerStats(s, c).hp;

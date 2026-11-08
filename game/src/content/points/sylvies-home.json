@@ -3,6 +3,8 @@
   "name": "Sylvie's Home",
   "zone": "plains",
   "pin": [2220, 1593],
+  "opensWith": {"tag": "met-sylvie"},
+  "closedText": "Not yet",
   "kind": "people",
   "fog": false,
   "table": ["tree", "berries", "stones"],

@@ -1,7 +1,8 @@
 // The one piece of reactive game state. UI reads G.s; every change goes through act(), which saves.
 
 import { content } from '../content';
-import { ensureFoes, regen, regenHp } from '../engine/actions';
+import { ensureFoes, expireBuffs, regen, regenHp } from '../engine/actions';
+import { updateStory } from '../engine/story';
 import { DEV_RULES } from '../engine/rules';
 import { track } from '../engine/telemetry';
 import { newGame } from '../engine/state';
@@ -20,6 +21,7 @@ function start(): GameState {
   regen(s, Date.now());
   regenHp(s, content, Date.now());
   ensureFoes(s, content, Date.now());
+  updateStory(s, content);
   return s;
 }
 
@@ -37,6 +39,7 @@ setInterval(() => {
   G.now = Date.now();
   regen(G.s, G.now);
   regenHp(G.s, content, G.now);
+  expireBuffs(G.s, G.now);
   ensureFoes(G.s, content, G.now); // a new cycle rolls fresh enemies where you stand
 }, 1000);
 
@@ -45,6 +48,7 @@ export function act<T>(fn: (s: GameState) => T): T {
   G.now = Date.now();
   const before = { ...G.s.bag };
   const out = fn(G.s);
+  updateStory(G.s, content); // quests that start, story beats that are due
   for (const [item, n] of Object.entries(G.s.bag)) {
     const gained = n - (before[item] ?? 0);
     if (gained > 0) showGain(item, gained);

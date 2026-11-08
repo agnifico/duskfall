@@ -17,7 +17,7 @@
   import { G } from '../lib/game.svelte';
   import type { Zone } from '../engine/types';
   import { enterLand, travelTo } from './commands';
-  import { ACTIVE_QUEST } from './placeholders';
+  import { focusQuest, pointClosed } from '../engine/story';
   import { KIND_LABEL, PIN_TONE } from './types';
 
   let {
@@ -282,18 +282,21 @@
 
         {#each points as p (p.id)}
           {@const s = toScreen(p.pin)}
+          {@const closed = pointClosed(G.s, content, p.id)}
           <button
             class="map-pin"
             class:current={p.id === G.s.point}
+            class:closed={!!closed}
+            disabled={!!closed}
             style:left="{s[0]}px"
             style:top="{s[1]}px"
             style:opacity={pinsIn}
             style:pointer-events={pinsIn < 0.3 ? 'none' : 'auto'}
             onclick={tap(() => travelTo(p.id))}
-            title={p.id === G.s.point ? 'Back here' : `${p.name}: ${KIND_LABEL[p.kind]}. Travel is free.`}
+            title={closed ? `${p.name}: ${closed.toLowerCase()}.` : p.id === G.s.point ? 'Back here' : `${p.name}: ${KIND_LABEL[p.kind]}. Travel is free.`}
           >
             <span class="px shield {PIN_TONE[p.kind]}"><i></i></span>
-            <span class="pin-name">{p.name}</span>
+            <span class="pin-name">{p.name}{#if closed}<small> · {closed}</small>{/if}</span>
           </button>
         {/each}
 
@@ -313,8 +316,8 @@
 
       <div class="quest" in:fade={{ duration: 400, delay: 150 }}>
         <div class="lbl m eyebrow">Active quest</div>
-        <div class="disp qt">{ACTIVE_QUEST.title}</div>
-        <div class="body qo">{ACTIVE_QUEST.objective}</div>
+        <div class="disp qt">{focusQuest(G.s, content)?.title ?? 'No quest'}</div>
+        <div class="body qo">{focusQuest(G.s, content)?.objective ?? 'Explore.'}</div>
       </div>
     {/if}
 

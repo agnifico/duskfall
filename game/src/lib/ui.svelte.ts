@@ -2,6 +2,18 @@
 
 export type PanelId = 'bag' | 'quests' | 'character' | 'person' | 'settings';
 
+/** Full-page screens, for deep work (inventory; later crafting, homestead, skill pages). Panels are quick looks
+ *  over the field; screens replace it. The field stays mounted underneath, hidden, so coming back is instant.
+ *  The URL follows (#/inventory): a reload keeps you on the screen, and Back leaves it. */
+export type ScreenId = 'inventory' | 'crafting';
+/** Each screen and the key that opens it (and closes it again). */
+export const SCREEN_KEYS: Record<ScreenId, string> = { inventory: 'i', crafting: 'k' };
+const SCREENS = Object.keys(SCREEN_KEYS) as ScreenId[];
+export const screenFromHash = (): ScreenId | null => {
+  const id = location.hash.replace(/^#\/?/, '') as ScreenId;
+  return SCREENS.includes(id) ? id : null;
+};
+
 /** The map, open over the hex field. A land's map can first show its title screen (intro). */
 export type MapView =
   | { kind: 'world' }
@@ -23,7 +35,9 @@ export interface Gain {
 
 export const UI = $state({
   panel: null as PanelId | null,
+  screen: screenFromHash() as ScreenId | null,
   person: null as string | null, // whose profile the 'person' panel shows
+  invFocus: null as { slot: import('../engine/types').WornSlot | 'relic'; i: number } | null, // open the Inventory screen on this worn piece
   people: false, // the People list under the portrait is open
   map: null as MapView | null, // null: you're looking at the hex field
   gains: [] as Gain[],

@@ -1,0 +1,243 @@
+{
+ "washed-ashore": {
+  "title": "Washed Ashore",
+  "main": true,
+  "giver": "sylvie",
+  "text": "You woke on a beach with the sea still in your lungs. A woman named Sylvie found you.",
+  "start": {
+   "enter": "arrival-beach"
+  },
+  "stages": [
+   {
+    "objective": "Wake up",
+    "need": {
+     "enter": "arrival-beach"
+    },
+    "auto": true,
+    "say": [
+     "The storm is gone. Gulls overhead, a pale clean sky, and sand under your cheek.",
+     "sylvie: Easy. Don't sit up too fast. You've swallowed half the sea.",
+     "sylvie: Can you stand? Good. Nobody washes up on this side of the island.",
+     "you: Where am I?",
+     "sylvie: Nuvatra. The north shore. My house is just past the trees: fire, dry clothes, something hot.",
+     "sylvie: Come on, lean on me if you n… Wait.",
+     "Something clicks across the sand behind you. Then something else, dragging itself out of the shallows.",
+     "sylvie: That's not right. They don't do that. They don't come at people.",
+     "sylvie: Can you fight? You'll have to. I can't hold off three of them on my own!"
+    ],
+    "then": [
+     {
+      "spawn": [
+       {
+        "kind": "riled-crab",
+        "n": 2
+       },
+       {
+        "kind": "riled-toxolotl",
+        "n": 1
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "objective": "Fight off the riled animals",
+    "need": {
+     "kill": [
+      "riled-crab",
+      "riled-toxolotl"
+     ],
+     "n": 3
+    },
+    "auto": true,
+    "say": [
+     "sylvie: …Well. You've done that before, whoever you are.",
+     "sylvie: A crab doesn't walk up the beach and pick a fight. Not on Nuvatra. Not ever.",
+     "sylvie: Come on. My house is up the slope. It's safe there."
+    ],
+    "then": [
+     {
+      "tag": "met-sylvie"
+     },
+     {
+      "goto": "sylvies-home"
+     }
+    ]
+   },
+   {
+    "objective": "Get your breath back at Sylvie's",
+    "need": {
+     "enter": "sylvies-home"
+    },
+    "auto": true,
+    "say": [
+     "sylvie: Here. Drink. It's only herbs, but it'll warm you.",
+     "sylvie: I'm Sylvie. I keep the woods and grasslands on this side of the island. And you are?",
+     {
+      "name": true
+     },
+     "sylvie: {name}. Pretty. Where did you come from, {name}?",
+     "you: I don't… I remember a storm. Fire on the water. Thunder that didn't stop.",
+     "sylvie: There was a storm. Off the north coast, all night. I watched it from the ridge.",
+     "sylvie: Funny thing: the sky over the island stayed clear. Only out there, over the water.",
+     "you: Was there a ship? Anyone else?",
+     "sylvie: Just you, and some planks. Whatever you were on, the sea has it now. I'm sorry.",
+     "sylvie: Stay as long as you like. This island's quiet. Usually.",
+     "sylvie: You saw those animals. They've been wrong for weeks now. Jumpier. Meaner."
+    ]
+   }
+  ]
+ },
+ "thinning-the-wilds": {
+  "title": "Thinning the Wilds",
+  "main": true,
+  "giver": "sylvie",
+  "text": "The animals around Sylvie's house have turned aggressive. She asked you to thin them out.",
+  "start": {
+   "quest": "washed-ashore",
+   "state": "done"
+  },
+  "stages": [
+   {
+    "objective": "Hear Sylvie out",
+    "need": {
+     "enter": "sylvies-home"
+    },
+    "auto": true,
+    "say": [
+     "sylvie: If you're staying, I could use your hands. There are more of them out there, round the house and down on the beach.",
+     "sylvie: You'll want something better than your fists. My brother left these behind. Take one.",
+     {
+      "choose": [
+       {
+        "text": "The sword",
+        "then": [
+         {
+          "give": "traveller-sword",
+          "wear": true
+         },
+         {
+          "tag": "path-sword"
+         }
+        ]
+       },
+       {
+        "text": "The bow",
+        "then": [
+         {
+          "give": "traveller-bow",
+          "wear": true
+         },
+         {
+          "tag": "path-bow"
+         }
+        ]
+       }
+      ]
+     },
+     "sylvie: It suits you. Keep to the house and the beach. Don't go past the trees yet."
+    ]
+   },
+   {
+    "objective": "Beat 6 animals around Sylvie's house or on Arrival Beach",
+    "need": {
+     "kill": "*",
+     "n": 6,
+     "at": [
+      "arrival-beach",
+      "sylvies-home"
+     ]
+    },
+    "auto": true,
+    "then": [
+     {
+      "notify": "That should thin them out. Sylvie will want to hear."
+     }
+    ]
+   },
+   {
+    "objective": "Tell Sylvie",
+    "who": "sylvie",
+    "need": {
+     "talk": "sylvie"
+    },
+    "say": [
+     "sylvie: Still in one piece. I'm impressed, and I don't say that much.",
+     "sylvie: Take these. Bitter, but they close a cut faster than waiting does."
+    ],
+    "then": [
+     {
+      "xp": 110
+     },
+     {
+      "give": "minor-health-potion",
+      "n": 3
+     }
+    ]
+   }
+  ]
+ },
+ "firewood": {
+  "title": "Firewood",
+  "giver": "sylvie",
+  "text": "Sylvie's woodpile is running low, and the nights are getting cold.",
+  "start": {
+   "quest": "thinning-the-wilds",
+   "state": "done"
+  },
+  "stages": [
+   {
+    "objective": "Hear Sylvie out",
+    "need": {
+     "enter": "sylvies-home"
+    },
+    "auto": true,
+    "say": [
+     "sylvie: One more thing, and it's a dull one. The nights are getting colder, and my woodpile isn't growing.",
+     "sylvie: Twenty wood from the trees around here would do it. Mind the stumps: they need a day to grow back."
+    ]
+   },
+   {
+    "objective": "Bring Sylvie 20 wood",
+    "who": "sylvie",
+    "need": {
+     "all": [
+      {
+       "talk": "sylvie"
+      },
+      {
+       "have": "wood",
+       "n": 20
+      }
+     ]
+    },
+    "remind": [
+     "sylvie: Twenty wood. The trees round here won't mind."
+    ],
+    "say": [
+     "sylvie: That'll see me through the week. Thank you, {name}. Truly.",
+     "sylvie: You're ready for more than the beach now. There's the Pine Grove, east of the house. Mind yourself in there."
+    ],
+    "then": [
+     {
+      "take": "wood",
+      "n": 20
+     },
+     {
+      "xp": 120
+     },
+     {
+      "give": "seed-bread",
+      "n": 3
+     },
+     {
+      "give": "traveller-head"
+     },
+     {
+      "tag": "grove-open"
+     }
+    ]
+   }
+  ]
+ }
+}

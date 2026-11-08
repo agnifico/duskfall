@@ -1,6 +1,6 @@
 {
-  "traveller": {"name": "Traveller's", "bonuses": [{"pieces": 5, "stats": {"hp": 5, "spd": 1}}]},
-  "padded": {"name": "Padded", "bonuses": [{"pieces": 5, "stats": {"hp": 10, "pdef": 2, "edef": 2}}]},
+  "traveller": {"name": "Traveller's", "bonuses": [{"pieces": 5, "stats": {"hp": 15, "spd": 1}}]},
+  "padded": {"name": "Padded", "bonuses": [{"pieces": 5, "stats": {"hp": 20, "pdef": 2, "edef": 2}}]},
   "iron": {"name": "Iron", "bonuses": []},
   "silversteel": {"name": "Silversteel", "bonuses": []},
   "toys": {"name": "Hela's Toys", "bonuses": []},

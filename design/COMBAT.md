@@ -167,3 +167,36 @@ At the start, defence, crit and speed's quarter share all change a fight by only
 **Reference:** djv2, the Chessboard Battlefield (`~/Desktop/code/djv2`, design docs in `~/Desktop/code/`). Worth carrying over: the split between shapes and behaviours, one damage pipeline that everything goes through, ground warnings, and balance runs. Port the design, not the code: djv2 is real time on square tiles.
 
 **Where this lands in the game:** `game/src/engine/` (rules, actions, hex grid and routes), enemies as content in `game/src/content/`, the field in `game/src/ui/HexView.svelte`.
+
+## 7. Enemy stats from level (built 2026-11-08)
+
+Enemies get their stats from their level, tuned against a reference player of that level wearing gear for it (`rules.ts` › `FOE_HITS`, `FOE_HIT_SHARE`, `REF_GEAR`, `FOE_DEF`; `combat.ts` › `curveStats`, `foeStats`).
+- **You beat an enemy of your level in about 4 hits with a weapon.** At level 1, unarmed, it's about 8 (Agni's target was 7–10 unarmed and about 4 armed).
+- **Each of its hits takes about 10% of your health.**
+- **Gear that lags your level** (Traveller's at level 9–10) makes it about 5 hits and 12.5% a hit: the gap that potions, food and skills fill.
+- **Each type keeps its character** through `mult` (the bear: health ×1.4, defence ×1.3, slow; the prowler: health ×0.75, fast, evasive) plus explicit `stats` for speed, evasion and precision.
+- **XP comes from level alone.** A tanky bear gives the same as any level 5 enemy.
+- **Armour carries health.** Under Dawn's Journey's damage formula, defence barely matters early, so Traveller's (about 40 HP, plus 15 for the full set) is what makes it substantial: it cuts a level 1 enemy's hit from about 9% to about 5% of your health.
+
+| Enemy | Level | HP | Attack | Defence | Hits to beat it: unarmed / Traveller's sword | Its hit: no armour / Traveller's |
+|---|---|---|---|---|---|---|
+| toxolotl | 1 | 72 | 9 | 4 | 7.2 / 3.6 | 8.6% / 5.4% |
+| pinchwarden | 1 | 72 | 11 | 8 | 7.3 / 3.7 | 10.5% / 6.6% |
+| grumbletusk | 3 | 93 | 18 | 7 | 7.8 / 4.3 | 15.4% / 10.1% |
+| bear | 5 | 149 | 23 | 13 | 11.1 / 6.5 | 17.9% / 12.0% |
+| forest prowler | 6 | 84 | 22 | 12 | 5.8 / 3.5 | 16.4% / 11.1% |
+| dragonling | 8 | 137 | 30 | 14 | 8.4 / 5.3 | 20.5% / 14.2% |
+
+### Drops
+Each line of an enemy's table rolls on its own (`foe.drops`; `combat.ts` › `rollDrops`).
+
+| Enemy | Always | Sometimes |
+|---|---|---|
+| toxolotl | toxolotl frill | spirit tonic 4% |
+| pinchwarden | 1–2 crab shells | smoked crab claw 6%, Traveller's boots 4% |
+| grumbletusk | 1–2 boar hides | a Traveller's head, body, hands or legs piece 5% |
+| bear | 1–2 bear pelts | a Padded piece (level 10) 6% |
+| forest prowler | prowler fang | Padded gloves or boots 5% |
+| dragonling | dragon scale 60%, red crystal 25% | a Padded piece 8% |
+
+Materials feed the recipes: frill goes into spirit tonics; hide, shell and bark into Traveller's; bear pelt, hide and fang into Padded.

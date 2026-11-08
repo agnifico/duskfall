@@ -1,0 +1,26 @@
+{
+  "seed-bread": { "craft": "cooking", "makes": "seed-bread", "needs": { "acorns": 2, "wood": 1 } },
+  "mint-tea": { "craft": "cooking", "makes": "mint-tea", "needs": { "herbs": 2 } },
+  "smoked-claw": { "craft": "cooking", "makes": "smoked-claw", "needs": { "crab-shell": 2, "wood": 1 } },
+  "honey-cake": { "craft": "cooking", "makes": "honey-cake", "needs": { "berries": 3, "acorns": 1 } },
+
+  "minor-health-potion": { "craft": "alchemy", "makes": "minor-health-potion", "needs": { "berries": 3, "herbs": 1 } },
+  "health-potion": { "craft": "alchemy", "makes": "health-potion", "needs": { "red-mushroom": 1, "herbs": 2, "resin": 1 } },
+  "spirit-tonic": { "craft": "alchemy", "makes": "spirit-tonic", "needs": { "toxolotl-frill": 2, "blue-mushroom": 1 } },
+  "energy-draught": { "craft": "alchemy", "makes": "energy-draught", "needs": { "brown-mushroom": 2, "berries": 2 } },
+
+  "traveller-head": { "craft": "smithing", "makes": "traveller-head", "needs": { "boar-hide": 1, "birch-bark": 1 } },
+  "traveller-body": { "craft": "smithing", "makes": "traveller-body", "needs": { "boar-hide": 3, "birch-bark": 1 } },
+  "traveller-hands": { "craft": "smithing", "makes": "traveller-hands", "needs": { "boar-hide": 1 } },
+  "traveller-legs": { "craft": "smithing", "makes": "traveller-legs", "needs": { "boar-hide": 2 } },
+  "traveller-feet": { "craft": "smithing", "makes": "traveller-feet", "needs": { "boar-hide": 1, "crab-shell": 1 } },
+  "traveller-shield": { "craft": "smithing", "makes": "traveller-shield", "needs": { "wood": 6, "crab-shell": 2 } },
+  "traveller-spear": { "craft": "smithing", "makes": "traveller-spear", "needs": { "wood": 4, "stone": 3 } },
+  "traveller-bow": { "craft": "smithing", "makes": "traveller-bow", "needs": { "wood": 5, "resin": 1 } },
+
+  "padded-head": { "craft": "smithing", "makes": "padded-head", "needs": { "bear-pelt": 2, "boar-hide": 2 } },
+  "padded-body": { "craft": "smithing", "makes": "padded-body", "needs": { "bear-pelt": 4, "boar-hide": 3 } },
+  "padded-hands": { "craft": "smithing", "makes": "padded-hands", "needs": { "bear-pelt": 1, "boar-hide": 2 } },
+  "padded-legs": { "craft": "smithing", "makes": "padded-legs", "needs": { "bear-pelt": 3, "boar-hide": 2 } },
+  "padded-feet": { "craft": "smithing", "makes": "padded-feet", "needs": { "bear-pelt": 1, "boar-hide": 2, "prowler-fang": 1 } }
+}
