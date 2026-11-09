@@ -11,6 +11,8 @@
   import FoeCards from './FoeCards.svelte';
   import QuestTracker from './QuestTracker.svelte';
   import Gains from './Gains.svelte';
+  import BenchBar from './BenchBar.svelte';
+  import NewItems from './NewItems.svelte';
   import GatherPrompt from './GatherPrompt.svelte';
   import Hotbar from './Hotbar.svelte';
   import MenuDock from './MenuDock.svelte';
@@ -22,14 +24,26 @@
   import BagPanel from '../panels/BagPanel.svelte';
   import ProfilePanel from '../panels/ProfilePanel.svelte';
   import QuestsPanel from '../panels/QuestsPanel.svelte';
+  import SkillsPanel from '../panels/SkillsPanel.svelte';
+  import ElementsPanel from '../panels/ElementsPanel.svelte';
   import SettingsPanel from '../panels/SettingsPanel.svelte';
 
   const onField = $derived(!!G.s.point && !UI.map);
+
+  // the first time you can choose an element (Heidi's Gift done, none chosen), the Elements panel opens by itself
+  let offered = false;
+  $effect(() => {
+    if (offered || UI.bench || !G.s.tags?.infused || G.s.element || UI.panel || UI.screen) return;
+    offered = true;
+    UI.panel = 'elements';
+  });
 </script>
 
 <div class="hud" in:fade={{ duration: 300 }}>
   <Messages />
   <Gains />
+  {#if UI.bench}<BenchBar />{/if}
+  <NewItems />
 
   {#if UI.hidden}
     {#if onField}<div class="bottom-left"><UiToggle /></div>{/if}
@@ -38,7 +52,7 @@
     {#if onField && ED.on}
       <EditorBar />
     {:else if onField}
-      <QuestTracker />
+      {#if !UI.bench}<QuestTracker />{/if}
       <FoeCards />
       <EventCard />
       <GatherPrompt />
@@ -51,6 +65,8 @@
 
   {#if UI.panel === 'bag'}<BagPanel />{/if}
   {#if UI.panel === 'quests'}<QuestsPanel />{/if}
+  {#if UI.panel === 'skills'}<SkillsPanel />{/if}
+  {#if UI.panel === 'elements'}<ElementsPanel />{/if}
   {#if UI.panel === 'character'}<ProfilePanel who="player" />{/if}
   {#if UI.panel === 'person' && UI.person}
     {#key UI.person}<ProfilePanel who={UI.person} />{/key}

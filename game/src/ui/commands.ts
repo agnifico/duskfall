@@ -1,6 +1,7 @@
 // What buttons and hotkeys do. Both go through here, so a hotkey and its button always agree.
 
 import { DEV, G, act, setDev } from '../lib/game.svelte';
+import { toggleBench } from '../lib/bench.svelte';
 import { ED, closeEditor, dirty, openEditor } from '../lib/editor.svelte';
 import { SCREEN_KEYS, UI, inIntro, notify, savePref, screenFromHash, type PanelId, type ScreenId } from '../lib/ui.svelte';
 import { content } from '../content';
@@ -243,6 +244,13 @@ export function travelTo(pointId: string): void {
   UI.map = null;
 }
 
+/** Dev mode: the test bench (` or the 🧪 button): its own player in the dev field, and back to your game. */
+export function toggleDevField(): void {
+  if (!DEV.on && !UI.bench) return;
+  if (inFight(G.s) && !UI.bench) return notify('Not during a fight.');
+  toggleBench();
+}
+
 /** Going to a person is free from anywhere: questing is kept apart from adventuring. Leaving a point is always
  *  allowed, even mid-fight: it's the way out (engine/actions.ts › enterPoint). */
 export function goToPerson(npcId: string): void {
@@ -276,6 +284,9 @@ const KEYS: Record<string, () => void> = {
   i: () => toggleScreen('inventory'),
   k: () => toggleScreen('crafting'),
   q: () => togglePanel('quests'),
+  j: () => togglePanel('skills'),
+  l: () => togglePanel('elements'),
+  '`': toggleDevField,
   c: () => togglePanel('character'),
   p: togglePeople,
   s: () => togglePanel('settings'),

@@ -16,6 +16,12 @@
   "so": 0.49,
   "sh": 0.219
  },
+ "grok_chars/sylvie-stand": {
+  "sw": 0.58,
+  "sh": 0.233,
+  "sx": 0.09,
+  "sy": -0.083
+ },
  "grok_nodes/berrybush": {
   "sw": 0.523,
   "sh": 0.209,

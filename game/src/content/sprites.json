@@ -2479,6 +2479,550 @@
   "by": 1.0,
   "fx": 0.586
  },
+ "clay/tree": {
+  "file": "sprites/clay/tree.png",
+  "w": 186,
+  "h": 169,
+  "bx": 0.505,
+  "by": 1.0,
+  "fx": 0.493
+ },
+ "clay/birch": {
+  "file": "sprites/clay/birch.png",
+  "w": 151,
+  "h": 181,
+  "bx": 0.497,
+  "by": 1.0,
+  "fx": 0.492
+ },
+ "clay/oak": {
+  "file": "sprites/clay/oak.png",
+  "w": 220,
+  "h": 188,
+  "bx": 0.491,
+  "by": 1.0,
+  "fx": 0.495
+ },
+ "clay/pine": {
+  "file": "sprites/clay/pine.png",
+  "w": 144,
+  "h": 184,
+  "bx": 0.5,
+  "by": 1.0,
+  "fx": 0.502
+ },
+ "clay/palm": {
+  "file": "sprites/clay/palm.png",
+  "w": 176,
+  "h": 169,
+  "bx": 0.47,
+  "by": 1.0,
+  "fx": 0.453
+ },
+ "clay/cypress": {
+  "file": "sprites/clay/cypress.png",
+  "w": 80,
+  "h": 181,
+  "bx": 0.496,
+  "by": 1.0,
+  "fx": 0.49
+ },
+ "clay/ancient": {
+  "file": "sprites/clay/ancient.png",
+  "w": 214,
+  "h": 176,
+  "bx": 0.489,
+  "by": 1.0,
+  "fx": 0.502
+ },
+ "clay/etherwood": {
+  "file": "sprites/clay/etherwood.png",
+  "w": 185,
+  "h": 173,
+  "bx": 0.488,
+  "by": 1.0,
+  "fx": 0.486
+ },
+ "clay/deadtree": {
+  "file": "sprites/clay/deadtree.png",
+  "w": 160,
+  "h": 166,
+  "bx": 0.471,
+  "by": 1.0,
+  "fx": 0.472
+ },
+ "clay/autumn": {
+  "file": "sprites/clay/autumn.png",
+  "w": 176,
+  "h": 175,
+  "bx": 0.493,
+  "by": 1.0,
+  "fx": 0.498
+ },
+ "clay/snowpine": {
+  "file": "sprites/clay/snowpine.png",
+  "w": 153,
+  "h": 170,
+  "bx": 0.509,
+  "by": 1.0,
+  "fx": 0.502
+ },
+ "clay/stump": {
+  "file": "sprites/clay/stump.png",
+  "w": 148,
+  "h": 120,
+  "bx": 0.523,
+  "by": 1.0,
+  "fx": 0.499
+ },
+ "clay/sapling": {
+  "file": "sprites/clay/sapling.png",
+  "w": 113,
+  "h": 144,
+  "bx": 0.468,
+  "by": 0.993,
+  "fx": 0.518
+ },
+ "clay/log": {
+  "file": "sprites/clay/log.png",
+  "w": 194,
+  "h": 124,
+  "bx": 0.178,
+  "by": 0.992,
+  "fx": 0.269
+ },
+ "clay/driftwood": {
+  "file": "sprites/clay/driftwood.png",
+  "w": 198,
+  "h": 117,
+  "bx": 0.877,
+  "by": 0.991,
+  "fx": 0.576
+ },
+ "clay/bush": {
+  "file": "sprites/clay/bush.png",
+  "w": 150,
+  "h": 130,
+  "bx": 0.492,
+  "by": 0.992,
+  "fx": 0.497
+ },
+ "clay/smallstones": {
+  "file": "sprites/clay/smallstones.png",
+  "w": 174,
+  "h": 123,
+  "bx": 0.506,
+  "by": 0.992,
+  "fx": 0.464
+ },
+ "clay/boulder": {
+  "file": "sprites/clay/boulder.png",
+  "w": 172,
+  "h": 147,
+  "bx": 0.502,
+  "by": 0.993,
+  "fx": 0.496
+ },
+ "clay/bouldercluster": {
+  "file": "sprites/clay/bouldercluster.png",
+  "w": 203,
+  "h": 155,
+  "bx": 0.533,
+  "by": 0.994,
+  "fx": 0.501
+ },
+ "clay/outcrop": {
+  "file": "sprites/clay/outcrop.png",
+  "w": 190,
+  "h": 178,
+  "bx": 0.531,
+  "by": 0.994,
+  "fx": 0.509
+ },
+ "clay/searock": {
+  "file": "sprites/clay/searock.png",
+  "w": 186,
+  "h": 151,
+  "bx": 0.459,
+  "by": 0.993,
+  "fx": 0.489
+ },
+ "clay/mossrock": {
+  "file": "sprites/clay/mossrock.png",
+  "w": 198,
+  "h": 158,
+  "bx": 0.577,
+  "by": 1.0,
+  "fx": 0.508
+ },
+ "clay/sandstone": {
+  "file": "sprites/clay/sandstone.png",
+  "w": 179,
+  "h": 173,
+  "bx": 0.557,
+  "by": 0.994,
+  "fx": 0.503
+ },
+ "clay/ironvein": {
+  "file": "sprites/clay/ironvein.png",
+  "w": 198,
+  "h": 162,
+  "bx": 0.524,
+  "by": 0.994,
+  "fx": 0.504
+ },
+ "clay/silvervein": {
+  "file": "sprites/clay/silvervein.png",
+  "w": 181,
+  "h": 154,
+  "bx": 0.495,
+  "by": 1.0,
+  "fx": 0.505
+ },
+ "clay/goldvein": {
+  "file": "sprites/clay/goldvein.png",
+  "w": 188,
+  "h": 156,
+  "bx": 0.542,
+  "by": 0.994,
+  "fx": 0.519
+ },
+ "clay/malachitevein": {
+  "file": "sprites/clay/malachitevein.png",
+  "w": 187,
+  "h": 156,
+  "bx": 0.534,
+  "by": 0.994,
+  "fx": 0.51
+ },
+ "clay/redvein": {
+  "file": "sprites/clay/redvein.png",
+  "w": 193,
+  "h": 165,
+  "bx": 0.518,
+  "by": 0.994,
+  "fx": 0.509
+ },
+ "clay/crystals": {
+  "file": "sprites/clay/crystals.png",
+  "w": 148,
+  "h": 142,
+  "bx": 0.508,
+  "by": 0.993,
+  "fx": 0.515
+ },
+ "clay/rubble": {
+  "file": "sprites/clay/rubble.png",
+  "w": 159,
+  "h": 146,
+  "bx": 0.265,
+  "by": 0.993,
+  "fx": 0.44
+ },
+ "clay/spentvein": {
+  "file": "sprites/clay/spentvein.png",
+  "w": 165,
+  "h": 153,
+  "bx": 0.603,
+  "by": 0.993,
+  "fx": 0.557
+ },
+ "clay/reef": {
+  "file": "sprites/clay/reef.png",
+  "w": 183,
+  "h": 156,
+  "bx": 0.448,
+  "by": 1.0,
+  "fx": 0.484
+ },
+ "clay/berrybush": {
+  "file": "sprites/clay/berrybush.png",
+  "w": 195,
+  "h": 156,
+  "bx": 0.503,
+  "by": 1.0,
+  "fx": 0.501
+ },
+ "clay/berrybush-picked": {
+  "file": "sprites/clay/berrybush-picked.png",
+  "w": 194,
+  "h": 154,
+  "bx": 0.494,
+  "by": 1.0,
+  "fx": 0.497
+ },
+ "clay/mushrooms": {
+  "file": "sprites/clay/mushrooms.png",
+  "w": 175,
+  "h": 158,
+  "bx": 0.487,
+  "by": 1.0,
+  "fx": 0.462
+ },
+ "clay/redmushrooms": {
+  "file": "sprites/clay/redmushrooms.png",
+  "w": 185,
+  "h": 158,
+  "bx": 0.526,
+  "by": 1.0,
+  "fx": 0.526
+ },
+ "clay/bluemushrooms": {
+  "file": "sprites/clay/bluemushrooms.png",
+  "w": 164,
+  "h": 155,
+  "bx": 0.542,
+  "by": 0.968,
+  "fx": 0.51
+ },
+ "clay/herbs": {
+  "file": "sprites/clay/herbs.png",
+  "w": 183,
+  "h": 143,
+  "bx": 0.495,
+  "by": 0.965,
+  "fx": 0.49
+ },
+ "clay/flowers-white": {
+  "file": "sprites/clay/flowers-white.png",
+  "w": 177,
+  "h": 143,
+  "bx": 0.518,
+  "by": 0.979,
+  "fx": 0.484
+ },
+ "clay/flowers-purple": {
+  "file": "sprites/clay/flowers-purple.png",
+  "w": 175,
+  "h": 152,
+  "bx": 0.638,
+  "by": 0.98,
+  "fx": 0.501
+ },
+ "clay/grass": {
+  "file": "sprites/clay/grass.png",
+  "w": 166,
+  "h": 146,
+  "bx": 0.499,
+  "by": 0.979,
+  "fx": 0.502
+ },
+ "clay/fern": {
+  "file": "sprites/clay/fern.png",
+  "w": 204,
+  "h": 158,
+  "bx": 0.442,
+  "by": 0.962,
+  "fx": 0.48
+ },
+ "clay/reeds": {
+  "file": "sprites/clay/reeds.png",
+  "w": 133,
+  "h": 167,
+  "bx": 0.492,
+  "by": 0.982,
+  "fx": 0.493
+ },
+ "clay/lilypads": {
+  "file": "sprites/clay/lilypads.png",
+  "w": 206,
+  "h": 134,
+  "bx": 0.638,
+  "by": 0.993,
+  "fx": 0.456
+ },
+ "clay/clover": {
+  "file": "sprites/clay/clover.png",
+  "w": 202,
+  "h": 141,
+  "bx": 0.587,
+  "by": 0.972,
+  "fx": 0.544
+ },
+ "clay/cactus": {
+  "file": "sprites/clay/cactus.png",
+  "w": 174,
+  "h": 148,
+  "bx": 0.497,
+  "by": 0.959,
+  "fx": 0.519
+ },
+ "clay/coral": {
+  "file": "sprites/clay/coral.png",
+  "w": 165,
+  "h": 148,
+  "bx": 0.507,
+  "by": 0.98,
+  "fx": 0.5
+ },
+ "clay/seaweed": {
+  "file": "sprites/clay/seaweed.png",
+  "w": 153,
+  "h": 150,
+  "bx": 0.527,
+  "by": 0.98,
+  "fx": 0.503
+ },
+ "chars/heroine-sword-1": {
+  "file": "sprites/chars/heroine-sword-1.png",
+  "w": 384,
+  "h": 369,
+  "bx": 0.748,
+  "by": 1.0,
+  "fx": 0.65
+ },
+ "chars/heroine-sword-2": {
+  "file": "sprites/chars/heroine-sword-2.png",
+  "w": 384,
+  "h": 300,
+  "bx": 0.449,
+  "by": 1.0,
+  "fx": 0.318
+ },
+ "chars/heroine-bow-1": {
+  "file": "sprites/chars/heroine-bow-1.png",
+  "w": 340,
+  "h": 384,
+  "bx": 0.659,
+  "by": 0.997,
+  "fx": 0.395
+ },
+ "chars/heroine-bow-2": {
+  "file": "sprites/chars/heroine-bow-2.png",
+  "w": 326,
+  "h": 384,
+  "bx": 0.679,
+  "by": 0.997,
+  "fx": 0.441
+ },
+ "chars/heidi-stand": {
+  "file": "sprites/chars/heidi-stand.png",
+  "w": 156,
+  "h": 384,
+  "bx": 0.507,
+  "by": 0.997,
+  "fx": 0.518
+ },
+ "chars/heidi-walk-1": {
+  "file": "sprites/chars/heidi-walk-1.png",
+  "w": 177,
+  "h": 384,
+  "bx": 0.779,
+  "by": 0.997,
+  "fx": 0.461
+ },
+ "chars/heidi-walk-2": {
+  "file": "sprites/chars/heidi-walk-2.png",
+  "w": 177,
+  "h": 384,
+  "bx": 0.784,
+  "by": 1.0,
+  "fx": 0.463
+ },
+ "chars/heidi-give": {
+  "file": "sprites/chars/heidi-give.png",
+  "w": 242,
+  "h": 384,
+  "bx": 0.359,
+  "by": 0.997,
+  "fx": 0.353
+ },
+ "chars/verona-stand": {
+  "file": "sprites/chars/verona-stand.png",
+  "w": 190,
+  "h": 384,
+  "bx": 0.467,
+  "by": 1.0,
+  "fx": 0.487
+ },
+ "chars/verona-walk": {
+  "file": "sprites/chars/verona-walk.png",
+  "w": 229,
+  "h": 384,
+  "bx": 0.845,
+  "by": 0.997,
+  "fx": 0.577
+ },
+ "chars/verona-cast-1": {
+  "file": "sprites/chars/verona-cast-1.png",
+  "w": 260,
+  "h": 384,
+  "bx": 0.327,
+  "by": 0.997,
+  "fx": 0.401
+ },
+ "chars/verona-cast-2": {
+  "file": "sprites/chars/verona-cast-2.png",
+  "w": 384,
+  "h": 347,
+  "bx": 0.306,
+  "by": 0.997,
+  "fx": 0.323
+ },
+ "chars/cygwin-stand": {
+  "file": "sprites/chars/cygwin-stand.png",
+  "w": 171,
+  "h": 384,
+  "bx": 0.349,
+  "by": 1.0,
+  "fx": 0.419
+ },
+ "chars/cygwin-walk-1": {
+  "file": "sprites/chars/cygwin-walk-1.png",
+  "w": 197,
+  "h": 384,
+  "bx": 0.745,
+  "by": 1.0,
+  "fx": 0.487
+ },
+ "chars/cygwin-walk-2": {
+  "file": "sprites/chars/cygwin-walk-2.png",
+  "w": 183,
+  "h": 384,
+  "bx": 0.812,
+  "by": 1.0,
+  "fx": 0.506
+ },
+ "chars/cygwin-swing": {
+  "file": "sprites/chars/cygwin-swing.png",
+  "w": 384,
+  "h": 357,
+  "bx": 0.257,
+  "by": 1.0,
+  "fx": 0.37
+ },
+ "chars_purple/guinevere-stand": {
+  "file": "sprites/chars_purple/guinevere-stand.png",
+  "w": 213,
+  "h": 384,
+  "bx": 0.539,
+  "by": 1.0,
+  "fx": 0.516
+ },
+ "chars_purple/guinevere-walk-1": {
+  "file": "sprites/chars_purple/guinevere-walk-1.png",
+  "w": 207,
+  "h": 384,
+  "bx": 0.821,
+  "by": 1.0,
+  "fx": 0.508
+ },
+ "chars_purple/guinevere-walk-2": {
+  "file": "sprites/chars_purple/guinevere-walk-2.png",
+  "w": 216,
+  "h": 384,
+  "bx": 0.77,
+  "by": 1.0,
+  "fx": 0.522
+ },
+ "chars_purple/guinevere-command": {
+  "file": "sprites/chars_purple/guinevere-command.png",
+  "w": 254,
+  "h": 384,
+  "bx": 0.512,
+  "by": 1.0,
+  "fx": 0.477
+ },
  "djv2/aquamech_shark": {
   "file": "sprites/djv2/aquamech_shark.png",
   "w": 384,

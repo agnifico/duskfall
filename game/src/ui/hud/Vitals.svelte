@@ -8,7 +8,9 @@
   import { MAX_SPIRIT } from '../../engine/rules';
   import { maxHp } from '../../engine/progress';
   import { statLines } from '../statText';
-  import { openScreen } from '../commands';
+  import { openScreen, togglePanel } from '../commands';
+  import { myElement } from '../../engine/elements';
+  import { ELEMENT_COLOUR, elName } from '../elementInfo';
   import ItemIcon from '../ItemIcon.svelte';
 
   const max = $derived(maxHp(G.s, content));
@@ -22,6 +24,7 @@
     const sec = Math.max(0, Math.round((until - G.now) / 1000));
     return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
   };
+  const atkEl = $derived(myElement(G.s));
 </script>
 
 <div class="vitals px flat t-panel">
@@ -38,6 +41,9 @@
     </button>
 
     <div class="bars">
+      <button class="elrow lbl" onclick={() => togglePanel('elements')} title="Your element: your elemental hits carry it, and it decides how enemies' blows land on you. Elements (L)">
+        {#if atkEl}<i style:background={ELEMENT_COLOUR[atkEl]}></i>{elName(atkEl)}{:else}<span class="dim">No element yet</span>{/if}
+      </button>
       <div class="row" title="Health: comes back 1 every 9 s outside a fight, or all at once at a fire or a bed">
         <span class="chip hp">HP</span>
         <div class="track">
@@ -66,6 +72,23 @@
 </div>
 
 <style>
+  /* your element (and the one you defend as), over the bars: opens the Elements panel */
+  .elrow {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--fg);
+    font-size: 10px;
+    cursor: pointer;
+  }
+  .elrow i {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
   .vitals {
     position: absolute;
     left: 50%;

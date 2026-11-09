@@ -98,6 +98,19 @@ SHEETS = [
     ('elem1', 'sheets/gear/Gemini_Generated_Image_6esdc76esdc76esd.png', 6, 4, ELEM1),  # Grok's own design: the lower tier
     ('elem2', 'sheets/gear/Gemini_Generated_Image_ljtt27ljtt27ljtt.png', 6, 4, ELEM2),  # Gemini's design: the higher tier  # glyph only (see GLYPH); the UI draws the disc
     ('grok_chars', 'sheets/chars/7pwSI.jpg', 2, 2, ['heroine-stand', 'heroine-walk', 'sylvie-stand', 'sylvie-walk']),
+    # Clay-style trial, 2026-11-09 (prompts/props-clay.html). Grok, wide 1168 px: a square rerun would be sharper.
+    ('clay', 'sheets/clay/trees.jpg', 4, 4, ['tree', 'birch', 'oak', 'pine', 'palm', 'cypress', 'ancient', 'etherwood', 'deadtree',
+                                            'autumn', 'snowpine', 'stump', 'sapling', 'log', 'driftwood', 'bush']),
+    ('clay', 'sheets/clay/rocks.jpg', 4, 4, ['smallstones', 'boulder', 'bouldercluster', 'outcrop', 'searock', 'mossrock', 'sandstone',
+                                            'ironvein', 'silvervein', 'goldvein', 'malachitevein', 'redvein', 'crystals', 'rubble', 'spentvein', 'reef']),
+    ('clay', 'sheets/clay/plants.jpg', 4, 4, ['berrybush', 'berrybush-picked', 'mushrooms', 'redmushrooms', 'bluemushrooms', 'herbs',
+                                             'flowers-white', 'flowers-purple', 'grass', 'fern', 'reeds', 'lilypads', 'clover', 'cactus', 'coral', 'seaweed']),
+    # Character figures, 2026-11-09 (prompts/characters.html). Grok: heroine-attacks. Gemini: the rest.
+    ('chars', 'sheets/chars/heroine-attacks.jpg', 2, 2, ['heroine-sword-1', 'heroine-sword-2', 'heroine-bow-1', 'heroine-bow-2']),
+    ('chars', 'sheets/chars/heidi.png', 2, 2, ['heidi-stand', 'heidi-walk-1', 'heidi-walk-2', 'heidi-give']),
+    ('chars', 'sheets/chars/verona.png', 2, 2, ['verona-stand', 'verona-walk', 'verona-cast-1', 'verona-cast-2']),
+    ('chars', 'sheets/chars/cygwin-clean.png', 2, 2, ['cygwin-stand', 'cygwin-walk-1', 'cygwin-walk-2', 'cygwin-swing']),
+    ('chars_purple', 'sheets/chars/guinevere-clean.png', 2, 2, ['guinevere-stand', 'guinevere-walk-1', 'guinevere-walk-2', 'guinevere-command']),
 ]
 # set name, folder in extras/, file names without .png. Each image is one object on a transparent background.
 # Left out until their backgrounds are cut: bob, inkjet_ray, rock_lion, shark_soldier.
@@ -112,18 +125,39 @@ KEYED_SINGLES = [
 ]
 MAX_SIDE = 384
 DESPILL = {'grok_chars'}  # sheets with no magenta in them: remove any magenta cast entirely
-OVERFLOW = {'grok_chars': 0.15, 'gear': 0.2, 'elem1': 0.2, 'elem2': 0.2, 'relics': 0.2, 'weapons': 0.2}  # sheets whose objects spill past their cells: cut from a window this much larger
+OVERFLOW = {'grok_chars': 0.15, 'chars': 0.15, 'chars_purple': 0.15, 'gear': 0.2, 'elem1': 0.2, 'elem2': 0.2, 'relics': 0.2, 'weapons': 0.2}  # sheets whose objects spill past their cells: cut from a window this much larger
 # Per-set overrides for cut_cell. icons: plain grey sheet, no cards to strip (a flat silhouette is not one), and
 # only near-exact grey counts as a gap. skills: badges on white, whose white highlights must never count as gaps.
 # One-colour glyph sheets (light glyph on a dark disc): cut by brightness into the glyph colour on transparent.
 GLYPH = {'lifeskills'}
-WATERMARK = set()  # sets whose sheet has Grok's mark in the bottom-right corner: painted over with the ground first
+# sheets Agni cleaned by hand (transparent background, magenta rim): see defringe()
+HAND_CLEANED = {'sheets/chars/guinevere-clean.png', 'sheets/chars/cygwin-clean.png'}
+WATERMARK = {'chars', 'chars_purple', 'clay'}  # sets whose sheet has Grok's mark in the bottom-right corner: painted over with the ground first
 # Something touching an object that isn't part of it (a neighbour, a watermark): rectangles (y0, y1, x0, x1) in
 # sheet pixels, painted over with the ground for that object only.
 HIDE = {('gear', 'silversteel_chainskirt'): [(1566, 1696, 2335, 2526), (1612, 1696, 2290, 2335)]}  # Gemini + Grok marks
 # magenta sheets: pairs stay together; watermarks and stray flecks fall under min_part
 GEAR_CUT = dict(cards=False, reach=0.15, min_part=0.25, key=True)
-CUT = {'items2': GEAR_CUT, 'gear': GEAR_CUT, 'elem1': GEAR_CUT, 'elem2': GEAR_CUT, 'relics': GEAR_CUT, 'weapons': GEAR_CUT, 'icons': dict(cards=False, gap_tol=16, speck_tol=18), 'skills': dict(cards=False, gap_tol=0, speck_tol=0)}
+# chars_purple: figures with purple or red in them (Guinevere, Hela). The full key turns purple navy, so only the outline is keyed.
+CUT = {'clay': GEAR_CUT, 'chars': GEAR_CUT, 'chars_purple': dict(GEAR_CUT, key=False), 'items2': GEAR_CUT, 'gear': GEAR_CUT, 'elem1': GEAR_CUT, 'elem2': GEAR_CUT, 'relics': GEAR_CUT, 'weapons': GEAR_CUT, 'icons': dict(cards=False, gap_tol=16, speck_tol=18), 'skills': dict(cards=False, gap_tol=0, speck_tol=0)}
+
+
+def defringe(path):
+    """A sheet whose background was already removed by hand (transparent): drop the magenta rim the hand cut
+    leaves (pixels near the edge with a strong magenta cast), then lay it on flat magenta so it cuts like the rest."""
+    im = np.asarray(Image.open(path).convert('RGBA'), np.float32)
+    rgb, a = im[..., :3], im[..., 3]
+    solid = a > 128
+    near = solid & ~ndi.binary_erosion(solid, iterations=4)  # the outer 4 px of every figure
+    r, g, b = rgb[..., 0], rgb[..., 1], rgb[..., 2]
+    pink = near & (np.minimum(r, b) - g > 70)
+    pink |= (r > 190) & (b > 140) & (g < 70)  # leftover magenta anywhere (gaps in hair the hand cut missed)
+    solid &= ~pink
+    solid &= ndi.binary_erosion(solid, iterations=1) | ~near  # shave one more pixel off the rim
+    out = np.empty_like(rgb)
+    out[:] = (255, 0, 255)
+    out[solid] = rgb[solid]
+    return out
 
 
 def flood_remove(img, allowed, seeds, colour, tol):
@@ -401,7 +435,10 @@ def main():
         return
     manifest = {}
     for name, fname, cols, rows, names in SHEETS:
-        sheet = np.asarray(Image.open(os.path.join(EXTRAS, fname)).convert('RGB'), np.float32)
+        if fname in HAND_CLEANED:
+            sheet = defringe(os.path.join(EXTRAS, fname))
+        else:
+            sheet = np.asarray(Image.open(os.path.join(EXTRAS, fname)).convert('RGB'), np.float32)
         H, W, _ = sheet.shape
         if name in WATERMARK:
             sheet = sheet.copy()

@@ -179,7 +179,13 @@
        }
       ]
      },
+     "sylvie: One more thing. When they crowd you, don't trade blows one at a time. Let them bunch up, then spin.",
      "sylvie: It suits you. Keep to the house and the beach. Don't go past the trees yet."
+    ],
+    "then": [
+     {
+      "notify": "Tip: Whirl (key 2) hits all six hexes around you. Wait until two or three are next to you."
+     }
     ]
    },
    {
@@ -207,15 +213,44 @@
     },
     "say": [
      "sylvie: Still in one piece. I'm impressed, and I don't say that much.",
-     "sylvie: Take these. Bitter, but they close a cut faster than waiting does."
+     "sylvie: Take these. Bitter, but they close a cut faster than waiting does.",
+     "sylvie: And those hides you're carrying: don't just haul them about. Make yourself something to wear. Gloves take one hide."
     ],
     "then": [
      {
-      "xp": 110
+      "xp": 220
      },
      {
       "give": "minor-health-potion",
       "n": 3
+     }
+    ]
+   },
+   {
+    "objective": "Make a piece of Traveller's armour (Crafting, K) and put it on",
+    "need": {
+     "any": [
+      {
+       "wear": "traveller-hands"
+      },
+      {
+       "wear": "traveller-legs"
+      },
+      {
+       "wear": "traveller-feet"
+      },
+      {
+       "wear": "traveller-body"
+      },
+      {
+       "wear": "traveller-head"
+      }
+     ]
+    },
+    "auto": true,
+    "then": [
+     {
+      "notify": "Every piece adds health and defence, and the whole Traveller's set together adds a bonus."
      }
     ]
    }
@@ -268,7 +303,7 @@
       "n": 20
      },
      {
-      "xp": 120
+      "xp": 240
      },
      {
       "give": "seed-bread",
@@ -341,7 +376,7 @@
     ],
     "then": [
      {
-      "xp": 200
+      "xp": 400
      },
      {
       "give": "traveller-body"
@@ -409,7 +444,7 @@
     ],
     "then": [
      {
-      "xp": 300
+      "xp": 680
      },
      {
       "give": "health-potion",
@@ -477,7 +512,7 @@
     ],
     "then": [
      {
-      "xp": 500
+      "xp": 1120
      },
      {
       "tag": "drill-open"
@@ -558,7 +593,7 @@
       "tag": "infused"
      },
      {
-      "xp": 150
+      "xp": 260
      },
      {
       "notify": "Infused: every basic attack that lands adds an elemental hit (30%)."
@@ -594,7 +629,7 @@
       "tag": "met-aurelie"
      },
      {
-      "xp": 300
+      "xp": 680
      }
     ]
    }
@@ -659,7 +694,7 @@
     ],
     "then": [
      {
-      "xp": 700
+      "xp": 1580
      },
      {
       "give": "health-potion",
@@ -695,7 +730,7 @@
       "n": 12
      },
      {
-      "xp": 800
+      "xp": 1800
      },
      {
       "give": "iron-hands"
@@ -778,7 +813,7 @@
     ],
     "then": [
      {
-      "xp": 900
+      "xp": 2020
      },
      {
       "tag": "fish-clue"
@@ -842,7 +877,7 @@
     ],
     "then": [
      {
-      "xp": 1200
+      "xp": 2700
      },
      {
       "tag": "verona-respect"
@@ -919,7 +954,7 @@
     ],
     "then": [
      {
-      "xp": 1400
+      "xp": 3150
      },
      {
       "tag": "marjane-hint"

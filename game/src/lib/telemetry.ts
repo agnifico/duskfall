@@ -41,8 +41,9 @@ if (import.meta.env.DEV) {
     fetch('/__dev/telemetry', { method: 'POST', body: body() }).catch(() => {});
   };
   snapshot('session');
-  setInterval(flush, FLUSH_MS);
-  setInterval(() => snapshot('snapshot'), SNAPSHOT_MS);
+  const a = setInterval(flush, FLUSH_MS);
+  const b = setInterval(() => snapshot('snapshot'), SNAPSHOT_MS);
+  import.meta.hot?.dispose(() => (clearInterval(a), clearInterval(b))); // a hot reload mustn't stack them
   // the last few seconds, when the tab closes or reloads
   addEventListener('pagehide', () => {
     snapshot('end');

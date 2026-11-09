@@ -1,10 +1,15 @@
-// Saves live in the browser (localStorage). One slot for now.
+// Saves live in the browser (localStorage). Two slots: the game, and the dev test bench's own profile.
 
 import type { GameState } from '../engine/types';
 import { newGame, SAVE_VERSION } from '../engine/state';
 import { STARTING_WEAPON } from '../engine/rules';
 
-const KEY = 'nuvatra.save';
+const SLOTS = { game: 'nuvatra.save', bench: 'nuvatra.bench' } as const;
+let KEY: string = SLOTS.game;
+/** Which slot loading and saving use from now on. */
+export function useSlot(slot: keyof typeof SLOTS): void {
+  KEY = SLOTS[slot];
+}
 
 /** v2 kept item names in the bag; v3 keeps item ids. */
 const V2_ITEM_IDS: Record<string, string> = {

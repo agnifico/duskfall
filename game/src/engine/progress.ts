@@ -2,10 +2,11 @@
 // and life skill levels (XP from gathering; a level raises what ranged nodes give). The tables are in rules.ts.
 
 import type { Content, GameState, Stats } from './types';
-import { COMBAT_XP, LEVEL_STATS, PLAYER_STATS, SKILL_XP, YIELD_PER_LEVEL } from './rules';
+import { EARTH_SET_SHARE, COMBAT_XP, LEVEL_STATS, PLAYER_STATS, SKILL_XP, YIELD_PER_LEVEL } from './rules';
 import { say } from './log';
 import { track } from './telemetry';
 import { gearStats } from './gear';
+import { passives } from './elements';
 
 export interface Progress {
   level: number;
@@ -27,14 +28,17 @@ export const combatLevel = (s: GameState) => combatProgress(s).level;
 export const skillProgress = (s: GameState, id: string) => progressOn(SKILL_XP, s.skills?.[id] ?? 0);
 export const skillLevel = (s: GameState, id: string) => skillProgress(s, id).level;
 
-/** Your stats: the base ones, plus what your level adds, plus your gear, plus any food buff still running. */
+/** Your stats: the base ones, plus what your level adds, plus your gear, plus any food or skill buff still running. */
 export function playerStats(s: GameState, c: Content): Stats {
   const up = combatLevel(s) - 1;
   const out: Stats = { ...PLAYER_STATS };
   for (const [k, v] of Object.entries(LEVEL_STATS) as [keyof typeof LEVEL_STATS, number][]) out[k] += up * v;
   for (const [k, v] of Object.entries(gearStats(s, c)) as [keyof Stats, number][]) out[k] += v;
   const now = Date.now();
-  for (const b of s.buffs ?? []) if (b.until > now) for (const [k, v] of Object.entries(b.stats) as [keyof Stats, number][]) out[k] += v;
+  if (passives(s, c).has('earth')) out.eatk += EARTH_SET_SHARE * out.pdef; // a full earth set: defence turned into attack
+  const live = (s.buffs ?? []).filter((b) => b.until > now && (b.ticks ?? 1) > 0);
+  for (const b of live) for (const [k, v] of Object.entries(b.stats) as [keyof Stats, number][]) out[k] += v;
+  for (const b of live) for (const [k, v] of Object.entries(b.pct ?? {}) as [keyof Stats, number][]) out[k] *= 1 + v;
   return out;
 }
 export const maxHp = (s: GameState, c: Content) => playerStats(s, c).hp;
@@ -71,4 +75,22 @@ export function levelledYield(n: number, ranged: boolean, level: number, rnd = M
   if (!ranged || level <= 1) return n;
   const x = n * (1 + YIELD_PER_LEVEL * (level - 1));
   return Math.floor(x) + (rnd() < x - Math.floor(x) ? 1 : 0);
+}
+
+/** What reaching a combat level opens up, in words: gear you can now wear (by set), quests that can now start. */
+export function levelUnlocks(c: Content, level: number): string[] {
+  const out: string[] = [];
+  const bySet = new Map<string, number>();
+  for (const it of Object.values(c.items)) {
+    if (it.level !== level || !it.slot) continue;
+    const name = it.set ? (c.sets[it.set]?.name ?? it.set) : it.name;
+    bySet.set(name, (bySet.get(name) ?? 0) + 1);
+  }
+  const sets = [...bySet.keys()];
+  if (sets.length) out.push(`Gear you can wear: ${sets.slice(0, 4).join(', ')}${sets.length > 4 ? ` and ${sets.length - 4} more` : ''}`);
+  const levelIn = (x: unknown): number[] =>
+    !x || typeof x !== 'object' ? [] : Array.isArray(x) ? x.flatMap(levelIn) : 'level' in x ? [(x as { level: number }).level] : Object.values(x).flatMap(levelIn);
+  for (const q of Object.values(c.quests))
+    if (levelIn(q.start).includes(level)) out.push(`New quest: ${q.title}${q.giver ? ` (${c.npcs[q.giver]?.name ?? q.giver})` : ''}`);
+  return out;
 }

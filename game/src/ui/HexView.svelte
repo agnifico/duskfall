@@ -27,6 +27,9 @@
   import { themeOf } from './themes';
   import { FOG_H, FOG_TOP, PATCH_EXTENT, edgeNeighbour, fogBlock, groundHex, mul, patchImage, shownHeight, type FogBlock } from './ground';
   import { padCells } from './pad';
+  import { FIGHT_ENERGY } from '../engine/rules';
+  import { foeElements, multOnFoe } from '../engine/elements';
+  import { elName, markOf } from './elementInfo';
 
   let { pointId }: { pointId: string } = $props();
 
@@ -163,24 +166,42 @@
     });
   });
   $effect(() => () => cancelAnimationFrame(glideRaf));
-  // follow you: when you walk near the edge of the view, it slides to keep you in its middle 60%
+  // follow you: when you walk near the edge of the view, it slides to keep you in its middle 60%;
+  // in a fight, its middle 30%, so the fight never ends up at the edge of the screen
   const FOLLOW = 0.3;
+  const FOLLOW_FIGHT = 0.15;
   $effect(() => {
     const p = player;
     if (!p || ED.on) return;
     const [px, py] = [p.x, p.y];
+    const band = fighting ? FOLLOW_FIGHT : FOLLOW;
     untrack(() => {
       if (gliding || drag?.kind === 'pan') return;
       const [fx, fy] = clampFocus(focus, zoom);
       const w = base.w / zoom, h = base.h / zoom;
       const dx = px - (base.cx + fx), dy = py - (base.cy + fy);
-      const sx = Math.abs(dx) > FOLLOW * w ? dx - Math.sign(dx) * FOLLOW * w : 0;
-      const sy = Math.abs(dy) > FOLLOW * h ? dy - Math.sign(dy) * FOLLOW * h : 0;
+      const sx = Math.abs(dx) > band * w ? dx - Math.sign(dx) * band * w : 0;
+      const sy = Math.abs(dy) > band * h ? dy - Math.sign(dy) * band * h : 0;
       if (!sx && !sy) return;
       const to = clampFocus([fx + sx, fy + sy], zoom);
       // a long way off (you panned away, then walked): ease back; otherwise keep pace with the walk
       if (Math.hypot(sx / w, sy / h) > 0.15) glide(zoom, to, 450);
       else focus = to;
+    });
+  });
+  // a fight starts: ease the view onto you, leaning a little towards whoever is after you
+  $effect(() => {
+    const on = fighting;
+    untrack(() => {
+      if (!on || ED.on || story || !G.s.pos) return;
+      const me = L.hexes.get(G.s.pos);
+      if (!me) return;
+      const them = foes.filter((f) => f.engaged).flatMap((f) => L.hexes.get(f.pos) ?? []);
+      const ax = them.length ? them.reduce((a, x) => a + x.cx, 0) / them.length : me.cx;
+      const ay = them.length ? them.reduce((a, x) => a + x.cy, 0) / them.length : me.cy;
+      // two parts you, one part them: you stay near the middle, the enemies stay on screen
+      const cx = (me.cx * 2 + ax) / 3, cy = (me.cy * 2 + ay) / 3;
+      glide(zoom, clampFocus([cx - base.cx, cy - base.cy], zoom), 450);
     });
   });
   const view = $derived.by(() => {
@@ -241,7 +262,15 @@
     if (!id) return new Set<string>();
     return new Set(E.skillHexes(G.s, content, id, hover ?? undefined).map((x) => x.key));
   });
+  /** Aiming a dash: where you'd land, and who you'd hit on the way (or bounce off). */
+  const dashAim = $derived.by(() => {
+    const id = UI.aim;
+    if (!id || content.skills[id]?.kind !== 'dash' || !hover) return null;
+    const p = E.dashPlan(G.s, content, id, hover);
+    return { land: p.land?.key ?? null, hits: new Set(p.hits.map((x) => x.key)) };
+  });
   const fighting = $derived(K.inFight(G.s));
+  const autoId = $derived(ED.on ? null : E.autoArmed(G.s, content));
   // the 15-minute cycle: changes 4 times an hour, so reading it (not the clock) keeps the field from redrawing each second
   const cycle = $derived(K.cycleOf(G.now));
   const onPath = new Set<string>(); // the route isn't drawn: just where you'd end up
@@ -274,16 +303,20 @@
       return { hx, text: aimHexes.size ? sk.name : `${sk.name} · ✕`, bad: !aimHexes.size };
     }
     if (!E.isSeen(G.s, content, pointId, x)) return { hx, text: '?', bad: false };
+    if (hoverFoe && autoId) return { hx, text: `${content.skills[autoId].name} (auto) · pick a target${hoverFoe.engaged ? '' : ` · ${FIGHT_ENERGY}⚡`}`, bad: false, below: true };
     if (hoverFoe) {
       const st = K.statsOf(content, hoverFoe);
       const lv = hoverFoe.level ?? content.props[hoverFoe.kind]?.foe?.level;
-      const name = cap(content.props[hoverFoe.kind]?.name ?? hoverFoe.kind) + (lv ? ` · Lv ${lv}` : '');
+      const els = foeElements(content, hoverFoe.kind);
+      const elTag = els.length ? ` · ${els.map(elName).join('/')}${markOf(multOnFoe(G.s, els))}` : '';
+      const name = cap(content.props[hoverFoe.kind]?.name ?? hoverFoe.kind) + (lv ? ` · Lv ${lv}` : '') + elTag;
+      const pick = hoverFoe.engaged ? '' : ` · ${FIGHT_ENERGY}⚡`; // starting a fight costs energy
       if (E.canHit(G.s, content, hoverFoe.id)) {
         const me = K.playerStats(G.s, content);
         const hit = Math.round((1 - K.dodgeChance(me, st)) * 100);
-        return { hx, text: `Attack · ${K.fmt(K.baseDamage(me.patk, st.pdef))} dmg · ${hit}%`, bad: false, below: true };
+        return { hx, text: `Attack · ${K.fmt(K.baseDamage(me.patk, st.pdef))} dmg · ${hit}%${pick}`, bad: false, below: true };
       }
-      return { hx, text: `${name} · ${Math.ceil(hoverFoe.hp)}/${st.hp}`, bad: false, below: true };
+      return { hx, text: `${name} · ${Math.ceil(hoverFoe.hp)}/${st.hp}${pick}`, bad: false, below: true };
     }
     const pr = E.visibleProp(G.s, content, x);
     if (!plan) return { hx, text: pr ? `${cap(pr.name)} · ✕` : '✕', bad: true };
@@ -492,11 +525,18 @@
 
   function onclick(ev: MouseEvent) {
     if (ED.on) return; // the editor works on pointer down
+    if (ev.shiftKey) return; // Shift is the pan hand: letting go after a drag isn't a click
     const key = keyAt(ev);
     if (!key || key === G.s.pos) return;
     if (UI.aim) return fireAim(key);
     stopWalk();
     const f = K.foeAt(G.s, key);
+    // the auto skill, when armed, takes the place of the basic attack
+    const auto = f && E.autoArmed(G.s, content);
+    if (auto) {
+      UI.aim = auto;
+      return fireAim(key);
+    }
     if (f) return attackFoe(f.id, key); // in reach: attack; else walk until it is, then attack
     const p = E.planRoute(G.s, content, key);
     if (!p || !p.path.length) return;
@@ -507,11 +547,12 @@
   // Paint: press and drag. Alt-click picks a hex's prop as the brush (Alt+Shift: its ground).
   // Tune: click a hex to show the tuned object there (or select the prop on it); drag the sprite to move it
   // over its foot point (Shift: move the whole prop on the hex); drag the shadow, or its two handles to size it.
-  // Anywhere: drag with the right or middle button, or with Space held, to pan.
+  // Anywhere: drag with the right or middle button to pan; or hold Space (editor) or Shift (playing) and drag.
 
   let painting = false;
   let lastPainted: string | null = null;
   let space = $state(false);
+  let shift = $state(false); // playing: Shift held turns the cursor into a hand that pans
   type Drag =
     | { kind: 'pan'; x: number; y: number; focus: [number, number] }
     | { kind: 'tune'; part: string; shift: boolean; p: DOMPoint; w: number; h: number; id: string; code: string; s: Record<string, number> };
@@ -546,7 +587,7 @@
   });
 
   function onpointerdown(ev: PointerEvent) {
-    const panButton = ev.button === 1 || ev.button === 2 || (ev.button === 0 && space);
+    const panButton = ev.button === 1 || ev.button === 2 || (ev.button === 0 && (space || (!ED.on && ev.shiftKey)));
     // playing: drag off the field (or with the right or middle button) to pan; clicks on hexes stay clicks
     if (panButton || (!ED.on && ev.button === 0 && !keyAt(ev))) {
       if (panButton) ev.preventDefault();
@@ -612,12 +653,16 @@
   }
 
   function onkeydown(ev: KeyboardEvent) {
+    if (ev.key === 'Shift') shift = true;
     if (ev.key !== ' ' || !ED.on || (ev.target as HTMLElement | null)?.closest?.('input, textarea, select')) return;
     space = true;
     (document.activeElement as HTMLElement | null)?.blur?.(); // or Space would press the last button clicked
     ev.preventDefault();
   }
-  const onkeyup = (ev: KeyboardEvent) => ev.key === ' ' && (space = false);
+  function onkeyup(ev: KeyboardEvent) {
+    if (ev.key === ' ') space = false;
+    if (ev.key === 'Shift') shift = false;
+  }
 
   // ---------- what the last action did: numbers, slashes, lunges, flashes ----------
   // The enemies' turn (phase 1) plays a beat after yours, so a fight reads as blow, then answer.
@@ -688,12 +733,12 @@
     l ? `--dx:${l.dx}px;--dy:${l.dy}px;animation-delay:${l.delay}ms` : undefined;
 </script>
 
-<svelte:window {onpointerup} {onkeydown} {onkeyup} />
+<svelte:window {onpointerup} {onkeydown} {onkeyup} onblur={() => (shift = space = false)} />
 
 <div class="wrap">
   <Backdrop kind={backdrop} />
   <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-  <svg bind:this={svgEl} viewBox={view} class:aiming={!!UI.aim} class:editing={ED.on} class:panning={space || drag?.kind === 'pan'} class:dragging={drag?.kind === 'pan'} {onclick} {onpointerdown} {onpointermove} onpointerleave={() => (hover = null)} oncontextmenu={(e) => e.preventDefault()}>
+  <svg bind:this={svgEl} viewBox={view} class:aiming={!!UI.aim} class:autoaim={!!autoId} class:editing={ED.on} class:panning={space || (shift && !ED.on) || drag?.kind === 'pan'} class:dragging={drag?.kind === 'pan'} {onclick} {onpointerdown} {onpointermove} onpointerleave={() => (hover = null)} oncontextmenu={(e) => e.preventDefault()}>
     <defs>
       <clipPath id="avatar"><circle r="18" /></clipPath>
       <filter id="soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.5" /></filter>
@@ -768,7 +813,7 @@
         {/if}
       {/each}
       {#each L.order as hx (hx.key)}
-        {#if aimHexes.has(hx.key)}<polygon class="aimhex" points={hx.top} />{/if}
+        {#if aimHexes.has(hx.key)}<polygon class="aimhex" class:land={dashAim?.land === hx.key} class:hit={dashAim?.hits.has(hx.key)} points={hx.top} />{/if}
       {/each}
       {#each flashes as f (f.id)}
         <polygon class="flash" points={f.hx.top} style:animation-delay="{f.delay}ms" />
@@ -1072,11 +1117,15 @@
   svg.aiming,
   svg.aiming .cell,
   svg.aiming .obj,
-  svg.aiming .foe {
+  svg.aiming .foe,
+  svg.autoaim .foe {
     cursor: crosshair;
   }
+  /* in a fight, props fade and let clicks through: a tall tree or rock in front mustn't swallow a click on
+     the enemy behind it (the hex under the click still takes it) */
   .obj.ghost {
     opacity: 0.35;
+    pointer-events: none;
   }
   /* the map editor */
   .obj.faint {
@@ -1179,6 +1228,16 @@
     stroke: #c8ecff;
     stroke-width: 2;
     opacity: 0.45;
+  }
+  /* a dash: where you land is solid; who you'll hit on the way is red */
+  .aimhex.land {
+    opacity: 0.75;
+    stroke: #fff;
+    stroke-width: 3;
+  }
+  .aimhex.hit {
+    fill: #e5484d;
+    stroke: #ffb3b5;
   }
   .flash {
     fill: #ff5a5f;

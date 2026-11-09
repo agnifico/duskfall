@@ -88,6 +88,7 @@ export interface FoeData {
   res?: number; // World Resonance it asks for (not used yet)
   level?: number; // its place on the XP curve: beating it gives killXp(level) (rules.ts)
   xp?: number; // combat XP for beating it, overriding its level's; worked out from its stats if neither
+  element?: string | string[]; // its element, or two (engine/elements.ts): its blows carry it, your elemental hits meet it
   behaviour: 'still' | 'territorial'; // still: never moves or notices; territorial: chases within its notice range
   notice?: number; // territorial: rings it notices you within (default 1)
   attack: Shape;
@@ -136,8 +137,9 @@ export interface Skill {
   icon: string; // emoji, shown when there's no badge
   badge?: string; // public/sprites/skills/<badge>.png
   text?: string;
-  kind: 'dash' | 'attack';
+  kind: 'dash' | 'attack' | 'heal' | 'buff';
   aim: 'self' | 'direction' | 'target'; // fires at once, pick a hex to aim at, or pick an enemy within `range`
+  // a `target` skill with an `area` shape is a blast: the hex picked and `rings` around it
   spirit: number;
   energy?: number;
   range?: number; // dash: hexes; target: reach
@@ -145,6 +147,8 @@ export interface Skill {
   shape?: Shape; // attack
   power?: number; // attack: damage multiplier per target
   damage?: DamageKind; // attack: physical if missing; spells will be elemental
+  heal?: number; // heal: HP back, as a multiple of your elemental attack
+  buff?: { stats?: Partial<Stats>; pct?: Partial<Stats>; ticks: number }; // buff: flat, then a share (0.05 = +5%), for ticks
 }
 
 export interface Item {
@@ -183,11 +187,13 @@ export interface ItemUse {
   buff?: { stats: Partial<Stats>; minutes: number };
 }
 
-/** A buff running on you, from food. */
+/** A buff running on you: from food (real time), or from a skill (fight ticks). */
 export interface Buff {
-  item: string;
+  item: string; // the food's item id, or "skill:<id>"
   stats: Partial<Stats>;
-  until: number; // ms timestamp
+  pct?: Partial<Stats>; // a share of the total, after every flat bonus (0.05 = +5%)
+  until: number; // ms timestamp (a skill's buff: never, it counts ticks instead)
+  ticks?: number; // a skill's buff: ticks left
 }
 
 /** Where gear is worn. Relics have several slots (RELIC_SLOTS). */
@@ -198,7 +204,7 @@ export type WornSlot = Exclude<Slot, 'relic'>;
 export interface GearSet {
   name: string;
   profile?: 'heavy' | 'light' | 'arcane'; // how the gear formula leans its pieces (engine/gearFormula.ts)
-  bonuses: { pieces: number; stats: Partial<Stats> }[];
+  bonuses: { pieces: number; stats: Partial<Stats>; passive?: string }[]; // passive: an element's set effect (engine/elements.ts)
 }
 
 /** What you're wearing: item ids, or null. Worn things leave the bag. */
@@ -250,6 +256,7 @@ export type Cond =
   | { enter: string } // you're in this point
   | { kill: string | string[]; n: number; at?: string[] } // beat n of these enemy kinds ('*' any), optionally only in these points
   | { have: string; n: number } // in your bag (not taken)
+  | { wear: string } // you have this on
   | { level: number } // your combat level at least
   | { tag: string } // a story flag is set
   | { notTag: string }
@@ -431,6 +438,7 @@ export interface GameState {
   day: number;
   toolTier?: number; // unused: nodes are gated by skill level now (kept so old saves load)
   bag: Record<string, number>; // item id -> count
+  known?: Record<string, true>; // items you've had at least once: the first time shows a card (missing in old saves)
   depleted: Record<string, number | true>; // node cell -> the 15-minute cycle it was used up in (true: old saves, until the next day)
   beaten: Record<string, true>; // unused since enemies roll per cycle; kept so old saves load
   taken: Record<string, true>; // secrets taken, for good
@@ -447,6 +455,9 @@ export interface GameState {
   restAt: string | null; // cell key of the last bed you slept in; knocked out, you wake there
   stoked: Record<string, number>; // campfire cell key -> when you last stoked it (ms)
   hotbar: (string | null)[]; // the quick slots, keys 1–6: "skill:dash", "item:seed-bread", or empty
+  element?: string | null; // the element you chose (engine/elements.ts); none until Heidi's Gift
+  elementAt?: number; // when you last chose it: re-attuning is free once a week
+  auto?: string | null; // the auto skill: armed whenever you have the Spirit, a click on an enemy fires it (design/SKILLS.md)
   foes: Record<string, Foe[]>; // point -> enemies standing there this cycle
   foeRolls: Record<string, { cycle: number; rerolls: number }>; // point -> the cycle its enemies were rolled in, and rerolls used
   fx: Fx[]; // what the last action did, for the UI to float up

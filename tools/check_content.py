@@ -44,6 +44,7 @@ for f in glob.glob(os.path.join(C, 'points', '*.json')):
     points[p['id']] = p
 
 enemies = {k for k, v in props.items() if v.get('type') == 'enemy'}
+ELEMENTS = {'fire', 'water', 'earth', 'air', 'light', 'dark'}  # engine/elements.ts
 public = lambda rel: os.path.exists(os.path.join(PUBLIC, rel))
 
 # what sets tags, what gives items (for the "never" checks at the end)
@@ -70,6 +71,7 @@ def cond(where, c):
     if 'not' in c: cond(where, c['not'])
     if 'talk' in c and c['talk'] not in npcs: err(where, f'talks to unknown person "{c["talk"]}"')
     if 'enter' in c and c['enter'] not in points: err(where, f'enters unknown point "{c["enter"]}"')
+    if 'wear' in c and c['wear'] not in items: err(where, f'wears unknown item "{c["wear"]}"')
     if 'have' in c and c['have'] not in items: err(where, f'needs unknown item "{c["have"]}"')
     if 'quest' in c and c['quest'] not in quests: err(where, f'waits on unknown quest "{c["quest"]}"')
     if 'tag' in c: tags_wanted.setdefault(c['tag'], where)
@@ -109,6 +111,11 @@ for code, p in props.items():
     if p.get('npc') and p['npc'] not in npcs: err(w, f'unknown person "{p["npc"]}"')
     foe = p.get('foe')
     if foe:
+        els = foe.get('element') or []
+        for e in ([els] if isinstance(els, str) else els):
+            if e not in ELEMENTS: err(w, f'unknown element "{e}"')
+        if isinstance(els, list) and len(els) > 2: err(w, 'more than two elements')
+        if not foe.get('element'): warn(w, 'enemy with no element')
         for d in foe.get('drops', []):
             for i in ([d['item']] if d.get('item') else []) + d.get('oneOf', []):
                 given.add(i)
@@ -183,10 +190,14 @@ for sid, s in skills.items():
     if s.get('badge') and not public(f'sprites/skills/{s["badge"]}.png'): err(f'skills › {sid}', f'badge "{s["badge"]}" has no image')
 for sid in player.get('skills', []):
     if sid not in skills: err('player › skills', f'unknown skill "{sid}"')
+for sid, st in sets.items():
+    for b in st.get('bonuses', []):
+        if b.get('passive') and b['passive'] not in ELEMENTS: err(f'sets › {sid}', f'unknown passive element "{b["passive"]}"')
 for iid, it in items.items():
     w = f'items › {iid}'
     if it.get('sprite') and it['sprite'] not in sprites: err(w, f'sprite "{it["sprite"]}" not in sprites.json')
     if it.get('set') and it['set'] not in sets: err(w, f'unknown set "{it["set"]}"')
+    if it.get('element') and it['element'] not in ELEMENTS: err(w, f'unknown element "{it["element"]}"')
     for g in it.get('grants', []):
         if g not in skills: err(w, f'grants unknown skill "{g}"')
 for nid, n in npcs.items():

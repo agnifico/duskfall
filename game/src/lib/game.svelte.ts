@@ -6,10 +6,11 @@ import { updateStory } from '../engine/story';
 import { DEV_RULES } from '../engine/rules';
 import { track } from '../engine/telemetry';
 import { newGame } from '../engine/state';
+import { wornIds } from '../engine/gear';
 import type { GameState } from '../engine/types';
 import { applyTheme } from '../ui/themes';
 import { clearSave, loadGame, saveGame } from './save';
-import { UI, showGain } from './ui.svelte';
+import { UI, showFirst, showGain } from './ui.svelte';
 
 function start(): GameState {
   const s = loadGame() ?? newGame();
@@ -35,13 +36,16 @@ function openStart(): void {
 }
 openStart();
 
-setInterval(() => {
+// the clock: once a second. A dev hot reload re-runs this file, so the old clock is stopped, or they'd stack
+// (each copy regenerating, rolling enemies and saving: the game slows to a crawl).
+const clock = setInterval(() => {
   G.now = Date.now();
   regen(G.s, G.now);
   regenHp(G.s, content, G.now);
   expireBuffs(G.s, G.now);
   ensureFoes(G.s, content, G.now); // a new cycle rolls fresh enemies where you stand
 }, 1000);
+import.meta.hot?.dispose(() => clearInterval(clock));
 
 /** Run a change to the game state, animate anything that landed in the bag, and save. */
 export function act<T>(fn: (s: GameState) => T): T {
@@ -49,10 +53,18 @@ export function act<T>(fn: (s: GameState) => T): T {
   const before = { ...G.s.bag };
   const out = fn(G.s);
   updateStory(G.s, content); // quests that start, story beats that are due
+  // an old save has no list of items you've had: count everything it held as known, so it doesn't flood
+  G.s.known ??= Object.fromEntries([...Object.keys(before), ...wornIds(G.s)].map((id) => [id, true as const]));
   for (const [item, n] of Object.entries(G.s.bag)) {
     const gained = n - (before[item] ?? 0);
-    if (gained > 0) showGain(item, gained);
+    if (gained <= 0) continue;
+    if (G.s.known[item]) showGain(item, gained);
+    else {
+      G.s.known[item] = true;
+      showFirst(item);
+    }
   }
+  for (const id of wornIds(G.s)) G.s.known[id] = true; // handed to you and put straight on: you've seen it
   saveGame($state.snapshot(G.s) as GameState);
   return out;
 }

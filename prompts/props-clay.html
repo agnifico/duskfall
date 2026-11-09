@@ -1,0 +1,79 @@
+<title>Clay props trial</title>
+<style>
+  body { margin: 0; padding: 16px; background: #1b1a1f; color: #ddd; font: 13px system-ui, sans-serif; }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  .note { color: #999; margin: 0 0 16px; max-width: 900px; line-height: 1.5; }
+  section { margin: 0 0 22px; padding: 12px; background: #25232b; border-radius: 8px; }
+  h2 { font-size: 15px; margin: 0 0 2px; }
+  .sub { color: #aaa; margin: 0 0 10px; }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+  figure { margin: 0; width: 150px; }
+  figure a { display: block; height: 150px; background: #111; border-radius: 6px; overflow: hidden; }
+  figure img { width: 100%; height: 100%; object-fit: contain; }
+  figcaption { margin-top: 4px; font-size: 11px; line-height: 1.35; word-break: break-all; }
+  figcaption b { color: #fc6; font-size: 12px; }
+  .alt figcaption b { color: #8cf; }
+  pre { white-space: pre-wrap; background: #141318; padding: 10px 12px; border-radius: 6px; margin: 0; font: 12.5px/1.5 ui-monospace, monospace; color: #e8e6ee; max-width: 900px; }
+  button { background: #3a3744; color: #eee; border: 0; border-radius: 4px; padding: 3px 9px; font: inherit; font-size: 11px; cursor: pointer; margin: 4px 4px 0 0; }
+  button:hover { background: #4b4758; }
+  .names { color: #8a8; font-size: 11px; margin-top: 6px; }
+</style>
+
+<h1>Clay props trial</h1>
+<p class="note">A trial of a soft, rounded, clay-like 3D style for flora, rocks and ores. Grok first: sheets of separate objects are its strength. Run sheet 2 first, because ore veins are the hardest. <b style="color:#fc6">Yellow</b> = attach. <b style="color:#8cf">Blue</b> = today's sprite, for comparison.</p>
+<div id="out"></div>
+
+<script>
+const A = '/Users/agni/Documents/code/duskfall/';
+const REF = A + 'extras/concept/clay-style-ref.png';
+const N = A + 'game/public/sprites/grok_nodes/', U = A + 'game/public/sprites/grok_nuv/';
+
+const HEAD = `Picture 1 shows an art style I want to try for my fantasy RPG: soft, rounded, stylised 3D, like clay or toy models. Simple chunky shapes, smooth matte surfaces, clean bright natural colours. Not realistic.
+
+Make 16 props for the game in this style. They stand on a hex board seen from above at an angle, so they all share the same camera from above and the same light from the upper left, and read clearly at a small size. The board draws its own ground, so draw no ground, base or shadow under them.
+
+16 separate objects in a 4 by 4 grid, each alone in its cell. Flat magenta (#FF00FF) background, no text.`;
+
+const sheets = [
+  ['1 · Trees', [
+    [REF, 'picture 1'], [N + 'tree.png', 'now: tree', 1], [N + 'birch.png', 'now: birch', 1], [U + 'pine.png', 'now: pine', 1], [N + 'etherwood.png', 'now: etherwood', 1],
+  ], [
+    'a plain leafy tree', 'a birch', 'a big oak', 'a pine', 'a palm', 'a tall cypress', 'an ancient giant tree', 'a magical tree with pale silver bark and blue-white leaves (no glow)',
+    'a dead bare tree', 'a tree in autumn colours', 'a snow-covered pine', 'a tree stump', 'a sapling', 'a fallen log', 'a piece of sea-bleached driftwood', 'a small round bush',
+  ], 'tree, birch, oak, pine, palm, cypress, ancient, etherwood, deadtree, autumn, snowpine, stump, sapling, log, driftwood, bush'],
+
+  ['2 · Rocks and ores (run first)', [
+    [REF, 'picture 1'], [N + 'boulder.png', 'now: boulder', 1], [N + 'silvervein.png', 'now: silver vein', 1], [N + 'redvein.png', 'now: red vein', 1], [N + 'rubble.png', 'now: rubble', 1],
+  ], [
+    'a few small stones', 'a boulder', 'a cluster of boulders', 'a tall rock outcrop', 'a sea rock', 'a mossy rock', 'a desert sandstone rock', 'a rock with iron ore in it',
+    'a rock with silver ore', 'a rock with gold ore', 'a rock with green malachite', 'a rock with red crystals', 'a cluster of crystals', 'a pile of rubble, a rock that has been mined away', 'a rock with its ore dug out', 'a coral reef rock',
+  ], 'smallstones, boulder, bouldercluster, outcrop, searock, mossrock, sandstone, ironvein, silvervein, goldvein, malachitevein, redvein, crystals, rubble, spentvein, reef'],
+
+  ['3 · Plants and ground decor', [
+    [REF, 'picture 1'], [N + 'berrybush.png', 'now: berry bush', 1], [N + 'mushrooms.png', 'now: mushrooms', 1],
+  ], [
+    'a berry bush full of berries', 'the same bush with its berries picked', 'brown mushrooms', 'red-capped mushrooms', 'blue mushrooms', 'a patch of herbs', 'a cluster of small white and yellow flowers', 'a cluster of purple flowers',
+    'a tuft of grass', 'a fern', 'reeds', 'lily pads with a flower', 'a patch of clover', 'a cactus', 'a piece of coral', 'seaweed',
+  ], 'berrybush, berrybush-picked, mushrooms, redmushrooms, bluemushrooms, herbs, flowers-white, flowers-purple, grass, fern, reeds, lilypads, clover, cactus, coral, seaweed'],
+];
+
+const prompt = (items) => `${HEAD}\n\n${[0, 1, 2, 3].map((r) => `Row ${r + 1}: ${items.slice(r * 4, r * 4 + 4).join('; ')}.`).join('\n')}`;
+const esc = (t) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+function copy(text, btn) {
+  const done = () => { const o = btn.textContent; btn.textContent = 'Copied'; setTimeout(() => (btn.textContent = o), 900); };
+  (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(done, () => {
+    const ta = document.createElement('textarea'); ta.value = text; document.body.append(ta); ta.select(); document.execCommand('copy'); ta.remove(); done();
+  });
+}
+const out = document.getElementById('out');
+sheets.forEach(([title, imgs, items, names], i) => {
+  out.insertAdjacentHTML('beforeend', `<section><h2>${title}</h2><div class="row">${
+    imgs.map(([src, role, alt], j) => `<figure class="${alt ? 'alt' : ''}"><a href="file://${src}" target="_blank"><img src="file://${src}"></a><figcaption><b>${role}</b>${alt ? '' : `<br><button data-path="${src}">Copy path</button>`}</figcaption></figure>`).join('')
+  }</div><pre>${esc(prompt(items))}</pre><button data-prompt="${i}">Copy prompt</button><div class="names">Cutter names: ${names}</div></section>`);
+});
+out.addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.prompt) copy(prompt(sheets[+b.dataset.prompt][2]), b);
+  if (b.dataset.path) copy(b.dataset.path, b);
+});
+</script>

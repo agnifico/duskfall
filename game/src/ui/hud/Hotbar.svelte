@@ -3,6 +3,7 @@
   // afford it, lights up while it waits to be aimed; hovering shows its reach) or food or a potion (count, greys
   // out when you can't use it). Click to use. Right-click any slot, or click an empty one, to pick what goes in
   // it: your skills, or anything usable in your bag. The bag's "To hotbar" fills the first empty slot.
+  // The auto skill (set in the Skills panel, J) is tagged, and glows while armed.
   import { G, act } from '../../lib/game.svelte';
   import { UI } from '../../lib/ui.svelte';
   import { asset, content } from '../../content';
@@ -50,6 +51,8 @@
           class="slot skill px btn t-inset"
           class:off={!!why}
           class:aiming={UI.aim === id}
+          class:auto={G.s.auto === id}
+          class:armed={G.s.auto === id && !why}
           title="{sk.name} ({i + 1}): {sk.text ?? ''} {sk.spirit} Spirit{sk.energy ? ` + ${sk.energy}⚡` : ''}{why ? ` · ${why}` : ''} · right-click to change"
           onclick={() => onclick(i)}
           oncontextmenu={(e) => oncontextmenu(e, i)}
@@ -59,6 +62,7 @@
           <span class="lbl n">{i + 1}</span>
           {#if sk.badge}<img class="badge" src={asset(`sprites/skills/${sk.badge}.png`)} alt="" />{:else}<span class="icon">{sk.icon}</span>{/if}
           <span class="lbl cost">{sk.spirit}</span>
+          {#if G.s.auto === id}<span class="lbl autotag">Auto</span>{/if}
         </button>
       {:else if it && id}
         {@const n = G.s.bag[id] ?? 0}
@@ -166,6 +170,21 @@
   .skill.aiming {
     outline: 3px solid #9fd8ff;
     outline-offset: 1px;
+  }
+  /* the auto skill: tagged; while armed (Spirit enough) it glows, since a click on an enemy fires it */
+  .autotag {
+    position: absolute;
+    top: -9px;
+    left: 50%;
+    translate: -50% 0;
+    z-index: 2;
+    padding: 0 4px;
+    font-size: 9px;
+    color: #0a1210;
+    background: #9fd8ff;
+  }
+  .skill.armed {
+    box-shadow: 0 0 0 2px #9fd8ff, 0 0 12px #9fd8ffaa;
   }
   .picker {
     position: absolute;

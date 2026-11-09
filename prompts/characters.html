@@ -1,0 +1,194 @@
+<title>Figure prompts</title>
+<style>
+  body { margin: 0; padding: 16px; background: #1b1a1f; color: #ddd; font: 13px system-ui, sans-serif; }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  .note { color: #999; margin: 0 0 16px; max-width: 900px; line-height: 1.5; }
+  section { margin: 0 0 22px; padding: 12px; background: #25232b; border-radius: 8px; }
+  section.later { opacity: .75; }
+  h2 { font-size: 15px; margin: 0 0 2px; }
+  .sub { color: #aaa; margin: 0 0 10px; }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+  figure { margin: 0; width: 160px; }
+  figure a { display: block; height: 210px; background: #111; border-radius: 6px; overflow: hidden; }
+  figure img { width: 100%; height: 100%; object-fit: contain; }
+  figcaption { margin-top: 4px; font-size: 11px; line-height: 1.35; word-break: break-all; }
+  figcaption b { color: #fc6; font-size: 12px; }
+  .alt figcaption b { color: #8cf; }
+  .alt a { opacity: .7; }
+  pre { white-space: pre-wrap; background: #141318; padding: 10px 12px; border-radius: 6px; margin: 0; font: 12.5px/1.5 ui-monospace, monospace; color: #e8e6ee; max-width: 900px; }
+  button { background: #3a3744; color: #eee; border: 0; border-radius: 4px; padding: 3px 9px; font: inherit; font-size: 11px; cursor: pointer; margin: 4px 4px 0 0; }
+  button:hover { background: #4b4758; }
+  .names { color: #8a8; font-size: 11px; margin-top: 6px; }
+</style>
+
+<h1>Figure prompts</h1>
+<p class="note">One block per Grok run. Attach the <b style="color:#fc6">yellow</b> pictures in order (picture 1, 2, 3), then paste the prompt. <b style="color:#8cf">Blue</b> = not attached, shown for comparison. "Copy path" gives a path for the file picker (Cmd+Shift+G). Rules behind these prompts: prompts/characters.md.</p>
+<div id="out"></div>
+
+<script>
+const A = '/Users/agni/Documents/code/duskfall/';
+const X = A + 'extras/', L = X + 'sprites_for_later/', P = A + 'game/public/characters/', C = X + 'sheets/chars/';
+const DJ = '/Users/agni/Documents/code/dawns-journey/v2/static/images/characters/';
+const ANCHOR = C + 'heroine-anchor.png';
+
+const HEAD = (who) => `Picture 1 is a figure from my fantasy RPG: a painted figure that stands on a small board, seen from above at an angle. Make a new sheet for ${who}, drawn the way picture 1 is drawn: same painted look, same camera from above, same figure size, facing three-quarters to the right, full body. Take only the style from picture 1, not the person.`;
+const FRAMES = (p, frames) => `These are animation frames for the game. The frames swap in place, so ${p} stays the same size and in the same spot in every cell, and only the movement changes. 4 frames in a 2 by 2 grid:\n${frames.map((f, i) => `${i + 1}. ${f}`).join('\n')}`;
+const TAIL = `Flat magenta (#FF00FF) background, no shadows, no ground, no text.`;
+const WALK = ['standing at ease', 'walking, one foot forward', 'walking, the other foot forward (with frame 2 this makes a walking loop)'];
+
+// Standard figure prompt. she = true for she/her, false for he/him.
+function std({ who, from, age, frames, she = true }) {
+  const [p, o, s] = she ? ['she', 'her', 'her'] : ['he', 'him', 'his'];
+  return [HEAD(who), `${age} Draw ${o} attractive and likeable, as everyone in this game is. Keep ${s} face, hair, outfit and colours from ${from}.`, FRAMES(p, frames), TAIL].join('\n\n');
+}
+
+// [title, sub, pictures: [path, role, alt?], prompt, cutter names, later?]
+const sheets = [
+  ['1 · Heroine: attacks (redo)', 'adult, ~25', [
+    [ANCHOR, 'picture 1'],
+  ], `Picture 1 is a figure from my fantasy RPG: the heroine, a painted figure that stands on a small board, seen from above at an angle. Make attack frames for her, drawn exactly the way picture 1 is drawn: same painted look, same camera from above, same figure size, facing three-quarters to the right, full body.
+
+She is an adult woman, about 25. Keep her face, hair, white shirt, trousers, belt and boots.
+
+These are animation frames for the game: each pair plays as a quick two-frame attack, swapping in place, so she stays the same size and in the same spot. 4 frames in a 2 by 2 grid:
+Top row: a plain steel sword, winding up; then the strike landing.
+Bottom row: a plain wooden bow, drawing an arrow; then just after the arrow is loosed.
+
+${TAIL}`, 'heroine-sword-1, heroine-sword-2, heroine-bow-1, heroine-bow-2'],
+
+  ['2 · Heroine: swimming (redo)', 'adult, ~25', [
+    [ANCHOR, 'picture 1'],
+  ], `Picture 1 is a figure from my fantasy RPG: the heroine, a painted figure that stands on a small board, seen from above at an angle. Make swimming frames for her, drawn exactly the way picture 1 is drawn: same painted look, same camera from above, same size, facing three-quarters to the right.
+
+She is an adult woman, about 25, the same person as in picture 1.
+
+The game draws its own water around her, so show only what is above the surface: head, shoulders and arms, ending in a soft ripple line at the waterline. These are animation frames that loop, swapping in place. 2 frames side by side: one swimming stroke, then the next stroke.
+
+Flat magenta (#FF00FF) background, no shadows, no text.`, 'heroine-swim-1, heroine-swim-2'],
+
+  ['3 · Pine Grove healer (Heidi)', 'adult, ~28', [
+    [ANCHOR, 'picture 1'],
+    [P + 'heidi/h2.webp', 'picture 2'],
+    [P + 'heidi/portrait.webp', 'picture 3'],
+    [P + 'heidi/full.webp', 'round 1 ref, dropped', 1],
+  ], std({ who: 'the woman in pictures 2 and 3', from: 'pictures 2 and 3', age: 'She is an adult woman, about 28, a village healer.', frames: [...WALK, 'holding out a small bundle of herbs to someone'] }),
+  'heidi-stand, heidi-walk-1, heidi-walk-2, heidi-give'],
+
+  ['4 · Claudia', 'adult, ~25', [
+    [ANCHOR, 'picture 1'],
+    [X + 'giVox.jpg', 'picture 2'],
+    [X + 'ApADM.jpg', 'picture 3'],
+  ], std({ who: 'the woman in pictures 2 and 3', from: 'pictures 2 and 3, with the staff from picture 3', age: 'She is an adult woman, about 25, a frost mage.', frames: [...WALK, 'casting with her staff raised'] }),
+  'claudia-stand, claudia-walk-1, claudia-walk-2, claudia-cast'],
+
+  ['5 · Cygwin', 'adult, ~25 · sword (recommended; axe shown in blue)', [
+    [ANCHOR, 'picture 1'],
+    [X + '5zQoG.jpg', 'picture 2'],
+    [X + '0qQMv.jpg', 'axe version', 1],
+  ], std({ who: 'the woman in picture 2', from: 'picture 2, with her sword', age: 'She is an adult woman, about 25, a warrior.', frames: [...WALK, 'a wide swing of her sword'] }),
+  'cygwin-stand, cygwin-walk-1, cygwin-walk-2, cygwin-swing'],
+
+  ['6 · Guinevere', 'adult, ~25 · no sword on the figure', [
+    [ANCHOR, 'picture 1'],
+    [DJ + 'guinevere/guinevere1.png', 'picture 2'],
+    [DJ + 'guinevere/guinevere0.png', 'picture 3'],
+  ], std({ who: 'the woman in pictures 2 and 3', from: 'pictures 2 and 3', age: 'She is an adult woman, about 25, a noblewoman. She carries no weapon: leave out the sword in picture 2.', frames: [...WALK, 'one hand raised in a commanding gesture'] }),
+  'guinevere-stand, guinevere-walk-1, guinevere-walk-2, guinevere-command'],
+
+  ['7 · Veres', 'adult, ~30', [
+    [ANCHOR, 'picture 1'],
+    [DJ + 'veres/veres5.png', 'picture 2'],
+    [DJ + 'veres/veres0.png', 'picture 3'],
+    [DJ + 'veres/veres1.png', 'tanned look, not used', 1],
+  ], std({ who: 'the winged woman in pictures 2 and 3', from: 'pictures 2 and 3, with her black wings and gold crown', age: 'She is an adult woman, about 30.', frames: [...WALK, 'wings spread wide'] }),
+  'veres-stand, veres-walk-1, veres-walk-2, veres-wings'],
+
+  ['8 · Verona (boss)', 'adult, ~27 · open-shirt look · no sword', [
+    [ANCHOR, 'picture 1'],
+    [DJ + 'verona/6.png', 'picture 2'],
+    [DJ + 'verona/verona_avatar.png', 'picture 3'],
+    [DJ + 'verona/2.png', 'longer view, has sword', 1],
+    [DJ + 'verona/10.png', '"nice girl" look, not used', 1],
+  ], std({ who: 'the woman in pictures 2 and 3', from: 'pictures 2 and 3: the open white shirt, green cape and gold laurel crown', age: 'She is an adult woman, about 27, a sensual, confident forest noblewoman, empty-handed.', frames: ['standing, confident', 'walking, one foot forward', 'gathering a swirl of green leaves in her hand', 'throwing it, a burst of leaves'] }),
+  'verona-stand, verona-walk, verona-cast-1, verona-cast-2'],
+
+  ['9 · Hela: naive (the island)', 'adult, looks ~25', [
+    [ANCHOR, 'picture 1'],
+    [L + 'Vnl14.jpg', 'picture 2'],
+    [DJ + 'hela/hela1.png', 'picture 3'],
+    [L + 'DobHu.jpg', 'same look', 1],
+  ], std({ who: 'the woman in pictures 2 and 3', from: 'pictures 2 and 3', age: 'She is an adult woman who looks about 25: a goddess, proud and a little spoiled.', frames: [...WALK, 'a flame held in her open hand'] }),
+  'hela-stand, hela-walk-1, hela-walk-2, hela-flame'],
+
+  ['10a · Marisol', 'Saltmere fisherwoman, ~40', [
+    [ANCHOR, 'picture 1'],
+    [P + 'marisol/full.webp', 'picture 2'],
+  ], std({ who: 'the woman in picture 2', from: 'picture 2', age: 'She is a fisherwoman, about 40, in a salt-stained jacket and work boots.', frames: [...WALK, 'hauling a coil of rope'] }),
+  'marisol-stand, marisol-walk-1, marisol-walk-2, marisol-rope'],
+
+  ['10b · Brann', 'Saltmere smith, 50s', [
+    [ANCHOR, 'picture 1'],
+    [P + 'brann/full.webp', 'picture 2'],
+  ], std({ she: false, who: 'the man in picture 2', from: 'picture 2', age: 'He is the village smith, a broad man in his 50s, in a leather apron.', frames: [...WALK, 'resting a hammer on his shoulder'] }),
+  'brann-stand, brann-walk-1, brann-walk-2, brann-hammer'],
+
+  ['10c · Old Tova', 'Saltmere net-mender, very old', [
+    [ANCHOR, 'picture 1'],
+    [P + 'tova/full.webp', 'picture 2'],
+  ], std({ who: 'the woman in picture 2', from: 'picture 2', age: 'She is a very old woman, small and a little bent, in a headscarf.', frames: [...WALK, 'holding up a half-mended net'] }),
+  'tova-stand, tova-walk-1, tova-walk-2, tova-net'],
+
+  ['10d · Sister Aurelie', 'Saltmere priestess, ~25', [
+    [ANCHOR, 'picture 1'],
+    [L + 'village_priestess.jpg', 'picture 2'],
+  ], std({ who: 'the woman in picture 2', from: 'picture 2', age: 'She is an adult woman, about 25, the village priestess.', frames: [...WALK, 'a blessing with her staff raised'] }),
+  'aurelie-stand, aurelie-walk-1, aurelie-walk-2, aurelie-bless'],
+
+  ['12a · Hela: Queen of Hell (later)', 'picture 1 = her island sheet (9), once made', [
+    [L + '7f4eD.jpg', 'picture 2'],
+    [L + 'N5GwC.jpg', 'regalia', 1],
+    [L + 'CAUZR.jpg', 'gown', 1],
+    [L + 'HqdRr.jpg', 'gown', 1],
+    [DJ + 'hela/hela6.png', 'throne', 1],
+  ], `Picture 1 is a figure sheet from my fantasy RPG. Make the same woman, same face and hair, drawn the same way (same painted look, same camera from above, same size, facing three-quarters to the right, full body), now as the Queen of Hell in her full regalia: the crown, armour and gown from picture 2.
+
+She is an adult woman who looks about 25. Draw her attractive and regal.
+
+${FRAMES('she', [...WALK, 'a flame held in her open hand'])}
+
+${TAIL}`, 'hela-queen-stand, hela-queen-walk-1, hela-queen-walk-2, hela-queen-flame', 1],
+
+  ['12b · Hela: adventurer (later)', 'picture 1 = her island sheet (9), once made · bike is a separate sheet', [
+    [L + 'OJBch.jpg', 'picture 2'],
+    [L + 'JxdG5.jpg', 'bodysuit', 1],
+    [DJ + 'hela/hela0.png', 'bodysuit', 1],
+    [DJ + 'hela/hela7.png', 'bodysuit', 1],
+  ], `Picture 1 is a figure sheet from my fantasy RPG. Make the same woman, same face and hair, drawn the same way (same painted look, same camera from above, same size, facing three-quarters to the right, full body), now in her adventuring outfit: the black bodysuit and boots from picture 2. She rides a motorbike in this form, so the look is a fire-queen biker.
+
+She is an adult woman who looks about 25. Draw her attractive and confident.
+
+${FRAMES('she', [...WALK, 'a flame held in her open hand'])}
+
+${TAIL}`, 'hela-adv-stand, hela-adv-walk-1, hela-adv-walk-2, hela-adv-flame', 1],
+];
+
+const esc = (t) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+function copy(text, btn) {
+  const done = () => { const o = btn.textContent; btn.textContent = 'Copied'; setTimeout(() => (btn.textContent = o), 900); };
+  (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(done, () => {
+    const ta = document.createElement('textarea'); ta.value = text; document.body.append(ta); ta.select(); document.execCommand('copy'); ta.remove(); done();
+  });
+}
+
+const out = document.getElementById('out');
+sheets.forEach(([title, sub, imgs, prompt, names, later], i) => {
+  out.insertAdjacentHTML('beforeend', `<section class="${later ? 'later' : ''}"><h2>${title}</h2><p class="sub">${sub}</p><div class="row">${
+    imgs.map(([src, role, alt], j) => `<figure class="${alt ? 'alt' : ''}"><a href="file://${src}" target="_blank"><img src="file://${src}" loading="lazy"></a><figcaption><b>${role}</b><br>${src.replace('/Users/agni/', '~/')}<br><button data-path="${i}:${j}">Copy path</button></figcaption></figure>`).join('')
+  }</div><pre>${esc(prompt)}</pre><button data-prompt="${i}">Copy prompt</button><div class="names">Cutter names: ${names}</div></section>`);
+});
+out.addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.prompt) copy(sheets[+b.dataset.prompt][3], b);
+  if (b.dataset.path) { const [i, j] = b.dataset.path.split(':'); copy(sheets[i][2][j][0], b); }
+});
+</script>

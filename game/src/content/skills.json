@@ -8,7 +8,8 @@
   "spirit": 20,
   "energy": 1,
   "range": 3,
-  "text": "Up to 3 hexes in a straight line, in one tick, for 1⚡. Click a hex in the direction to go."
+  "power": 0.6,
+  "text": "Charge up to 3 hexes in a straight line and land where you click. Every enemy you pass takes a 60% hit. Click an enemy to dash past it; if there's no room behind it, you hit it and bounce back."
  },
  "whirl": {
   "name": "Whirl",
@@ -31,10 +32,84 @@
   "kind": "attack",
   "aim": "target",
   "range": 2,
-  "spirit": 10,
-  "refund": 15,
+  "spirit": 20,
+  "refund": 10,
   "power": 1.3,
   "damage": "elemental",
-  "text": "A bolt of raw element at an enemy up to 2 hexes away. Elemental damage, from your elemental attack. Landing it gives back 15 Spirit, so once it's going it keeps itself going. Needs a staff."
+  "text": "A bolt of raw element at an enemy up to 2 hexes away. Elemental damage, from your elemental attack. Landing it gives back 10 Spirit, so it runs a little behind: about two basic attacks for every three Sparks. Needs a staff."
+ },
+ "cleave": {
+  "name": "Cleave",
+  "icon": "🪓",
+  "badge": "cleave",
+  "kind": "attack",
+  "aim": "direction",
+  "spirit": 25,
+  "power": 1.0,
+  "shape": {
+   "shape": "arc",
+   "width": 3
+  },
+  "text": "A wide cut across the three hexes in front of you, toward the hex you click. Full damage to each."
+ },
+ "piercing-shot": {
+  "name": "Piercing Shot",
+  "icon": "🏹",
+  "badge": "strike",
+  "kind": "attack",
+  "aim": "direction",
+  "spirit": 30,
+  "power": 0.9,
+  "shape": {
+   "shape": "line",
+   "length": 4
+  },
+  "text": "A shot that goes straight through: 90% to every enemy in a line of four hexes, toward the hex you click."
+ },
+ "elemental-smite": {
+  "name": "Elemental Smite",
+  "icon": "💥",
+  "badge": "heavy",
+  "kind": "attack",
+  "aim": "target",
+  "range": 2,
+  "spirit": 45,
+  "power": 0.8,
+  "damage": "elemental",
+  "shape": {
+   "shape": "area",
+   "rings": 1
+  },
+  "text": "A burst of element on a hex up to 2 away: 80% elemental damage to it and the six hexes around it."
+ },
+ "minor-heal": {
+  "name": "Minor Heal",
+  "icon": "💚",
+  "badge": "heal",
+  "kind": "heal",
+  "aim": "self",
+  "spirit": 35,
+  "heal": 2,
+  "text": "Mend yourself for twice your elemental attack. Takes your turn."
+ },
+ "fortify": {
+  "name": "Fortify",
+  "icon": "🛡️",
+  "badge": "guard",
+  "kind": "buff",
+  "aim": "self",
+  "spirit": 30,
+  "buff": {
+   "stats": {
+    "pdef": 10,
+    "edef": 10
+   },
+   "pct": {
+    "pdef": 0.05,
+    "edef": 0.05
+   },
+   "ticks": 5
+  },
+  "text": "Brace: +10 and then +5% to both defences for 5 ticks."
  }
 }

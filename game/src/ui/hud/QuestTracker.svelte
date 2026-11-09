@@ -1,5 +1,5 @@
 <script lang="ts">
-  // The quests you're on, top left under the portrait: title, the current step, and kills so far.
+  // The quests you're on, top left under the portrait: title, the current step, kills so far, and items carried against items asked for.
   import { G } from '../../lib/game.svelte';
   import { content } from '../../content';
   import { activeStages } from '../../engine/story';
@@ -16,6 +16,11 @@
       <div class="q" class:main={a.q.main}>
         <div class="lbl m title">{a.q.title}</div>
         <div class="body obj">{a.st?.objective}{#if a.progress}<b> {a.progress}</b>{/if}</div>
+        {#if a.items.length}
+          <div class="items">
+            {#each a.items as it (it.name)}<span class="body" class:got={it.have >= it.n}>{it.name} <b>{it.have}/{it.n}</b></span>{/each}
+          </div>
+        {/if}
       </div>
     {/each}
     {#each errands as d (d.e.id)}
@@ -59,6 +64,20 @@
   .obj {
     font-size: 13px;
     line-height: 1.35;
+  }
+  .items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px 12px;
+    margin-top: 3px;
+    font-size: 12px;
+    opacity: 0.9;
+  }
+  .items b {
+    color: var(--hl);
+  }
+  .items .got b {
+    color: #6fcf7c;
   }
   .obj b {
     color: var(--hl);

@@ -1,13 +1,15 @@
 <script lang="ts">
   // Bottom right, above the menu: tools for the field you're on.
-  //   Reroll (R): roll this point's enemies again, 2 free per 15-minute cycle; then it shows the time to the
+  //   Reroll (R): roll this point's enemies again, 1 free per 15-minute cycle; then it shows the time to the
   //   next cycle, when they roll fresh anyway.
   //   Turn ([ and ]): turn the hex field; remembered.
-  import { G } from '../../lib/game.svelte';
+  //   Dev mode only: the test bench and back (`).
+  import { DEV, G } from '../../lib/game.svelte';
+  import { UI } from '../../lib/ui.svelte';
   import { content } from '../../content';
   import * as K from '../../engine/combat';
   import { FREE_REROLLS } from '../../engine/rules';
-  import { rerollEnemies, turnField } from '../commands';
+  import { rerollEnemies, toggleDevField, turnField } from '../commands';
 
   const pid = $derived(G.s.point);
   const hasEnemies = $derived(!!pid && !!content.points[pid]?.enemies);
@@ -22,6 +24,11 @@
 </script>
 
 <div class="tools">
+  {#if DEV.on || UI.bench}
+    <button class="px btn bevel t-panel reroll" onclick={toggleDevField} title="Dev mode: the test bench, its own player in the dev field; again to go back to your game (`)">
+      <span class="ico">🧪</span><span class="lbl m">{UI.bench ? 'Leave bench' : 'Test bench'}</span>
+    </button>
+  {/if}
   {#if hasEnemies}
     <button
       class="px btn bevel t-panel reroll"

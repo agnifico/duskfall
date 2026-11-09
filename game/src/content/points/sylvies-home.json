@@ -8,7 +8,6 @@
   "kind": "people",
   "levels": [1, 10],
   "fog": false,
-  "enemies": {"place":[{"kind":"boar","on":["f"]},{"kind":"boar","on":["f"]}]},
   "table": ["tree", "berries", "stones"],
   "rows": [
     "_ _ _ _ _       w       w",
@@ -20,7 +19,7 @@
     "_ w h s g.birch g       f.birch  f       g.birch p        f.oak    f",
     "_ w h s g       g       g        g       p       f        f.stones f",
     "_ w h s g.tree  g.birch g        p       p.birch f        g.tree   f.oak    f.oak",
-    "w h s h g       g       p.sylvie p.house p.birch g        f        f        f.oak",
+    "w h s h g       g       g.sylvie p.house p.birch g        f        f        f.oak",
     "w h h h s       g.birch g        p       p       g.*      g        f        f     f",
     "w h h h p.>     g       p        g       g.fire  g.*      g.tree   f        f.oak f.stones",
     "w h s s s       _       _        g       g.birch g.stones g.tree   f.stones f     f",

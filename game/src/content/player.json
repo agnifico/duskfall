@@ -4,7 +4,7 @@
     "stand": "grok_chars/heroine-stand",
     "walk": "grok_chars/heroine-walk"
   },
-  "skills": ["dash", "whirl"],
+  "skills": ["dash", "whirl", "cleave", "piercing-shot", "elemental-smite", "minor-heal", "fortify"],
   "portrait": "characters/heroine/portrait.webp",
   "art": [
     "characters/heroine/full.webp",

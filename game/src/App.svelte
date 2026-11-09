@@ -10,6 +10,7 @@
   import CraftingPage from './ui/panels/CraftingPage.svelte';
   import Dialogue from './ui/Dialogue.svelte';
   import QuestBanner from './ui/QuestBanner.svelte';
+  import LevelUp from './ui/LevelUp.svelte';
   import { onKey } from './ui/commands';
 </script>
 
@@ -40,6 +41,7 @@
   {#if UI.screen === 'inventory'}<InventoryPage />{/if}
   {#if UI.screen === 'crafting'}<CraftingPage />{/if}
   <QuestBanner />
+  <LevelUp />
 </div>
 
 <style>

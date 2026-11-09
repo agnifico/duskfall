@@ -1,6 +1,6 @@
 // UI-only state. Never saved.
 
-export type PanelId = 'bag' | 'quests' | 'character' | 'person' | 'settings';
+export type PanelId = 'bag' | 'quests' | 'character' | 'person' | 'settings' | 'skills' | 'elements';
 
 /** Full-page screens, for deep work (inventory; later crafting, homestead, skill pages). Panels are quick looks
  *  over the field; screens replace it. The field stays mounted underneath, hidden, so coming back is instant.
@@ -35,12 +35,14 @@ export interface Gain {
 
 export const UI = $state({
   panel: null as PanelId | null,
+  bench: false, // the dev test bench's player is swapped in (lib/bench.svelte.ts)
   screen: screenFromHash() as ScreenId | null,
   person: null as string | null, // whose profile the 'person' panel shows
   invFocus: null as { slot: import('../engine/types').WornSlot | 'relic'; i: number } | null, // open the Inventory screen on this worn piece
   people: false, // the People list under the portrait is open
   map: null as MapView | null, // null: you're looking at the hex field
   gains: [] as Gain[],
+  firsts: [] as { id: number; item: string }[], // items you've just got for the first time (hud/NewItems.svelte)
   bagBump: 0, // goes up each time a gain lands in the bag
   note: { seq: 0, text: '' }, // a UI message ("Theme: Harvest"), shown like game messages
   aim: null as string | null, // a skill waiting for you to click where to aim it
@@ -86,6 +88,18 @@ export function showGain(item: string, n: number): void {
     UI.gains = UI.gains.filter((g) => g.id !== id);
     UI.bagBump++;
   }, GAIN_MS + delay);
+}
+
+const FIRST_MS = 6500; // keep in step with hud/NewItems.svelte
+
+/** An item you've never had before: a card with its name and what it's for, in place of the "+n" line. */
+export function showFirst(item: string): void {
+  const id = ++nextGain;
+  UI.firsts.push({ id, item });
+  setTimeout(() => {
+    UI.firsts = UI.firsts.filter((g) => g.id !== id);
+    UI.bagBump++;
+  }, FIRST_MS);
 }
 
 /** True while a land's title screen is up: no HUD, nothing but the land and its name. */

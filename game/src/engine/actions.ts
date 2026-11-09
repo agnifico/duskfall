@@ -1,12 +1,13 @@
 // Everything the player can do. Each function changes the state it is given, and nothing else.
 
 import type { Action, Cell, Content, GameState, Prop } from './types';
-import { BASIC_ATTACK, INFUSION_POWER, HOTBAR_SLOTS, FIRE_ENERGY, FIRE_MS, FIRE_WOOD, RANGED_POWER, WEAPON_RANGE, COST, DEV_RULES, SPIRIT_PER_BASIC, HP_REGEN_MS, KO_HP, MAX_ENERGY, MAX_SPIRIT, REGEN_MS, NODE_FALLOFF, NODE_FLOOR, NODE_XP, SEARCH_RADIUS } from './rules';
+import { FIGHT_ENERGY, BASIC_ATTACK, INFUSION_POWER, HOTBAR_SLOTS, FIRE_ENERGY, FIRE_MS, FIRE_WOOD, RANGED_POWER, WEAPON_RANGE, COST, DEV_RULES, SPIRIT_PER_BASIC, HP_REGEN_MS, KO_HP, MAX_ENERGY, MAX_SPIRIT, REGEN_MS, NODE_FALLOFF, NODE_FLOOR, NODE_XP, SEARCH_RADIUS } from './rules';
 import { dirTo, grid, hexDistance, route, shapeCells, stepDir, type Grid } from './hex';
 import { say } from './log';
 import { track } from './telemetry';
-import { addSkillXp, levelledYield, maxHp, skillLevel } from './progress';
+import { addSkillXp, levelledYield, maxHp, playerStats, skillLevel } from './progress';
 import { peopleOn, talkTo } from './story';
+import { passives } from './elements';
 import { cycleOf, ensureFoesAt, foeAt, foesHere, fx, inFight, playerHits, rerollFoes, resetFoes, tick } from './combat';
 
 export { say };
@@ -276,12 +277,20 @@ export function canHit(s: GameState, c: Content, foeId: string): boolean {
   return shapeCells(g, me, at, BASIC_ATTACK).includes(at);
 }
 
-/** Your basic attack: free, one tick. */
-export function attack(s: GameState, c: Content, foeId: string): void {
+/** Picking a fight costs energy: FIGHT_ENERGY for each enemy on these hexes that isn't after you yet.
+ *  Enemies that come at you on their own (riled, territorial, ambushes) are free to fight. */
+function pickFight(s: GameState, keys: string[], now: number): boolean {
+  const fresh = keys.filter((k) => foeAt(s, k) && !foeAt(s, k)!.engaged).length;
+  return spend(s, fresh * FIGHT_ENERGY, now, 'fight');
+}
+
+/** Your basic attack: one tick; free on an enemy already after you, FIGHT_ENERGY to start a fight. */
+export function attack(s: GameState, c: Content, foeId: string, now = Date.now()): void {
   s.fx = [];
   const g = hereGrid(s, c);
   const f = foesHere(s).find((x) => x.id === foeId);
   if (!g || !f || !canHit(s, c, foeId)) return;
+  if (!pickFight(s, [f.pos], now)) return;
   const ranged = attackRange(s, c) > 1;
   if (ranged) fx(s, f.pos, '', c.items[s.worn?.main ?? '']?.kind === 'bow' ? 'shot' : 'bolt', 0, s.pos!);
   else {
@@ -297,25 +306,38 @@ export function attack(s: GameState, c: Content, foeId: string): void {
 
 // ---------- skills ----------
 
-/** The hexes a dash towards a cell would cross: straight on, through enemies, stopping before water, walls and
- *  fog. It can't end on an enemy, so it lands on the last free hex. */
-export function dashPath(s: GameState, c: Content, skillId: string, targetKey: string): Cell[] {
+/** A dash towards a cell: a straight charge of up to the skill's range, through enemies, stopping before
+ *  water, walls, fog and the field's edge. You land on the hex you clicked; clicked an enemy, you land just past
+ *  it, or (no room past it) stop short. With no free hex to land on at all, you hit it and bounce back: you stay
+ *  put, the blow still lands. Every enemy you pass, or bounce off, takes the dash's hit. */
+export function dashPlan(s: GameState, c: Content, skillId: string, targetKey: string): { line: Cell[]; land: Cell | null; hits: Cell[] } {
+  const none = { line: [], land: null, hits: [] };
   const sk = c.skills[skillId];
   const pid = currentPoint(s);
   const g = hereGrid(s, c);
   const me = hereCell(s, c);
   const to = g?.byKey.get(targetKey);
-  if (!sk || !pid || !g || !me || !to || to === me) return [];
+  if (!sk || !pid || !g || !me || !to || to === me) return none;
+  const range = (sk.range ?? 2) + (passives(s, c).has('air') ? 1 : 0); // a full air set dashes further
   const dir = dirTo(me, to);
-  const out: Cell[] = [];
+  const open: Cell[] = []; // the straight line, as far as it goes
   let x: Cell | undefined = me;
-  for (let i = 0; i < (sk.range ?? 2); i++) {
+  for (let i = 0; i < range; i++) {
     x = x && stepDir(g, x, dir);
     if (!x || c.terrain[x.t]?.cost == null || !isSeen(s, c, pid, x)) break;
-    out.push(x);
+    open.push(x);
   }
-  while (out.length && foeAt(s, out[out.length - 1].key)) out.pop();
-  return out;
+  if (!open.length) return none;
+  // how far you mean to go: to the hex you clicked, or past it when an enemy stands there
+  let want = Math.min(open.length, Math.max(1, hexDistance(me, to)));
+  if (foeAt(s, open[want - 1].key)) while (want < open.length && foeAt(s, open[want - 1].key)) want++;
+  let n = want;
+  while (n > 0 && foeAt(s, open[n - 1].key)) n--; // can't end on an enemy: land on the last free hex
+  const line = open.slice(0, Math.max(n, 1));
+  const land = n > 0 ? open[n - 1] : null;
+  // passed on the way, or bounced off when there's nowhere to land
+  const hits = (land ? open.slice(0, n - 1) : [open[0]]).filter((x) => foeAt(s, x.key));
+  return { line, land, hits };
 }
 
 /** The hexes a skill would hit, aimed at a cell (self-aimed skills ignore it). */
@@ -324,11 +346,15 @@ export function skillHexes(s: GameState, c: Content, skillId: string, targetKey?
   const g = hereGrid(s, c);
   const me = hereCell(s, c);
   if (!sk || !g || !me) return [];
-  if (sk.kind === 'dash') return targetKey ? dashPath(s, c, skillId, targetKey) : [];
+  if (sk.kind === 'dash') return targetKey ? dashPlan(s, c, skillId, targetKey).line : [];
   if (sk.aim === 'target') {
     const t = targetKey ? g.byKey.get(targetKey) : undefined;
     const ok = t && t !== me && hexDistance(me, t) <= (sk.range ?? 1) && isSeen(s, c, s.point!, t);
-    return ok ? [t] : [];
+    if (!ok) return [];
+    // a blast: the hex picked first, then the rings around it
+    const sh = sk.shape;
+    if (sh?.shape === 'area') return [t, ...g.cells.filter((x) => x !== t && hexDistance(t, x) <= sh.rings)];
+    return [t];
   }
   const at = (targetKey && g.byKey.get(targetKey)) || me;
   return sk.shape ? shapeCells(g, me, at, sk.shape) : [];
@@ -340,12 +366,19 @@ export function knownSkills(s: GameState, c: Content): string[] {
   return [...new Set([...(c.player.skills ?? []), ...granted])];
 }
 
+/** A skill's Spirit cost for you: a full air set halves Dash's. */
+export function spiritCost(s: GameState, c: Content, skillId: string): number {
+  const sk = c.skills[skillId];
+  if (!sk) return 0;
+  return sk.kind === 'dash' && passives(s, c).has('air') ? Math.ceil(sk.spirit / 2) : sk.spirit;
+}
+
 /** Why a skill can't be used right now, or null. */
 export function skillBlocked(s: GameState, c: Content, skillId: string): string | null {
   const sk = c.skills[skillId];
   if (!sk) return 'Unknown skill';
   if (!knownSkills(s, c).includes(skillId)) return 'Needs the right weapon';
-  if ((s.spirit ?? 0) < sk.spirit) return `Needs ${sk.spirit} Spirit`;
+  if ((s.spirit ?? 0) < spiritCost(s, c, skillId)) return `Needs ${spiritCost(s, c, skillId)} Spirit`;
   if (sk.energy && !DEV_RULES.freeEnergy && s.energy < sk.energy) return `Needs ${sk.energy}⚡`;
   return null;
 }
@@ -361,10 +394,11 @@ export function useSkill(s: GameState, c: Content, skillId: string, targetKey: s
   const why = skillBlocked(s, c, skillId);
   if (why) return say(s, `${sk.name}: ${why.toLowerCase()}.`);
   if (sk.kind === 'dash') {
-    const path = targetKey ? dashPath(s, c, skillId, targetKey) : [];
-    if (!path.length) return say(s, "You can't dash that way.");
+    const plan = targetKey ? dashPlan(s, c, skillId, targetKey) : null;
+    if (!plan?.line.length || (!plan.land && !plan.hits.length)) return say(s, "You can't dash that way.");
+    if (!pickFight(s, plan.hits.map((x) => x.key), now)) return;
     if (!spend(s, sk.energy ?? 0, now, `skill:${skillId}`)) return;
-    for (const x of path) {
+    for (const x of plan.line) {
       look(s, g, pid, x, 1);
       const pr = x.p ? c.props[x.p] : null;
       if (pr?.hidden && !s.revealed[x.key]) {
@@ -372,24 +406,53 @@ export function useSkill(s: GameState, c: Content, skillId: string, targetKey: s
         say(s, `You notice ${pr.name.toLowerCase()}.`);
       }
     }
-    fx(s, path[path.length - 1].key, '', 'dash', 0, me.key);
-    s.pos = path[path.length - 1].key;
+    for (const x of plan.hits) fx(s, x.key, '', 'slash', 0, me.key);
+    if (plan.land) {
+      fx(s, plan.land.key, '', 'dash', 0, me.key);
+      s.pos = plan.land.key;
+    } else fx(s, plan.hits[0].key, '', 'lunge', 0, me.key); // nowhere to land: hit it and bounce back
+    let landed = 0;
+    for (const x of plan.hits) {
+      const f = foeAt(s, x.key);
+      if (f && playerHits(s, c, f, sk.power ?? 0.6, sk.damage ?? 'physical')) landed++;
+    }
+    if (landed) say(s, `Dash: ${landed === 1 ? 'a hit' : `${landed} hits`} on the way through.`);
+  } else if (sk.kind === 'heal' || sk.kind === 'buff') {
+    // on yourself: a heal, or a buff that lasts some ticks
+    if (sk.kind === 'heal') {
+      const top = maxHp(s, c);
+      if (s.hp >= top) return say(s, `${sk.name}: your health is full.`);
+      const n = Math.round(Math.min(top - s.hp, (sk.heal ?? 1) * playerStats(s, c).eatk));
+      s.hp += n;
+      fx(s, me.key, `+${n} HP`, 'xp');
+    } else if (sk.buff) {
+      const item = `skill:${skillId}`;
+      // +1: the tick this cast takes counts down at once
+      s.buffs = [...(s.buffs ?? []).filter((b) => b.item !== item), { item, stats: sk.buff.stats ?? {}, pct: sk.buff.pct, until: Number.MAX_SAFE_INTEGER, ticks: sk.buff.ticks + 1 }];
+      fx(s, me.key, sk.name, 'xp');
+    }
+    s.spirit -= spiritCost(s, c, skillId);
+    track('skill', { id: skillId, spirit: sk.spirit });
+    afterAction(s, c, g);
+    return;
   } else {
     const hexes = skillHexes(s, c, skillId, targetKey);
     if (sk.aim === 'target' && !hexes.length) return say(s, `${sk.name}: pick an enemy within ${sk.range ?? 1}.`);
-    for (const x of hexes) fx(s, x.key, '', sk.aim === 'target' ? (sk.damage === 'elemental' ? 'bolt' : 'shot') : 'slash', 0, me.key);
+    if (!pickFight(s, hexes.map((x) => x.key), now)) return;
+    // a targeted shot or bolt flies to the hex picked; a blast flashes the hexes around it
+    for (const [i, x] of hexes.entries()) fx(s, x.key, '', sk.aim === 'target' ? (i ? 'flash' : sk.damage === 'elemental' ? 'bolt' : 'shot') : 'slash', 0, me.key);
     let landed = 0;
     for (const x of hexes) {
       const f = foeAt(s, x.key);
       if (f && playerHits(s, c, f, sk.power ?? 1, sk.damage ?? 'physical')) landed++;
     }
-    s.spirit -= sk.spirit;
+    s.spirit -= spiritCost(s, c, skillId);
     if (sk.refund && landed) s.spirit = Math.min(MAX_SPIRIT, s.spirit + sk.refund);
     track('skill', { id: skillId, spirit: sk.spirit, landed });
     afterAction(s, c, g);
     return;
   }
-  s.spirit -= sk.spirit;
+  s.spirit -= spiritCost(s, c, skillId);
   track('skill', { id: skillId, spirit: sk.spirit });
   afterAction(s, c, g);
 }
@@ -420,6 +483,22 @@ export function setHotbar(s: GameState, entry: string | null, slot?: number): vo
   }
   bar[at] = entry;
   s.hotbar = bar;
+}
+
+/** Whether a skill can be the auto skill: it has to be aimed at something (a self-aimed one, like Whirl, has
+ *  nothing for a click to choose). */
+export const canAuto = (c: Content, id: string) => !!c.skills[id] && c.skills[id].aim !== 'self';
+
+/** Set (or clear, with null) the auto skill. */
+export function setAuto(s: GameState, c: Content, id: string | null): void {
+  s.auto = id && canAuto(c, id) ? id : null;
+}
+
+/** The auto skill, if it's armed right now: one you have, aimed, and affordable. */
+export function autoArmed(s: GameState, c: Content): string | null {
+  const id = s.auto;
+  if (!id || !canAuto(c, id) || !knownSkills(s, c).includes(id) || skillBlocked(s, c, id)) return null;
+  return id;
 }
 
 /** Eat or drink it. A potion drunk in a fight takes your turn. */

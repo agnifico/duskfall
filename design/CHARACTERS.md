@@ -37,3 +37,6 @@ Surveyed 2026-11-09. Sources:
 
 ## Settled 2026-11-09
 Verona: DJ's art is the reference. Aoife is the name (Hanabi is the same character). Akari is dropped (to be redone from scratch for the Shadowhand, under another name). Alice: hairband, short hair, a gunslinger's look. Minerva: blonde (the drift was kept). Young Guinevere, Claudia and others: story scenes only. `HEALER_SPRITE` is Heidi. The `*_SPRITE(S)` folders are LPC sheets: not usable here (outfit layers drop out when walking). The loose images in `Else/characters` are where to look for one-off characters; sorting them can wait.
+
+## Settled 2026-11-09 (art pass)
+Hela has three forms: naive (the island; red top, flame in hand), Queen of Hell (regalia: crown, armour, gown, throne), adventurer (black bodysuit, rides a bike). Everyone is drawn attractive and likeable, body-positive, never as a villain stereotype (Brann sides with the Saints and still isn't drawn as a bad man). References for each figure: `prompts/characters.md`; prompts with their pictures: `prompts/characters.html`.

@@ -4,6 +4,31 @@ Written 2026-11-08, at the end of the tiles, HUD and art session. Lines marked *
 
 ---
 
+## 0. Theme days (agreed 2026-11-09)
+
+One theme a day, done completely that day: everything it needs and everything we can think of. Then later days
+only add rows to content files and test them in the dev field. Aim: 7–10 days a month of building systems, the
+rest short days that use them. Story, homestead, farming, fishing wait.
+
+0. **Test bench.** A second player (own save slot, every item, any level, a kit in one click, all quests done)
+   swapped in on the dev field; enemy spawner. *Built 2026-11-09 (slice 1).* Still to add: named save slots.
+1. **Skills.** All of `SKILLS.md` plus ~20 more; statuses (stun, poison, root). Tested in one sitting.
+2. **Elements** *(proposed: before enemies and gear, both depend on it)*. Matchups and set bonuses (parked P3).
+3. **Enemies.** The full roster to the cap: behaviours, stats from the curve, drops; a bestiary; each seen once.
+4. **Gear.** The armour ladder at every tier, weapons per kind per tier, relics, recipes, set bonuses.
+5. **Gathering.** ~10 trees, ores, herbs, fish across regions; levels to the cap; what they feed.
+6. **World blueprint.** Every region and point: level range, enemy and node tables, unlocks; empty points laid
+   out in the editor.
+7. **Art day** (likely two). One prompt batch for everything missing, then cut and tune in one pass.
+8. **Numbers pass.** XP curve to the cap, gear by level, prices, drop rates; the content checker taught to flag gaps.
+
+Caveats agreed with the plan:
+- The dev field shows whether a system works, not whether the game is fun. Every two or three theme days, one real
+  run from a new game, with the playtest log on.
+- Themes depend on each other (elements → enemies and gear; statuses → skills and enemies): keep the order.
+- A theme can take two days; finishing it beats moving on half-done.
+- New mechanics will creep into "content" days; when one does, it gets its own building day.
+
 ## 1. Approach: stop widening, connect what exists
 
 Most systems now exist in a first form: the hex map, tiles, combat, gathering, gear, icons and the HUD. The next step is to connect them, not to start more. That means a **vertical slice from level 1 to 15**, playable end to end across the five existing locations. Each step of the slice should have:
@@ -57,6 +82,7 @@ Polish art and UI one area at a time, and only once that area plays well. Past p
    - 4→5: a little fighting by choice. All of 1–5 within 2–3 full energy bars.
    - 5→10 is harder than 1–5. From 10 to 20–25 each level costs about the same as at 5–10, never much harder or easier.
    - Quests give a lot of XP, and this stretch is where players learn that quests beat grinding.
+   - **Retuned 2026-11-09** (playtest: level 6 in 8 minutes, quests gave 730 of 1,170 XP): kills per level 2, 8, 10, 12, then 14 for levels 5–7, then 18 from 8; quest and daily XP scaled to match (×2 early, ×1.75 at 6, ×2.25 from 8); 1 reroll per point per cycle; no enemies at Sylvie's Home. Agni: levels 5–8 can stay lenient; it should slow before the Drill.
    - **Built 2026-11-08 as a curve** (`rules.ts`): a kill is worth `25 × 1.12^(enemy level − 1)`; a level takes 2, 4, 5, 6 kills for levels 1–4, then 8 (about one energy bar) up to the cap of 25. Enemies carry a `level` and get their XP from the curve. Quests will give XP counted in kills at their level. Still to do: enemy **stats** from the same level.
 2. ~~**How locations unlock.**~~ Decided 2026-11-08: a mix of level, quest and World Resonance, place by place. Never by combat strength (stats).
 3. ~~**Armour ladder.**~~ Decided 2026-11-08: **keep 1/10/20/30.** Compressing it means too much churn for a new player.

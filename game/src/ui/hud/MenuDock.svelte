@@ -13,6 +13,8 @@
     { key: 'B', label: 'Bag', icon: 'bag', panel: 'bag', run: () => togglePanel('bag') },
     { key: 'I', label: 'Inventory', icon: 'bag', run: () => toggleScreen('inventory') },
     { key: 'K', label: 'Crafting', icon: 'crafting', run: () => toggleScreen('crafting') },
+    { key: 'J', label: 'Skills', icon: 'strike', panel: 'skills', run: () => togglePanel('skills') },
+    { key: 'L', label: 'Elements', icon: 'resonance', panel: 'elements', run: () => togglePanel('elements') },
     { key: 'Q', label: 'Quests', icon: 'quests', panel: 'quests', run: () => togglePanel('quests') },
     { key: 'M', label: 'Map', icon: 'map', run: toggleMap },
     { key: 'S', label: 'Settings', icon: 'settings', panel: 'settings', run: () => togglePanel('settings') },

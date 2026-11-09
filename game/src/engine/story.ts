@@ -9,7 +9,7 @@ import { say } from './log';
 import { MAX_ENERGY } from './rules';
 import { track } from './telemetry';
 import { addCombatXp, combatLevel } from './progress';
-import { wear } from './gear';
+import { wear, wornIds } from './gear';
 import { enterPoint } from './actions';
 import { spawnAround } from './combat';
 import { errandKill } from './errands';
@@ -23,6 +23,7 @@ export function check(s: GameState, c: Content, cond: Cond, q?: QuestProgress): 
   if ('enter' in cond) return s.point === cond.enter;
   if ('kill' in cond) return (q?.count ?? 0) >= cond.n;
   if ('have' in cond) return (s.bag[cond.have] ?? 0) >= cond.n;
+  if ('wear' in cond) return wornIds(s).includes(cond.wear);
   if ('level' in cond) return combatLevel(s) >= cond.level;
   if ('tag' in cond) return !!s.tags?.[cond.tag];
   if ('notTag' in cond) return !s.tags?.[cond.notTag];
@@ -47,6 +48,13 @@ function killOf(cond: Cond): Extract<Cond, { kill: unknown }> | null {
     }
   }
   return null;
+}
+
+/** The items a step asks you to carry, wherever they sit in its conditions (not inside a `not`). */
+function havesOf(cond: Cond): Extract<Cond, { have: unknown }>[] {
+  if ('have' in cond) return [cond];
+  if ('all' in cond || 'any' in cond) return ('all' in cond ? cond.all : cond.any).flatMap(havesOf);
+  return [];
 }
 
 const queued = (s: GameState, quest: string, stage: number) => s.beats.some((b) => b.quest === quest && b.stage === stage);
@@ -167,6 +175,8 @@ export function activeStages(s: GameState, c: Content) {
       const q = c.quests[id];
       const st = q.stages[p.stage];
       const k = st ? killOf(st.need) : null;
-      return { id, q, p, st, progress: k ? `${Math.min(p.count ?? 0, k.n)} / ${k.n}` : null };
+      // what you carry towards each item asked for: "Wild herbs 2/6"
+      const items = st ? havesOf(st.need).map((h) => ({ name: c.items[h.have]?.name ?? h.have, have: Math.min(s.bag[h.have] ?? 0, h.n), n: h.n })) : [];
+      return { id, q, p, st, items, progress: k ? `${Math.min(p.count ?? 0, k.n)} / ${k.n}` : null };
     });
 }

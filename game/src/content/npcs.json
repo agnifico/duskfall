@@ -50,7 +50,11 @@
       "Mind the bears. They're not cruel, just frightened.",
       "If you're hurt, sit. I'll have a look.",
       "Sylvie sends her best people. She doesn't say it, but she does."
-    ]
+    ],
+    "figure": {
+      "stand": "chars/heidi-stand",
+      "walk": "chars/heidi-walk-1"
+    }
   },
   "aurelie": {
     "name": "Sister Aurelie",
@@ -99,7 +103,11 @@
       "You fight well. Don't let it go to your head.",
       "The machine is loud. The work is honest.",
       "Claudia talks. I listen. Between us, we hear everything."
-    ]
+    ],
+    "figure": {
+      "stand": "chars/cygwin-stand",
+      "walk": "chars/cygwin-walk-1"
+    }
   },
   "marisol": {
     "name": "Marisol",
@@ -206,6 +214,10 @@
       "You again. Good. I was getting bored of frogs.",
       "The ground here is healing faster than it should. Something under it wants to live.",
       "Come back when you can last longer than a minute."
-    ]
+    ],
+    "figure": {
+      "stand": "chars/verona-stand",
+      "walk": "chars/verona-walk"
+    }
   }
 }

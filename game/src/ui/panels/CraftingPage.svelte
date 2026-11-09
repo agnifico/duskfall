@@ -9,7 +9,7 @@
   import { SLOT_NAME } from '../../engine/gear';
   import type { Recipe } from '../../engine/types';
   import ItemIcon from '../ItemIcon.svelte';
-  import { statRows, useLines } from '../statText';
+  import { haveText, statRows, useLines } from '../statText';
   import Screen from './Screen.svelte';
 
   type Craft = Recipe['craft'];
@@ -68,7 +68,7 @@
         <button class="row" class:sel={picked === x.id} class:no={!x.max} onclick={() => (picked = x.id)}>
           <span class="ic"><ItemIcon id={x.r.makes} size={36} /></span>
           <span class="body nm">{it?.name ?? x.r.makes}{(x.r.n ?? 1) > 1 ? ` ×${x.r.n}` : ''}</span>
-          <span class="lbl dim have" title="In your bag">{G.s.bag[x.r.makes] ? `have ${G.s.bag[x.r.makes]}` : ''}</span>
+          <span class="lbl dim have" title="In your bag">{haveText(G.s, x.r.makes) !== '0' ? `have ${haveText(G.s, x.r.makes)}` : ''}</span>
           <span class="dot" class:on={x.max > 0} title={x.max ? `You can make ${x.max}` : 'Missing ingredients'}></span>
         </button>
       {:else}
@@ -85,15 +85,19 @@
             {#if out.slot}
               <div class="lbl m dim">{SLOT_NAME[out.slot]} · level {out.level ?? 1}{out.set ? ` · ${content.sets[out.set]?.name ?? out.set}` : ''}</div>
             {/if}
-            <div class="lbl dim">You have {G.s.bag[r.makes] ?? 0}</div>
+            <div class="lbl dim">You have {haveText(G.s, r.makes)}</div>
           </div>
         </div>
 
         {#if out.use || statRows(out.stats).length}
           <div class="does">
-            {#each statRows(out.stats) as s (s.key)}
-              <div class="srow"><img src={s.icon} alt="" /><span class="body">{s.name}</span><span class="lbl m up">{s.value}</span></div>
-            {/each}
+            {#if statRows(out.stats).length}
+              <div class="tags">
+                {#each statRows(out.stats) as s (s.key)}
+                  <span class="tag lbl" title={s.name}><img src={s.icon} alt="" /><span class="up">{s.value}</span> {s.name}</span>
+                {/each}
+              </div>
+            {/if}
             {#each useLines(out.use) as l (l)}<div class="body">{l}</div>{/each}
           </div>
         {/if}
@@ -269,15 +273,25 @@
     background: color-mix(in oklab, var(--c-inset) 45%, var(--face));
     border-left: 3px solid var(--hl);
   }
-  .srow {
-    display: grid;
-    grid-template-columns: 22px 1fr auto;
-    align-items: center;
-    gap: 8px;
+  /* stats as tags with their icons, like the Inventory page */
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
   }
-  .srow img {
-    width: 22px;
-    height: 22px;
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 24px;
+    padding: 0 9px;
+    color: var(--fg);
+    background: color-mix(in srgb, var(--ink) 12%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 18%, transparent);
+  }
+  .tag img {
+    width: 16px;
+    height: 16px;
     object-fit: contain;
   }
   .up {

@@ -6,11 +6,12 @@
 
 import type { Cell, Content, DamageKind, Drop, Foe, FoeData, Fx, GameState, Intent, Stats } from './types';
 import { grid, hexDistance, route, shapeCells, type Grid } from './hex';
-import { START_CLEAR, CYCLE_MS, DEV_RULES, FOE_DEF, FOE_DEFAULTS, FOE_HITS, FOE_HIT_SHARE, FREE_REROLLS, LEVEL_STATS, PLAYER_STATS, REF_GEAR, killXp } from './rules';
+import { FIRE_SET_BONUS, WATER_SET_HEAL, START_CLEAR, CYCLE_MS, DEV_RULES, FOE_DEF, FOE_DEFAULTS, FOE_HITS, FOE_HIT_SHARE, FREE_REROLLS, LEVEL_STATS, PLAYER_STATS, REF_GEAR, killXp } from './rules';
 import { hash, mulberry32 } from './rng';
 import { say } from './log';
 import { track } from './telemetry';
 import { addCombatXp, combatLevel, playerStats } from './progress';
+import { foeElements, multOnFoe, multOnYou, passives } from './elements';
 import { onKill, peopleOn } from './story';
 export { playerStats };
 
@@ -285,6 +286,7 @@ function foeAct(s: GameState, c: Content, g: Grid, f: Foe, shown: Intent | null)
       return true;
     }
     const h = rollHit(statsOf(c, f), playerStats(s, c));
+    h.dmg *= multOnYou(s, foeElements(c, f.kind)); // its element(s) against yours
     track('hit', { by: f.kind, to: 'you', dmg: h.dodged ? 0 : h.dmg, crit: h.crit, miss: h.dodged, hp: s.hp });
     if (h.dodged) fx(s, s.pos, 'dodge', 'miss', 1);
     else {
@@ -321,8 +323,18 @@ export function playerHits(s: GameState, c: Content, f: Foe, power = 1, kind: Da
     return false;
   }
   h.dmg *= power;
+  // your element against its element, on elemental hits; a full fire set hits harder, a full water set mends you
+  let mark = '';
+  if (kind === 'elemental') {
+    const m = multOnFoe(s, foeElements(c, f.kind));
+    h.dmg *= m;
+    mark = m > 1 ? '▲' : m < 1 ? '▼' : '';
+    const on = passives(s, c);
+    if (on.has('fire')) h.dmg *= 1 + FIRE_SET_BONUS;
+    if (on.has('water')) s.hp = Math.min(playerStats(s, c).hp, s.hp + playerStats(s, c).hp * WATER_SET_HEAL);
+  }
   f.hp -= h.dmg;
-  fx(s, f.pos, fmt(h.dmg), h.crit ? 'crit' : 'hit');
+  fx(s, f.pos, fmt(h.dmg) + mark, h.crit ? 'crit' : 'hit');
   if (f.hp > 0) return true;
   s.foes[s.point!] = foesHere(s).filter((x) => x !== f); // gone until the next cycle
   for (const [item, n] of Object.entries(rollDrops(c, f.kind))) {
@@ -341,6 +353,11 @@ export function playerHits(s: GameState, c: Content, f: Foe, power = 1, kind: Da
 /** Everything that happens after one player action. Returns true if it knocked you out. */
 export function tick(s: GameState, c: Content, g: Grid): boolean {
   const pspd = playerStats(s, c).spd;
+  // a skill's buff counts down in ticks
+  if (s.buffs?.some((b) => b.ticks != null)) {
+    for (const b of s.buffs) if (b.ticks != null) b.ticks--;
+    s.buffs = s.buffs.filter((b) => b.ticks == null || b.ticks > 0);
+  }
   for (const f of [...foesHere(s)]) {
     const spd = statsOf(c, f).spd;
     if (!f.engaged && !f.intent && f.pos === f.home) {

@@ -19,7 +19,7 @@ export function wornIds(s: GameState): string[] {
 }
 
 /** Pieces worn per set, and the bonuses that count. */
-export function activeSets(s: GameState, c: Content): { id: string; name: string; worn: number; bonuses: { pieces: number; on: boolean; stats: Partial<Stats> }[] }[] {
+export function activeSets(s: GameState, c: Content): { id: string; name: string; worn: number; bonuses: { pieces: number; on: boolean; stats: Partial<Stats>; passive?: string }[] }[] {
   const n: Record<string, number> = {};
   for (const id of wornIds(s)) {
     const set = c.items[id]?.set;

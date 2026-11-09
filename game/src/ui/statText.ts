@@ -1,7 +1,8 @@
 // Stat names, icons and how they read, for gear and the stat sheet. Show a stat with its icon wherever
 // there's room: there are ten of them, and the icons are how players learn them.
 
-import type { Stats } from '../engine/types';
+import type { GameState, Stats } from '../engine/types';
+import { wornIds } from '../engine/gear';
 import { asset } from '../content';
 
 export const STAT_NAME: Record<keyof Stats, string> = {
@@ -68,3 +69,11 @@ export const useVerb = (u: import('../engine/types').ItemUse) => (u.kind === 'fo
 
 /** "+3 Physical Defence": for places with no room for icons. */
 export const statLines = (st: Partial<Stats> | undefined): string[] => statRows(st).map((r) => `${r.value} ${r.name}`);
+
+/** How many of an item you have, counting what you're wearing: "2", "1 (equipped)", "3 (1 equipped)". */
+export function haveText(s: GameState, id: string): string {
+  const bag = s.bag[id] ?? 0;
+  const worn = wornIds(s).filter((x) => x === id).length;
+  if (!worn) return `${bag}`;
+  return bag ? `${bag + worn} (${worn} equipped)` : worn === 1 ? '1 (equipped)' : `${worn} (equipped)`;
+}
